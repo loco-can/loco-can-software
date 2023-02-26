@@ -6,18 +6,18 @@ The system is still under developement.
 
 The LOCO-CAN-system is designed for the use is miniature railway vehicles. It is based on the CAN-bus to connect the different modules inside a locomotive, but also between vehicles in a train.
 
-The CAN protocol definitions can be extended to add new functionality. Board designs are available in different versions, due to the process of evolvement. Besides bugs in the board design details like the pinout of the program interface differ between the versions and the electric spezifications of the CAN-connector. The communication protocal is compatible betweet all versions.
+The CAN protocol definitions can be extended to add new functionality. Board designs are available in different versions, due to the process of evolvement. Besides bugs in the board design details like the pinout of the program interface differ between the versions and the electric spezifications of the CAN-connector. The communication protocol is compatible betweet all versions.
 
 
 ## Design
-The design is highly modular. For the simple control of aa elektric locomotive only a control and a motor module is needed. When using the latest motor module version values for motor voltage and battery voltage is sent to the can bus. The control module has the ability to connect meters for display of this values.
+The design is highly modular. For the simple control of an elektric locomotive only a control and a motor module is needed. When using the latest motor module version, values for motor and battery voltage is sent to the can bus. The control module has the ability to connect meters to display this values.
 
-The structure with a bus system makes it easy to expand the contruction with additional functions. New modules, i.e. for light, controlling servos or measuring corrent, only need to be hooked into the CAN-line.
+The structure of a bus system makes it easy to expand the contruction with additional functions. New modules, i.e. for light, controlling servos or measuring current, only need to be hooked into the CAN-line.
 
 
 # Configuration
 **This functionality is not yet implemented**
-The modules are shipped with a standard configuration like the assignment of the switch module outputs to the light stati or the potentiometer value for neutral position of the throtle. The paramters can be adjusted using the webinterface of a WiFi-modul. Connecting with a laptop or smartphone gives access to a user-friendly interface for this task.
+The modules are shipped with a standard configuration, like the assignment of the switch module outputs to light stati or the potentiometer value for neutral position of the throttle. The paramters can be adjusted using a USB connection or the webinterface of a WiFi-modul. Connecting with a laptop or smartphone gives access to a user-friendly interface for this task.
 
 ## Software Updates
 The pinout of the FTDI interface for flashing new software differs in the early versions. The standard pinout will be implemented in all revisions, divergent pinouts are listed with the version descriptions.
