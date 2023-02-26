@@ -61,15 +61,14 @@ INTELLILED led(CAN_STATUS_LED);
 CAN_COM can_com;
 
 
-
 void setup() {
 
 	#ifdef DEBUG
 		Serial.begin(115200);
-		Serial.println("Start Light-CAN");
+		Serial.println("Start Loco-Light");
 	#endif
 
-	can_com.begin(500E3);
+	can_com.begin(500E3, CAN_STATUS_LED);
 
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);

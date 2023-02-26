@@ -19,12 +19,26 @@
 #include "module.h"
 
 
+MODULE module;
+
+CAN_COM can_com;
+
 
 void setup(void) {
 
+    #ifdef DEBUG
+        Serial.begin(115200);
+        Serial.println("Start Loco-Servo");
+    #endif
+
+    can_com.begin(500E3, CAN_STATUS_LED);
+    can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
+
+    module.begin();
 }
 
 
 void loop(void) {
-    
+
+    module.update();
 }

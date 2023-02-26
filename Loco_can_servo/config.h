@@ -16,6 +16,8 @@
 #include "can_protocol.h"
 #include "can_com.h"
 
+#include "settings.h"
+
 
 // =====================================
 // The main module methods

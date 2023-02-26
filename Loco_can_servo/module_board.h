@@ -19,7 +19,7 @@
 // unsupported lines are set to -1
 #if BOARD_VERSION == BOARD_V_2_0
 
-	#define CAN_STATUS_LED 7
+	#define CAN_STATUS_LED 9
 
 	// servo output
 	#define SERVO_1 2
