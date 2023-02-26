@@ -1,6 +1,6 @@
-# LOCO-CAN
+# LOCO-CAN Software
 
-The hardware schematics and PCB layouts are managed in the [LOCO-CAN](https://github.com/loco-can/loco-can-hardware) repository.
+The hardware schematics and PCB layouts are managed in the [LOCO-CAN Hardware](https://github.com/loco-can/loco-can-hardware) repository.
 
 The system is still under developement.
 
