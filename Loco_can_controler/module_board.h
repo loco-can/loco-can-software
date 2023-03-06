@@ -45,6 +45,8 @@
 	#define STATUS_RED 6
 	#define STATUS_GREEN 7
 
+	#define CAN_STATUS_LED 6
+
 	#define METER_VOLT 8
 	#define METER_AMP 9
 
@@ -76,6 +78,8 @@
 
 	#define STATUS_RED 6
 	#define STATUS_GREEN 7
+
+	#define CAN_STATUS_LED 6
 
 	#define METER_VOLT 8
 	#define METER_AMP 9
@@ -133,14 +137,16 @@
 	#define STATUS_RED 2
 	#define STATUS_GREEN 3
 
+	#define CAN_STATUS_LED 2
+
 	#define METER_VOLT 6
-	#define METER_MOTOR_VOLT 7
+	// #define METER_MOTOR_VOLT 7
 	#define METER_AMP 8
 
 	// meter maximum input value
-	#define METER_VOLT_VALUE 2100
-	#define METER_AMP_VALUE 8800
-	#define METER_MOTOR_VALUE 2100
+	#define METER_VOLT_VALUE 2500
+	#define METER_AMP_VALUE 9000
+	#define METER_MOTOR_VALUE 2500
 
 	#define ANALOG_DRIVE A0
 	#define ANALOG_BREAK A1
@@ -196,6 +202,8 @@
 
 	#define STATUS_RED 27
 	#define STATUS_GREEN 26
+
+	#define CAN_STATUS_LED 6
 
 	#define METER_VOLT 32
 	#define METER_MOTOR_VOLT 35

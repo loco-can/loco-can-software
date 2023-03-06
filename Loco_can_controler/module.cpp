@@ -46,7 +46,7 @@ void MODULE::begin(void) {
 
 
 	// ===================================================================
-	// start analog direction switch 
+	// start analog direction switch
 	_mains_switch.begin(ANALOG_MAINS_SWITCH);
 
 	_mains_switch.learn(MAINS_OFF);
@@ -87,7 +87,7 @@ void MODULE::begin(void) {
 
 	#ifdef METER_AMP
 		_meter_amp.begin(METER_AMP, METER_TYPE_SERVO);
-		_meter_amp.set_limits(130, 55);
+		_meter_amp.set_limits(135, 55);
 		_meter_amp.set_value_limits(500, METER_AMP_VALUE);
 	#endif
 
@@ -101,7 +101,10 @@ void MODULE::begin(void) {
 	// ===================================================================
 	// INIT SEQUENCE
 	// set meters to max
-	delay(500);
+	#ifdef DEBUG
+    Serial.println("start self test");
+    Serial.println("> set meters to max");
+  #endif
 	
 	_meter_volt.set(METER_VOLT_VALUE);
 
@@ -115,6 +118,10 @@ void MODULE::begin(void) {
 
 
 	// test instrument light
+	#ifdef DEBUG
+    Serial.println("> test instrument light");
+  #endif
+
 	digitalWrite(INSTRUMENT_LIGHT, HIGH);
 
 
@@ -134,8 +141,15 @@ void MODULE::begin(void) {
 
 	_status_led.off();
 
+  #ifdef DEBUG
+		Serial.println("> reset status led");
+  #endif
 
 	// reset meters
+  #ifdef DEBUG
+		Serial.println("> reset meters");
+  #endif
+
 	_meter_volt.set(0);
 
 	#ifdef METER_AMP
@@ -156,9 +170,19 @@ void MODULE::begin(void) {
 	_active = false;
 
   #ifdef DEBUG
-    Serial.println("startup successfull");
+    Serial.println("end test");
   #endif
 
+	delay(1000);
+
+
+	// DEBUG set voltage to 13,5V
+	// _meter_volt.set(1250);
+
+	// // set amp to 50 A
+	// #ifdef METER_AMP
+	// 	_meter_amp.set(5500);
+	// #endif
 }
 
 
@@ -210,10 +234,6 @@ void MODULE::update(void) {
 	// set status led
 	_led();
 
-
-// DEBUG set voltage to 13,5V
-	// _meter_volt.set(1350);
-
 	// update _status LED
 	_status_led.update();
 }
@@ -228,8 +248,6 @@ void MODULE::_receive(CAN_MESSAGE message) {
 	_collision = false;
 
 	if (filter = can_com.read(&message)) {
-
-		// Serial.println(filter);
 
 		// set _status
 		switch (filter) {

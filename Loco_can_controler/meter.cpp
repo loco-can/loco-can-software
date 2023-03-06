@@ -54,12 +54,14 @@ void METER::set_type(uint8_t type) {
 }
 
 
+// set min and max values for analog or servo output
 void METER::set_limits(uint16_t min, uint16_t max) {
 	_min = min;
 	_max = max;
 }
 
 
+// set min and max input values
 void METER::set_value_limits(uint16_t val_min, uint16_t val_max) {
 	_val_min = val_min;
 	_val_max = val_max;
@@ -74,7 +76,17 @@ void METER::set(uint16_t value) {
 		value = _val_max;
 	}
 
+	if (value < _val_min) {
+		value = _val_min;
+	}
+	
 	calc = map(value, _val_min, _val_max, _min, _max);
+
+// Serial.print(_port);
+// Serial.print(": ");
+// Serial.print(value);
+// Serial.print(" => ");
+// Serial.println(calc);
 
 	// set by type
 	switch(_type) {

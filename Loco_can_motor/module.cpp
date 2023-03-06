@@ -18,7 +18,6 @@
 #include "flags.h"
 
 extern CAN_COM can_com;
-extern INTELLILED led;
 
 extern FLAGS switches;
 extern FLAGS status;
@@ -154,7 +153,6 @@ void MODULE::update(void) {
 
 	// heartbeat OK
 	else {
-
 		// mains on
 		if (status.get_flag(MAINS_FLAG)) {
 
@@ -448,11 +446,5 @@ int16_t MODULE::_motor_voltage(void) {
 bool MODULE::send(uint8_t* data, uint8_t length, long id) {
 
 	// send data
-	// blink led
-	led.on();
-	
 	can_com.send(data, length, id);
-	delay(10);
-
-	led.off();
 }

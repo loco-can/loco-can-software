@@ -54,7 +54,6 @@
 
 
 MODULE module;
-INTELLILED led(CAN_STATUS_LED);
 
 CAN_COM can_com;
 
@@ -74,7 +73,7 @@ void setup() {
 	#endif
 
 	// begin CAN communication
-	can_com.begin(CAN_BUS_SPEED);
+	can_com.begin(CAN_BUS_SPEED, CAN_STATUS_LED);
 	// can_com.setHeartbeat(HEARTBEAT, CAN_ID_HEARTBEAT);
 
 	#ifdef DEBUG
@@ -88,8 +87,6 @@ void setup() {
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_HEARTBEAT);
-
-	led.off();
 
 
 	// init module
@@ -174,8 +171,4 @@ void loop() {
 
 	// update module
 	module.update();
-
-	// update led
-	led.update();
-
 }
