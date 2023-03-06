@@ -48,6 +48,8 @@ Jack: MATE-N-LOK 4-794618-0
 
 Pins 6 and 8 are connected to the motor output to sense the voltage. Drive and break outputs provide a PWM signal to drive the power output stage.
 
+The outputs on pins 3, 5 and 7 can be configured for PWM or servo motors.
+
 ### FTDI Interface
 | V2.1a    | V2.1b     |
 |:---------|:----------|
@@ -56,3 +58,7 @@ Pins 6 and 8 are connected to the motor output to sense the voltage. Drive and b
 | 3 **RX** | **3 TX**  |
 | 4 3V3    | **4 3V3** |
 | 5 GND    | **5 GND** |
+
+
+## Direction reverse
+The direction assignment can be reversed with a flag, that is set or cleard using the locomotive setup procedure. The actual direction is influenced by the flag. If switch modules are paired to the motor module the flag influences theire direction functionality too.

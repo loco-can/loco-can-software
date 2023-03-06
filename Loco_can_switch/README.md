@@ -11,14 +11,15 @@ The can protocol supports eight light stati in out byte, that can be mapped to t
 	bits     7      6      5      4      3      2      1      0
 	       	main  train   cab   instr   back    high   low   posit
 	       	------------------------------------------------------
-	main:	main light switch
-	train:	train lights
-	cab:		cabine light
-	instr:	instrument light
-	back:	back light
-	high:	bright spot light
-	low:		low spot light
-	posit:	position light
+
+* main:		main light switch
+* train:	train lights
+* cab:		cabine light
+* instr:	instrument light
+* back:		back light
+* high:		bright spot light
+* low:		low spot light
+* posit:	position light
 
 A common current sensor returns the overall consumption of the light outputs.
 
@@ -63,7 +64,6 @@ JST XH
 
 
 # LOCO-Single Light
-**To do**
 A tiny module with only one CAN connector and one FET driven output for a single light. It can be used for intelligent back lights. In this case, a backlight heartbeat status can detect the train integrity.
 
 
@@ -90,3 +90,12 @@ A mapping table applies the six outputs to the eight light stati. In addition th
 	 11		backward_light 5
 	 12		backward_light 6
 	 13		backward_light 7
+
+
+
+
+## Switch-Motor Pairing
+The switch module can be paired with a motor module to use its direction setting. A pairing is requirement to use the locomotive setup procedure.
+When the actual direction is reversed through the locomotive setup, this module also uses the correct direction.
+
+The switch module registers to the motor status message with the correct uuid and sets the dir and revers bits correspondently.

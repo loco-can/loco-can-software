@@ -35,19 +35,29 @@ A missing heartbeat during operation can lead to an emergency stop, depending on
 ## End light heartbeat
 All modules with a hearbeat mode can register the end light message. If no end light is found, the missing heartbeat is ignored. When connecting an end light, all modules, that have registered the hearbeat set a end light present flag to true. In this case a failing hearbeat results in an imediate stop of the train.
 
+## Module pairing
+In some cases, it makes sense to combine modules. With a pairing the uuid of the involved modules are stored in euch module. Some functions can depend on the state of paired units.
+
+### Motor-Switch Pairing 
+If a switch module is used in a locomotive with headlight on both ends of the vihicle, it has to be paired to the motor module. It is a requirement for use of the locomotive setup to be able to switch the lamps depending on the direction.
+
+### Controler-Motor Pairing
+Basically it is not necessary to pair a controller to a motor module. If one wants to drive in multiple traction, measured values of a certain locomotive can be displayed by pairing on the driver's desk. Otherwise the values of the first locomotive found are displayed. If there are several locomotive controller pairs in one train, the respective locomotives can be operated independently of each other by several locomotive drivers.
+
 
 ## Drive Module Status Messages
 The message is sent as part of the module heartbeat, when the main switch is off and as status message, when the main switch is on.
 
 Byte 0
 
-|Bit 7|Bit 6|Bit 5|Bit 4|Bit 3 |Bit 2|Bit 1|Bit 0|
-|-----|-----|-----|-----|----- |-----|-----|-----|
-|error|ready|stop |     |paired|dir  |drive|mains|
+|Bit 7|Bit 6|Bit 5|Bit 4 |Bit 3  |Bit 2|Bit 1|Bit 0|
+|-----|-----|-----|------|-------|-----|-----|-----|
+|error|ready|stop |paired|reverse|dir  |drive|mains|
 
 * error: the module reports an error
 * ready: ready to drive (mains on, direction selected)
 * stop: the locomotive is standing
+* reverse: the direction works the other way around 
 * paired: the drive module is paired with a controller, the uuid of the paired controller is stored in the module
 * dir: the selected direction (0: forware, 1: reward)
 * mains: the main switch status (0: off, 1: on)
