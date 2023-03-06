@@ -60,6 +60,7 @@ Byte 0
 * reverse: the direction works the other way around 
 * paired: the drive module is paired with a controller, the uuid of the paired controller is stored in the module
 * dir: the selected direction (0: forware, 1: reward)
+* drive: motor drive enabled (direction in neutral)
 * mains: the main switch status (0: off, 1: on)
 
 # Operation Messages

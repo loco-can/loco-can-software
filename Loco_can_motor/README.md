@@ -59,6 +59,33 @@ The outputs on pins 3, 5 and 7 can be configured for PWM or servo motors.
 | 4 3V3    | **4 3V3** |
 | 5 GND    | **5 GND** |
 
+## Motor status
+
+|Bit 7|Bit 6|Bit 5|Bit 4 |Bit 3  |Bit 2|Bit 1|Bit 0|
+|-----|-----|-----|------|-------|-----|-----|-----|
+|error|ready|stop |paired|reverse|dir  |drive|mains|
+
+* error: the module reports an error
+* ready: ready to drive (mains on, direction selected)
+* stop: the locomotive is standing
+* reverse: the direction works the other way around 
+* paired: the drive module is paired with a controller, the uuid of the paired controller is stored in the module
+* dir: the selected direction (0: forware, 1: reward)
+* drive: motor drive enabled (direction in neutral)
+* mains: the main switch status (0: off, 1: on)
+
 
 ## Direction reverse
 The direction assignment can be reversed with a flag, that is set or cleard using the locomotive setup procedure. The actual direction is influenced by the flag. If switch modules are paired to the motor module the flag influences theire direction functionality too.
+
+## Pairing
+The module can be paired with a controller. In addition, up to 16 further modules can be paired, which are installed together in one locomotive. Switch modules for light are a prerequisite for using the locomotive setup function.
+
+* Pairing with a controller can be done anytíme and is described in the controller readme.
+* The paring of locomotive internal modules must be done with no other vehicle connected to the CAN line and only needs to be performed once, as long as nothing is changed in the locomotive.
+
+The locomotive setup process is initiated by setting the main switch to off, pushing and holding the horn button and switching on the mains again.
+
+The status led will alternately blink orange and green, if the controller is not paired, and green, if a pairing is found. Push and hold the horn button for more than 10 seconds, until the led light starts to rapidly flash orange. The motor module scans all incoming module heartbeat messages and pair to all modules offering this functionality. The process will last for about a minute, then three green blinks of the status led indicates the successfull end.
+
+The setup mode is ended by switching the main switch to off.
