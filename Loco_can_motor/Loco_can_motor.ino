@@ -74,7 +74,7 @@ void setup() {
 
 	// begin CAN communication
 	can_com.begin(CAN_BUS_SPEED, CAN_STATUS_LED);
-	// can_com.setHeartbeat(HEARTBEAT, CAN_ID_HEARTBEAT);
+	// can_com.setHeartbeat(HEARTBEAT, CAN_ID_DRIVE_HEARTBEAT);
 
 	#ifdef DEBUG
 		Serial.println();
@@ -86,7 +86,7 @@ void setup() {
 	// register commands to read
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
-	can_com.register_filter(CAN_ID_MASK, CAN_ID_HEARTBEAT);
+	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_HEARTBEAT);
 
 
 	// init module
@@ -151,7 +151,7 @@ void loop() {
 
 				break;
 
-			case CAN_ID_HEARTBEAT:
+			case CAN_ID_DRIVE_HEARTBEAT:
 				module.heartbeat();
 				break;
 

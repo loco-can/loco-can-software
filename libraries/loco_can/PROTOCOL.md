@@ -102,18 +102,27 @@ Byte 0
 |CAN_ID_SWITCH|0x420|
 
 ## Status messages
+The drive status is sent by the motor modules with informations about the condition of the locomotive.
 
 |Name|Value|
 |----|-----|
-|CAN_ID_STATUS|0x500|
+|CAN_ID_DRIVE_STATUS|0x500|
+|CAN_ID_MODULE_HEARTBEAT|0x510|
+
+The module hearbeat is a special status message, that is automatically sent by each module. Depending on the mains flag setting the frequency of this messages are different and defined in the protocol.h file.
+
+|Name|Value|
+|----|-----|
+|MESSAGE_HEARTBEAT_STANDBY|10000|
+|MESSAGE_HEARTBEAT_ACTIVE|1000|
 
 ## Heardbeat values
 The heartbeat is sent from the active controller and used to monitor the connection between controller and motor modules. The train end latern signals are registered in the controller when starting to drive. A change in the latern signal list while driving leads to a emergency stop (switch off the heartbeat signal)
 
 |Name|Value|
 |----|-----|
-|CAN_ID_HEARTBEAT|0x600|
-|CAN_ID_TRAINEND|0x610|
+|CAN_ID_DRIVE_HEARTBEAT|0x010|
+|CAN_ID_TRAINEND_HEARTBEAT|0x020|
 
 sent from train end laterns
 
@@ -150,4 +159,8 @@ The setup command is used to send and receive module setup data.
 |CAN_SETUP_MASK|0x700|
 |CAN_ID_SETUP|0x700|
 
-|N
+# Global Settings
+|Name|Value|
+|----|-----|
+|CAN_NAME_MAX_SIZE|5|
+|CAN_VALUE_MAX_SIZE|6|

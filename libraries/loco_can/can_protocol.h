@@ -37,14 +37,20 @@
 // status values
 #define CAN_ID_STATUS 0x500
 
+// message heartbeat
+#define CAN_ID_MODULE_HEARTBEAT 0x510 // heartbeat sent from modules
+
+#define MESSAGE_HEARTBEAT_STANDBY 10000
+#define MESSAGE_HEARTBEAT_ACTIVE 1000
+
 // heardbeat values
 // The heartbeat is sent from the active controller and used
 // to monitor the connection between controller and motor modules.
 // The train end latern signals are registered in the controller
 // when starting to drive. A change in the latern signal list while
 // driving leads to a emergency stop (switch off the heartbeat signal)
-#define CAN_ID_HEARTBEAT 0x600
-#define CAN_ID_TRAINEND 0x610 // sent from train end laterns
+#define CAN_ID_DRIVE_HEARTBEAT 0x010
+#define CAN_ID_TRAINEND_HEARTBEAT 0x020 // sent from train end laterns
 
 
 // =====================================

@@ -110,9 +110,10 @@
 /*
  * 7 byte package
  *
- * STATUS
  * byte 0:   7      6      5      4      3      2      1      0
- *         error  ready   stop          aux    dir   drive  mains
+ *         error  ready   stop  paired  aux    dir   drive  mains
+ *
+ * paired: the controller is paired (only set, if paired motor is present)
  *
  * DRIVE VALUE: 10-bit value of drive voltage
  * byte 1: drive bit 8-9
@@ -127,6 +128,28 @@
  * byte 6: break bit 0-7
  */
 
+
+// =====================================
+//
+// MOTOR STATUS DATA
+//
+// =====================================
+
+/*
+ * 1 byte package
+ * STATUS
+ * byte 0:   7      6      5      4      3      2      1      0
+ *         error  ready   stop  paired reverse dir   drive  mains
+ *
+ * error:   motor drive reports an error
+ * ready:   ready to drive
+ * stop:    loco is standing
+ * paired:  motor is paired with controller (only set, if paired controller is present)
+ * reverse: reverse dir signal
+ * dir:     drive direction (0=forward, 1=reverse)
+ * drive:   drive is activated
+ * mains:   main switch state
+ */
 
 
 #define ERROR_FLAG 7

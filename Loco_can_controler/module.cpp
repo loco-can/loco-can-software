@@ -392,7 +392,7 @@ void MODULE::_send(void) {
 	// send heartbeat if active
 	if (_active && _heartbeat.update()) {
 		buffer[0] = 0x00;
-		can_com.send(buffer, 1, CAN_ID_HEARTBEAT);
+		can_com.send(buffer, 1, CAN_ID_DRIVE_HEARTBEAT);
 	}
 }
 
