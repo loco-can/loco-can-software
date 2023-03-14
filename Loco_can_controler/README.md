@@ -111,9 +111,24 @@ not paired: listen to not paired controller or
 
 
 ```mermaid
-  graph TD;
-      A-->B;
-      A-->C;
-      B-->D;
-      C-->D;
+flowchart TD
+    BEGIN([begin]) --> MAINS_ON{mains on?}
+    MAINS_ON -->|no| MOFF[mains=false]
+    MOFF --> ROFF
+    MAINS_ON -->|yes| MON[mains=true]
+    MON --> ON{paired motors found?}
+    ON -->|yes| PON[paired=true]
+    ON -->|no| POFF[paired=false]
+    PON --> PON_LED[status led to paired]
+    PON_LED --> PON_GET[[get ready state\nfrom paired motors]]
+    PON_GET -->|yes| PON_READY{all paired ready?}
+    PON_READY -->|no| ROFF[ready=false]
+    ROFF --> END([END])
+    PON_READY -->|yes| RON[ready=true]
+    RON -->|yes| END
+    POFF --> POFF_LED[status led normal]
+    POFF_LED --> POFF_GET[[get ready state\nfrom not paired motors]]
+    POFF_GET --> POFF_READY{all not paired ready?}
+    POFF_READY -->|no| ROFF
+    POFF_READY -->|yes| RON
 ```
