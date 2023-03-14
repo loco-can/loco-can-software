@@ -125,10 +125,11 @@ flowchart TD
     PON_READY -->|no| ROFF[ready=false]
     ROFF --> END([END])
     PON_READY -->|yes| RON[ready=true]
-    RON -->|yes| END
+    RON -->|yes| SEND[[send drive message]]
     POFF --> POFF_LED[status led normal]
     POFF_LED --> POFF_GET[[get ready state\nfrom not paired motors]]
     POFF_GET --> POFF_READY{all not paired ready?}
     POFF_READY -->|no| ROFF
     POFF_READY -->|yes| RON
+    SEND --> END([END])
 ```
