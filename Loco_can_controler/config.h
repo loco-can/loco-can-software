@@ -41,7 +41,7 @@
 // =====================================
 
 #define BOARD_VERSION BOARD_UNIV_V_2_1
-#define SOFTWARE_VERSION 0x0100
+#define SOFTWARE_VERSION 0x0200
 
 #include "module_board.h"
 
@@ -119,6 +119,9 @@
 
 // max settings mytes
 #define MODULE_MAX_SETTINGS 23
+
+#define MODULE_STANDBY_TIMEOUT 10000
+#define MODULE_HEARTBEAT_TIMEOUT 1000
 
 #define STATUS_OFF_FLASH 2000
 #define STATUS_ERROR_FLASH 750

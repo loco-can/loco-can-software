@@ -52,12 +52,9 @@
 #include "simpletimeout.h"
 #include "flags.h"
 #include "AnalogSwitch.h"
-// #include "settings.h"
 
 
 CAN_COM can_com;
-
-// SETTINGS settings;
 
 MODULE module;
 
@@ -79,7 +76,7 @@ void setup() {
 
 	// register can filters
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_LIGHT_CURRENT); // light current
-	can_com.register_filter(CAN_ID_MASK, CAN_ID_STATUS); // drive status
+	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_STATUS); // drive status
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);	// drive commands from other controllers
 
 
@@ -104,13 +101,8 @@ void setup() {
 		Serial.println(can_com.uuid(), HEX);
 	#endif
 
-	// init settings
-	// settings.begin(can_com.uuid(), SOFTWARE_VERSION, MODULE_CONTROLLER, MODULE_MAX_SETTINGS);
-
-
 	// start module
 	module.begin();
-
 }
 
 

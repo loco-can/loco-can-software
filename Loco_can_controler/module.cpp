@@ -14,9 +14,12 @@
 #include "simpletimeout.h"
 #include "can_com.h"
 #include "can_protocol.h"
+#include "settings.h"
 
 
 extern CAN_COM can_com;
+
+SETTINGS settings;
 
 
 void MODULE::begin(void) {
@@ -29,6 +32,23 @@ void MODULE::begin(void) {
 	_timeout.begin(200); // drive send
 	_drive_timeout.begin(1000); // drive check timeout for activation
 	_heartbeat.begin(500); // set heartbeat
+
+
+	// init settings
+  SETTINGS_CONFIG config;
+
+  config.can_com = &can_com;
+  config.version = SOFTWARE_VERSION;
+  config.module_type = MODULE_CONTROLLER;
+  config.settings_count = MODULE_MAX_SETTINGS;
+  config.name_size = 16;
+  config.request_id = 0x7FF;
+  config.reply_id = 0x700;
+  config.setup_id = 0x600;
+
+	settings.begin(config);
+	settings.set_heartbeat(1000); // should be MODULE_HEARTBEAT_TIMEOUT
+
 
 	// begin IO
 	pinMode(ANALOG_DIR_SWITCH, INPUT);
@@ -236,6 +256,9 @@ void MODULE::update(void) {
 
 	// update _status LED
 	_status_led.update();
+
+	// send module heartbeat
+	settings.heartbeat();
 }
 
 
@@ -253,7 +276,7 @@ void MODULE::_receive(CAN_MESSAGE message) {
 		switch (filter) {
 
 			// status
-			case  CAN_ID_STATUS:
+			case  CAN_ID_DRIVE_STATUS:
 				_status.set(message.data[0]);
 				_drive_timeout.retrigger();
 				break;
