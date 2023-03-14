@@ -106,4 +106,28 @@ Multiple motors can be paired to a controller. A Controller has no pairing infor
 * Controller is paired -> get paired motor module -> only paired status must be ready to drive
 
 * Motor module checks, if the paired controller is active -> sets paired flag in motor status
-not paired: listen to not paired controller or 
+not paired: listen to not paired controller or
+
+```mermaid
+flowchart TD
+    BEGIN([begin]) --> MAINS_ON{mains on?}
+    MAINS_ON -->|no| MOFF[mains=false]
+    MOFF --> ROFF
+    MAINS_ON -->|yes| MON[mains=true]
+    MON --> ON{paired motors found?}
+    ON -->|yes| PON[paired=true]
+    ON -->|no| POFF[paired=false]
+    PON --> PON_LED[status led to paired]
+    PON_LED --> PON_GET[[get ready state\nfrom paired motors]]
+    PON_GET -->|yes| PON_READY{all paired ready?}
+    PON_READY -->|no| ROFF[ready=false]
+    ROFF --> END([END])
+    PON_READY -->|yes| RON[ready=true]
+    RON -->|yes| SEND[[send drive message]]
+    POFF --> POFF_LED[status led normal]
+    POFF_LED --> POFF_GET[[get ready state\nfrom not paired motors]]
+    POFF_GET --> POFF_READY{all not paired ready?}
+    POFF_READY -->|no| ROFF
+    POFF_READY -->|yes| RON
+    SEND --> END([END])
+```
