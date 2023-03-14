@@ -108,3 +108,12 @@ Multiple motors can be paired to a controller. A Controller has no pairing infor
 
 * Motor module checks, if the paired controller is active -> sets paired flag in motor status
 not paired: listen to not paired controller or 
+
+
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
