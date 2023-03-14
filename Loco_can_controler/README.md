@@ -5,9 +5,9 @@ The LOCO-Controller software is used in the Universal and Universal-WiFi modules
 The hardware specifications are described in the README files of the Universal and Universal-WiFi modules.
 
 ## IO-connectors
-| Bus 1         | | Bus 2a       |
-|:--------------| |:-------------|
-| 1 VCC         | | 1 +12V       |
+| Bus 1         |
+|:--------------|
+| 1 VCC         |
 | 2 LED red     |
 | 3 LED green   |
 | 4 Instr.light |
@@ -17,8 +17,9 @@ The hardware specifications are described in the README files of the Universal a
 | 8 Ampere      |
 | 9 GND         |
 
-
-
+| Bus 2a       |
+|:-------------|
+| 1 +12V       |
 | 1 +12V       |
 | 2 Light SW   |
 | 3 Mains SW   |
