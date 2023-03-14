@@ -111,34 +111,54 @@ not paired: listen to not paired controller or
 
 **byte 0: drive status**
 
-|Bit 7|Bit 6|Bit 5|Bit 4 |Bit 3  |Bit 2|Bit 1|Bit 0|
-|-----|-----|-----|------|-------|-----|-----|-----|
-|error|ready|stop |paired|reverse|dir  |drive|mains|
+|Byte |Bit 7  |Bit 6  |Bit 5  |Bit 4  |Bit 3  |Bit 2  |Bit 1  |Bit 0  |
+|:---:|-------|-------|-------|-------|-------|-------|-------|-------|
+|0    |error  |ready  |stop   |paired |reverse|dir    |drive  |mains  |
+|1    |uuid-15|uuid-14|uuid-13|uuid-12|       |       |drive-9|drive-8|
+|2    |drive-7|drive-6|drive-5|drive-4|drive-3|drive-2|drive-1|drive-0|
+|3    |uuid-11|uuid-10|uuid-9 |uuid-8 |       |       |power-9|power-8|
+|4    |power-7|power-6|power-5|power-4|power-3|power-2|power-1|power-0|
+|5    |       |       |       |       |       |       |break-9|break-8|
+|6    |break-7|break-6|break-5|break-4|break-3|break-2|break-1|break-0|
+|6    |uuid-7 |uuid-6 |uuid-5 |uuid-4 |uuid-3 |uuid-2 |uuid-1 |uuid-0 |
 
-**DRIVE VALUE: 10-bit value of drive voltage**
-* byte 1: drive bit 8-9
-* byte 2: drive bit 0-7
-
-**POWER VALUE: 10-bit value of drive max power**
-* byte 3: power bit 8-9
-* byte 4: power bit 0-7
-
-**BREAK VALUE: 10-bit value of break intensity**
-byte 5: break bit 8-9
-byte 6: break bit 0-7
 
 ```mermaid
 flowchart TD
-    BEGIN([loop]) --> MAINS_ON{mains on?}
+    CONTROLLER([controller\nuuid=1234]) --> CHECK_MAINS{mains on?}
+    CHECK_MAINS -->|no| MSG_CM_OFF[["drive message\nmains=0\ndrive=0\npaired=0\n"]]
+    CHECK_MAINS -->|yes| MSG_CM_ON[["drive message\nmains=1\ndrive=0\npaired=0\n"]]
+
+    CHECK_MAINS --> CHECK_PAIRED{paired.uuid = self.uuid?}
+
+    MSG_CM_OFF --> MOTOR([motor\npaired-uid=1234])
+    MSG_CM_ON --> MOTOR([motor\npaired-uid=1234])
+    MOTOR --> MSG_MC["status message\nready=0\ndrive=0\npaired=0"]
+
+    MSG_MC -->CONTROLLER
+
+    MSG_CM1 --> MOTOR1([motor\npaired-uid=1234])
+    MOTOR1 --> MSG_MC2["status message\nready=0\ndrive=0\npaired=1"]
+    MSG_MC2 -->CONTROLLER1
+    CONTROLLER1([controller\nuuid=1234]) --> MSG_CM3["drive message\nmains=0\ndrive=0\npaired=1\n"]
+    MSG_CM3 --> MOTOR1
+```
+    
+```mermaid
+flowchart TD
+    BEGIN([loop]) --> MSG{"state message\navailable"}
+    MSG --> |no| MAINS_ON
+    MSG --> |yes| GET_MOTOR_STATE[[save motor state]]
+    GET_MOTOR_STATE --> MAINS_ON{mains on?}
     MAINS_ON -->|no| MOFF[mains=false]
     MOFF --> ROFF
     MAINS_ON -->|yes| MON[mains=true]
-    MON --> ON{paired motors found?}
+    MON --> ON{paired_cnt > 0?}
     ON -->|yes| PON[paired=true]
     ON -->|no| POFF[paired=false]
-    PON --> PON_LED[status led to paired]
-    PON_LED --> PON_GET[[get ready state\nfrom paired motors]]
-    PON_GET -->|yes| PON_READY{all paired ready?}
+    PON --> PCHECK{check for pairing partner:\npaired.uuid = self.uuid}
+    PON_LED[status led to paired]
+    PON_LED --> PON_READY{all paired ready?}
     PON_READY -->|no| ROFF[ready=false]
     ROFF --> STATUS([END])
     PON_READY -->|yes| POFF_GET
