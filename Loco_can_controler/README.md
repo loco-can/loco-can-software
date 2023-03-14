@@ -109,10 +109,27 @@ Multiple motors can be paired to a controller. A Controller has no pairing infor
 * Motor module checks, if the paired controller is active -> sets paired flag in motor status
 not paired: listen to not paired controller or 
 
+**byte 0: drive status**
+
+|Bit 7|Bit 6|Bit 5|Bit 4 |Bit 3  |Bit 2|Bit 1|Bit 0|
+|-----|-----|-----|------|-------|-----|-----|-----|
+|error|ready|stop |paired|reverse|dir  |drive|mains|
+
+**DRIVE VALUE: 10-bit value of drive voltage**
+* byte 1: drive bit 8-9
+* byte 2: drive bit 0-7
+
+**POWER VALUE: 10-bit value of drive max power**
+* byte 3: power bit 8-9
+* byte 4: power bit 0-7
+
+**BREAK VALUE: 10-bit value of break intensity**
+byte 5: break bit 8-9
+byte 6: break bit 0-7
 
 ```mermaid
 flowchart TD
-    BEGIN([begin]) --> MAINS_ON{mains on?}
+    BEGIN([loop]) --> MAINS_ON{mains on?}
     MAINS_ON -->|no| MOFF[mains=false]
     MOFF --> ROFF
     MAINS_ON -->|yes| MON[mains=true]
@@ -124,12 +141,12 @@ flowchart TD
     PON_GET -->|yes| PON_READY{all paired ready?}
     PON_READY -->|no| ROFF[ready=false]
     ROFF --> END([END])
-    PON_READY -->|yes| RON[ready=true]
+    PON_READY -->|yes| POFF_GET
     RON -->|yes| SEND[[send drive message]]
     POFF --> POFF_LED[status led normal]
     POFF_LED --> POFF_GET[[get ready state\nfrom not paired motors]]
     POFF_GET --> POFF_READY{all not paired ready?}
     POFF_READY -->|no| ROFF
-    POFF_READY -->|yes| RON
-    SEND --> END([END])
+    POFF_READY -->|yes| RON[[set direction]]
+    SEND --> END([end])
 ```
