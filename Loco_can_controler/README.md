@@ -151,3 +151,22 @@ flowchart TD
     SEND --> STATUS[[set status led]]
     STATUS --> END([end])
 ```
+
+```mermaid
+flowchart TD
+    BEGIN([get pared state]) --> RESET[unpaired_cnt = 0\npaired_cnt = 0]
+    RESET --> LOOP[/while\ntimeout != 1000ms\]
+    LOOP --> GET_STATUS[status = get status message]
+    GET_STATUS --> PAIRED{status.paired=true}
+    PAIRED --> |no| END_LOOP[\loop/]
+    PAIRED --> |yes| EXISTS{"(id = paired_stack[uuid]) == true"}
+    EXISTS --> |no| ADD["paired_stack[].uuid=uuid\npaired_stack[].paired=paired"]
+    EXISTS --> |yes| UPDATE["paired_stack[id].paired=paired"]
+    UPDATE --> LOOP
+    LOOP --> END([end])
+
+    INIT([init]) --> STRUCT["struct MOTOR {\nuint_16t uuid\nuint8_t cnt\n}"]
+    STRUCT --> VARIABLES["MOTOR unpaired_stack[MAX_MOTORS]\nMOTOR paired_stack[MAX_MOTORS]"]
+    VARIABLES --> VAR_INIT[int unpaired_cnt = 0\nint paired_cnt = 0]
+    VAR_INIT --> EINIT([end init])
+```
