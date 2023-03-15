@@ -20,6 +20,7 @@ The hardware specifications are described in the README files of the Universal a
 | Bus 2a       |
 |:-------------|
 | 1 +12V       |
+| 1 +12V       |
 | 2 Light SW   |
 | 3 Mains SW   |
 | 4 Dir. SW    |
@@ -106,28 +107,86 @@ Multiple motors can be paired to a controller. A Controller has no pairing infor
 * Controller is paired -> get paired motor module -> only paired status must be ready to drive
 
 * Motor module checks, if the paired controller is active -> sets paired flag in motor status
-not paired: listen to not paired controller or
+not paired: listen to not paired controller or 
+
+**byte 0: drive status**
+
+|Byte |Bit 7  |Bit 6  |Bit 5  |Bit 4  |Bit 3  |Bit 2  |Bit 1  |Bit 0  |
+|:---:|-------|-------|-------|-------|-------|-------|-------|-------|
+|0    |error  |ready  |stop   |paired |reverse|dir    |drive  |mains  |
+|1    |uuid-15|uuid-14|uuid-13|uuid-12|       |       |drive-9|drive-8|
+|2    |drive-7|drive-6|drive-5|drive-4|drive-3|drive-2|drive-1|drive-0|
+|3    |uuid-11|uuid-10|uuid-9 |uuid-8 |       |       |power-9|power-8|
+|4    |power-7|power-6|power-5|power-4|power-3|power-2|power-1|power-0|
+|5    |       |       |       |       |       |       |break-9|break-8|
+|6    |break-7|break-6|break-5|break-4|break-3|break-2|break-1|break-0|
+|6    |uuid-7 |uuid-6 |uuid-5 |uuid-4 |uuid-3 |uuid-2 |uuid-1 |uuid-0 |
+
 
 ```mermaid
 flowchart TD
-    BEGIN([begin]) --> MAINS_ON{mains on?}
+    CONTROLLER([controller\nuuid=1234]) --> CHECK_MAINS{mains on?}
+    CHECK_MAINS -->|no| MSG_CM_OFF[["drive message\nmains=0\ndrive=0\npaired=0\n"]]
+    CHECK_MAINS -->|yes| MSG_CM_ON[["drive message\nmains=1\ndrive=0\npaired=0\n"]]
+
+    CHECK_MAINS --> CHECK_PAIRED{paired.uuid = self.uuid?}
+
+    MSG_CM_OFF --> MOTOR([motor\npaired-uid=1234])
+    MSG_CM_ON --> MOTOR([motor\npaired-uid=1234])
+    MOTOR --> MSG_MC["status message\nready=0\ndrive=0\npaired=0"]
+
+    MSG_MC -->CONTROLLER
+
+    MSG_CM1 --> MOTOR1([motor\npaired-uid=1234])
+    MOTOR1 --> MSG_MC2["status message\nready=0\ndrive=0\npaired=1"]
+    MSG_MC2 -->CONTROLLER1
+    CONTROLLER1([controller\nuuid=1234]) --> MSG_CM3["drive message\nmains=0\ndrive=0\npaired=1\n"]
+    MSG_CM3 --> MOTOR1
+```
+    
+```mermaid
+flowchart TD
+    BEGIN([loop]) --> MSG{"state message\navailable"}
+    MSG --> |no| MAINS_ON
+    MSG --> |yes| GET_MOTOR_STATE[[save motor state]]
+    GET_MOTOR_STATE --> MAINS_ON{mains on?}
     MAINS_ON -->|no| MOFF[mains=false]
     MOFF --> ROFF
     MAINS_ON -->|yes| MON[mains=true]
-    MON --> ON{paired motors found?}
+    MON --> ON{paired_cnt > 0?}
     ON -->|yes| PON[paired=true]
     ON -->|no| POFF[paired=false]
-    PON --> PON_LED[status led to paired]
-    PON_LED --> PON_GET[[get ready state\nfrom paired motors]]
-    PON_GET -->|yes| PON_READY{all paired ready?}
+    PON --> PCHECK{check for pairing partner:\npaired.uuid = self.uuid}
+    PON_LED[status led to paired]
+    PON_LED --> PON_READY{all paired ready?}
     PON_READY -->|no| ROFF[ready=false]
-    ROFF --> END([END])
-    PON_READY -->|yes| RON[ready=true]
+    ROFF --> STATUS([END])
+    PON_READY -->|yes| POFF_GET
     RON -->|yes| SEND[[send drive message]]
     POFF --> POFF_LED[status led normal]
     POFF_LED --> POFF_GET[[get ready state\nfrom not paired motors]]
     POFF_GET --> POFF_READY{all not paired ready?}
     POFF_READY -->|no| ROFF
-    POFF_READY -->|yes| RON
-    SEND --> END([END])
+    POFF_READY -->|yes| RON[[set direction]]
+    SEND --> STATUS[[set status led]]
+    STATUS --> END([end])
+```
+
+```mermaid
+flowchart TD
+    BEGIN([get pared state]) --> RESET[unpaired_cnt = 0\npaired_cnt = 0]
+    RESET --> LOOP[/while\ntimeout != 1000ms\]
+    LOOP --> GET_STATUS[status = get status message]
+    GET_STATUS --> PAIRED{status.paired=true}
+    PAIRED --> |no| END_LOOP[\loop/]
+    PAIRED --> |yes| EXISTS{"(id = paired_stack[uuid]) == true"}
+    EXISTS --> |no| ADD["paired_stack[].uuid=uuid\npaired_stack[].paired=paired"]
+    EXISTS --> |yes| UPDATE["paired_stack[id].paired=paired"]
+    UPDATE --> LOOP
+    LOOP --> END([end])
+
+    INIT([init]) --> STRUCT["struct MOTOR {\nuint_16t uuid\nuint8_t cnt\n}"]
+    STRUCT --> VARIABLES["MOTOR unpaired_stack[MAX_MOTORS]\nMOTOR paired_stack[MAX_MOTORS]"]
+    VARIABLES --> VAR_INIT[int unpaired_cnt = 0\nint paired_cnt = 0]
+    VAR_INIT --> EINIT([end init])
 ```
