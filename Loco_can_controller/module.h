@@ -41,7 +41,7 @@ class MODULE {
 		void _drive_break(void);
 		void _send(void);
 
-		bool _activate(void); // activate controler > returns new state
+		bool _activate(void); // activate controller > returns new state
 
 		bool _active;
 		uint16_t _value;

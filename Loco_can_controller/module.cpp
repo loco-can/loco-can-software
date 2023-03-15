@@ -1,5 +1,5 @@
 /*
- * LOCO-CAN Controler Module
+ * LOCO-CAN Controller Module
  * 
  * @author: Thomas H Winkler
  * @copyright: 2020

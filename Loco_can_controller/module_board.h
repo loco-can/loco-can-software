@@ -1,5 +1,5 @@
 /*
- * LOCO-CAN Controler Module board configuration
+ * LOCO-CAN Controller Module board configuration
  * 
  * @author: Thomas H Winkler
  * @copyright: 2020

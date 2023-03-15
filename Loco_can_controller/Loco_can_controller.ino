@@ -1,5 +1,5 @@
 /*
- * LOCO-CAN Controler Module
+ * LOCO-CAN Controller Module
  * 
  * @author: Thomas H Winkler
  * @copyright: 2020
@@ -7,7 +7,7 @@
  */
 
 /*
- * The controler module is for simple units
+ * The controller module is for simple units
  * that use a CAN cable connection for controlling
  * the train.
  *
