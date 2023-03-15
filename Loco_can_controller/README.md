@@ -123,6 +123,57 @@ not paired: listen to not paired controller or
 |6    |uuid-7 |uuid-6 |uuid-5 |uuid-4 |uuid-3 |uuid-2 |uuid-1 |uuid-0 |
 
 
+`´`mermaid
+flowchart TD
+    C1[controller-1\nUUID=1] --> C1_pair_1["paired\n2"]
+    C1_pair_1 --> C1_pair_2["paired\n*"]
+    C1_pair_2 --> C1_pair_3["paired\n*"]
+    C1_pair_3 --> C1_pair_4["paired\n*"]
+
+    C2[controller-2\nUUID=5] --> C2_pair_1["paired\n*"]
+    C2_pair_1 --> C2_pair_2["paired\n*"]
+    C2_pair_2 --> C2_pair_3["paired\n*"]
+    C2_pair_3 --> C2_pair_4["paired\n*"]
+
+    C3[controller-3\nUUID=8] --> C3_pair_1["paired\n*"]
+    C3_pair_1 --> C3_pair_2["paired\n*"]
+    C3_pair_2 --> C3_pair_3["paired\n*"]
+    C3_pair_3 --> C3_pair_4["paired\n*"]
+
+    M1[motor-1\nUUID=2] --> M1_pair_1["paired\n1"]
+    M1_pair_1 --> M1_pair_2["paired\n4"]
+    M1_pair_2 --> M1_pair_3["paired\n*"]
+    M1_pair_3 --> M1_pair_4["paired\n*"]
+
+    M2[motor-2\nUUID=3] --> M2_pair_1["paired\n*"]
+    M2_pair_1 --> M2_pair_2["paired\n*"]
+    M2_pair_2 --> M2_pair_3["paired\n*"]
+    M2_pair_3 --> M2_pair_4["paired\n*"]
+
+    M3[motor-3\nUUID=6] --> M3_pair_1["paired\n*"]
+    M3_pair_1 --> M3_pair_2["paired\n*"]
+    M3_pair_2 --> M3_pair_3["paired\n*"]
+    M3_pair_3 --> M3_pair_4["paired\n*"]
+
+    M4[motor-4\nUUID=7] --> M4_pair_1["paired\n*"]
+    M4_pair_1 --> M4_pair_2["paired\n*"]
+    M4_pair_2 --> M4_pair_3["paired\n*"]
+    M4_pair_3 --> M4_pair_4["paired\n*"]
+
+    SW1[switch-1\nUUID=4] --> SW1_pair_1["paired\n2"]
+    SW1_pair_1 --> SW1_pair_2["paired\n*"]
+    SW1_pair_2 --> SW1_pair_3["paired\n*"]
+    SW1_pair_3 --> SW1_pair_4["paired\n*"]
+
+    SW2[switch-2\nUUID=9] --> SW2_pair_1["paired\n*"]
+    SW2_pair_1 --> SW2_pair_2["paired\n*"]
+    SW2_pair_2 --> SW2_pair_3["paired\n*"]
+    SW2_pair_3 --> SW2_pair_4["paired\n*"]
+
+    C1_pair_1 --> M1_pair_1
+    M1_pair_2 --> SW1_pair_1
+```
+
 ```mermaid
 flowchart TD
     CONTROLLER([controller\nuuid=1234]) --> CHECK_MAINS{mains on?}
