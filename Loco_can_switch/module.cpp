@@ -8,6 +8,7 @@
 
 
 #include "module.h"
+#include "config.h"
 
 #include "can_com.h"
 #include "can_protocol.h"
@@ -15,7 +16,6 @@
 
 // init extern classes
 extern CAN_COM can_com;
-extern INTELLILED led;
 
 
 // init classes
@@ -32,12 +32,24 @@ void MODULE::begin(void) {
 	uint8_t count = (uint8_t)sizeof(settings_declaration);
 	VALUE value;
 
+	SETTINGS_CONFIG config;
+
 	// start send timing
 	_send_timeout.begin(LIGHT_CURRENT_TIME);
 
 
 	// init settings class
-	_settings.begin(&can_com, SOFTWARE_VERSION, MODULE_LIGHT, count, MODULE_NAME_LENGTH, CAN_ID_REQUEST, CAN_ID_REPLY, CAN_ID_SETUP);
+	config.can_com = &can_com;
+	config.version = SOFTWARE_VERSION;
+	config.module_type = MODULE_SWITCH;
+	config.settings_count = MODULE_MAX_SETTINGS;
+	config.name_size = 16;
+	config.request_id = 0x7FF;
+	config.reply_id = 0x700;
+	config.setup_id = 0x600;
+
+	_settings.begin(config);
+	_settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
 
 	// add setting values from declaration
 	for (i = 0; i < count; i++) {
@@ -296,10 +308,5 @@ void MODULE::update(void) {
 bool MODULE::send(uint8_t* data, uint8_t length, long id) {
 
 	// send data
-	// blink led
-	led.on();
-
 	can_com.send(data, length, id);
-
-	led.off();
 }

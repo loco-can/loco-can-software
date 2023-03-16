@@ -18,6 +18,7 @@
 
 #include "settings.h"
 
+#define DEBUG
 
 // =====================================
 // The main module methods
@@ -65,5 +66,8 @@
 // =====================================
 
 #include "module_settings.h"
+
+// max settings bytes
+#define MODULE_MAX_SETTINGS 23
 
 #endif

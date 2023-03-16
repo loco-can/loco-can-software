@@ -117,7 +117,7 @@
 //
 // =====================================
 
-// max settings mytes
+// max settings bytes
 #define MODULE_MAX_SETTINGS 23
 
 #define MODULE_STANDBY_TIMEOUT 10000

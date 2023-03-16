@@ -47,7 +47,7 @@ void MODULE::begin(void) {
   config.setup_id = 0x600;
 
 	settings.begin(config);
-	settings.set_heartbeat(1000); // should be MODULE_HEARTBEAT_TIMEOUT
+	settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
 
 
 	// begin IO

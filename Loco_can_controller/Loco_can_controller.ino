@@ -44,14 +44,8 @@
  */
 
 
-#include "Servo.h"
-
 #include "config.h"
 #include "module.h"
-
-#include "simpletimeout.h"
-#include "flags.h"
-#include "AnalogSwitch.h"
 
 
 CAN_COM can_com;
@@ -68,7 +62,9 @@ void setup() {
 
 	// ===================================================================
 	// INIT CAN
-	Serial.println("Start CAN Controler");
+    #ifdef DEBUG
+    	Serial.println("Start CAN Controler");
+    #endif
 
 	can_com.begin(CAN_BUS_SPEED, CAN_STATUS_LED); // set CAN speed
 	can_com.set_alive(500); // set live timeout for CAN communication (this module sends heartbeat)

@@ -299,7 +299,7 @@ void MODULE::update(void) {
 	// =======================================
 	// send status
 	data[0] = status.get();
-	send(data, 1, CAN_ID_STATUS);
+	send(data, 1, CAN_ID_DRIVE_STATUS);
 
 }
 

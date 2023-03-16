@@ -51,22 +51,17 @@
 #include "config.h"
 #include "module.h"
 
-#include "RokkitHash.h"
-#include "intelliled.h"
-
 
 MODULE module;
-INTELLILED led(CAN_STATUS_LED);
+
 
 CAN_COM can_com;
 
 
 void setup() {
 
-	#ifdef DEBUG
-		Serial.begin(115200);
-		Serial.println("Start Loco-Light");
-	#endif
+	Serial.begin(115200);
+	Serial.println("Start Loco-Light");
 
 	can_com.begin(500E3, CAN_STATUS_LED);
 
@@ -76,16 +71,11 @@ void setup() {
 	can_com.register_filter(CAN_REQUEST_MASK, CAN_ID_REQUEST);
 	can_com.register_filter(CAN_SETUP_MASK, CAN_ID_SETUP);
 
-	led.off();
-
-	#ifdef DEBUG
-		Serial.println();
-		Serial.print("Device UUID: ");
-		Serial.println(can_com.uuid(), HEX);
-	#endif
+	Serial.println();
+	Serial.print("Device UUID: ");
+	Serial.println(can_com.uuid(), HEX);
 
 	module.begin();
-
 }
 
 
@@ -93,8 +83,4 @@ void loop() {
 
 	// update module
 	module.update();
-
-	// update led
-	led.update();
-
 }
