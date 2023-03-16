@@ -1,2 +1,2 @@
 # Libraries
-LOCO-Control depends on libraries, that are collected in this directory. To build the module packages, first install the libraries in the IE of your choice.
+Loco-CAN depends on libraries, that are collected in an [own repository](https://github.com/loco-can/libraries). To build the module packages, first install the libraries in the IE of your choice.
