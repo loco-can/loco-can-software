@@ -12,8 +12,8 @@
 
 #include <Arduino.h>
 
-#include "loco_config.h"
 #include "can_protocol.h"
+#include "loco_config.h"
 #include "can_com.h"
 
 #include "settings.h"
