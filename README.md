@@ -314,3 +314,23 @@ Jack: MATE-N-LOK 3-794618-2
 |:---:|:---------------------------|
 | 1   | +6-30 Volt / max. 5 Ampere |
 | 2   | GND                        |
+
+
+# Libraries for the Loco-CAN Project
+
+All libraries, that are used by the Loco-CAN project are collected in this repository to guaratee the make process and all functions. Some libraries are used from other projects.
+
+* AnalogSwitch
+* CAN_Com
+* CAN_Com_Settings
+* Flags
+* IntelliLED
+* LocoCAN
+* RampPWM
+* SimpleTimeout
+
+## Other Libraries
+
+* ArduinoUniqueID   (Luiz Henrique Cassettari <ricaun@gmail.com>)
+* CAN-0.3.1         (Sandeep Mistry <sandeep.mistry@gmail.com>)
+* RokkitHash        (This is a port of Paul Hsieh's "SuperFastHash" (http://www.azillionmonkeys.com/qed/hash.html))
