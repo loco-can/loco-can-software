@@ -51,6 +51,8 @@
 
 	// digital intput/output
 	// not used
+	#define SWITCH_PORT_COUNT 6
+
 	#define LIGHT1 2
 	#define LIGHT2 3
 	#define LIGHT3 4
@@ -134,8 +136,11 @@
 
 	#define ANALOG_RESOLUTION 10
 
+
 	// digital intput/output
 	// not used
+	#define SWITCH_PORT_COUNT 6
+
 	#define LIGHT1 2
 	#define LIGHT2 3
 	#define LIGHT3 4

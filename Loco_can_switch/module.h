@@ -37,7 +37,7 @@ class MODULE {
 
 		SIMPLETIMEOUT _send_timeout;
 
-		INTELLILED _leds[6];
+		INTELLILED _leds[SWITCH_PORT_COUNT];
 
 		MEASURE _current;
 };
