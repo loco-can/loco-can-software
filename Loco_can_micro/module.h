@@ -14,9 +14,10 @@
 
 #include "measure.h"
 #include "settings.h"
-#include "simpletimeout.h"
 #include "flags.h"
+#include "intellitimeout.h"
 #include "intelliled.h"
+#include "intelliservo.h"
 
 
 class MODULE {
@@ -37,9 +38,8 @@ class MODULE {
 
 		SIMPLETIMEOUT _send_timeout;
 
-		INTELLILED _leds[SWITCH_PORT_COUNT];
-
-		MEASURE _current;
+		INTELLILED _leds[2];
+		INTELLISERVO _servos[2];
 };
 
 #endif

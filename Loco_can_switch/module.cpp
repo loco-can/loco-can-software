@@ -29,7 +29,7 @@ void MODULE::begin(void) {
 
 	uint8_t i;
 	uint8_t ports[] = {LIGHT1, LIGHT2, LIGHT3, LIGHT4, LIGHT5, LIGHT6};
-	uint8_t count = (uint8_t)sizeof(settings_declaration);
+	uint8_t count = (uint8_t)sizeof(settings_declaration)/sizeof(settings_declaration[0]);
 	VALUE value;
 
 	SETTINGS_CONFIG config;
@@ -52,8 +52,9 @@ void MODULE::begin(void) {
 	_settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
 
 	// add setting values from declaration
-	for (i = 0; i < count; i++) {
-		_settings.register_setting(settings_declaration[i]);
+	i = 0;
+	while (i < count) {
+		_settings.register_setting(settings_declaration[i++]);
 	}
 
 	// init data storage and load EEPROM data
@@ -85,7 +86,7 @@ void MODULE::begin(void) {
 
 
 	// set output ports as LED object
-	for (i=0; i<7; i++) {
+	for (i=0; i < SWITCH_PORT_COUNT; i++) {
 		_leds[i].begin(ports[i]);
 		_leds[i].off();
 	}

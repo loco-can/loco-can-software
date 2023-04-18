@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "serialcan.h"
+#include "can_com.h"
 
 
 SERIALCAN s_can;
@@ -9,7 +10,7 @@ void setup(void) {
 
   s_can.begin(115200);
 
-  message.size = 8;
+  message.size = 4;
   message.id = 0x12345678;
   message.uuid = 0xfedc;
 
@@ -27,11 +28,11 @@ void setup(void) {
 void loop(void) {
 
   // read from serial
-  // if (s_can.available()) {
+  if (s_can.available()) {
+    message = s_can.read();
+  }
 
-  // message = s_can.read();
   s_can.send(&message);
-  // }
 
-  delay(50);
+  delay(500);
 }

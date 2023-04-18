@@ -2,7 +2,7 @@
 #define MODULE_H
 
 #include "config.h"
-#include "motor.h"
+#include "intelliservo.h"
 #include "can_com.h"
 
 #define SERVO_COUNT 4
@@ -32,7 +32,7 @@ class MODULE {
 		void update(void);
 
 	private:
-		MOTOR _servo[SERVO_COUNT];
+		INTELLISERVO _servo[SERVO_COUNT];
 		MESSAGE _message[SERVO_COUNT];
 		uint8_t _message_count;
 };
