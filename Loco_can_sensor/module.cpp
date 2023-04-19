@@ -12,7 +12,7 @@
 #include "module.h"
 
 #include "intelliled.h"
-#include "simpletimeout.h"
+#include "intellitimeout.h"
 
 
 // Module module;

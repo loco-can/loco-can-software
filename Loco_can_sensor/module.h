@@ -12,7 +12,7 @@
 #include <Arduino.h>
 
 #include "config.h"
-#include "simpletimeout.h"
+#include "intellitimeout.h"
 #include "measure.h"
 
 
@@ -36,8 +36,8 @@ class MODULE {
 		MEASURE _c[UI_MAX_CURR];
 		MEASURE _v[UI_MAX_VOLT];
 
-		SIMPLETIMEOUT _curr_timeout;
-		SIMPLETIMEOUT _volt_timeout;
+		INTELLITIMEOUT _curr_timeout;
+		INTELLITIMEOUT _volt_timeout;
 
 };
 

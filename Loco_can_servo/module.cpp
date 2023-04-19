@@ -50,12 +50,21 @@ void MODULE::update(void) {
 	// set motors
 	if (filter = can_com.read(&message)) {
 
+		i = 0;
 		while (i < SERVO_COUNT) {
 
 			// matches registered filter
 			if (filter = _message[i].filter) {
 
-				// 
+Serial.print("receive 0x");
+Serial.print(filter, HEX);
+
+Serial.print(" size=");
+Serial.print(message.size);
+				// get offset bytes
+				uint32_t val = message.data[_message[i].offset];
+Serial.print(": ");
+Serial.println(val);
 			}
 
 			i++;

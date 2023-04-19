@@ -17,7 +17,7 @@
 
 #include "can_com.h"
 #include "intelliled.h"
-#include "simpletimeout.h"
+#include "intellitimeout.h"
 #include "flags.h"
 #include "AnalogSwitch.h"
 #include "meter.h"
@@ -79,9 +79,9 @@ class MODULE {
 
 		INTELLILED _status_led;
 
-		SIMPLETIMEOUT _timeout;
-		SIMPLETIMEOUT _drive_timeout;
-		SIMPLETIMEOUT _heartbeat;
+		INTELLITIMEOUT _timeout;
+		INTELLITIMEOUT _drive_timeout;
+		INTELLITIMEOUT _heartbeat;
 
 };
 

@@ -36,7 +36,7 @@ class MODULE {
 		FLAGS _status;
 		FLAGS _switches;
 
-		SIMPLETIMEOUT _send_timeout;
+		INTELLITIMEOUT _send_timeout;
 
 		INTELLILED _leds[2];
 		INTELLISERVO _servos[2];
