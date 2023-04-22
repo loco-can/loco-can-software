@@ -34,7 +34,7 @@
 #define MODULE_LK_1_H
 
 #include "config.h"
-#include "simpletimeout.h"
+#include "intellitimeout.h"
 #include "pwm_ramp.h"
 #include "measure.h"
 
@@ -95,9 +95,9 @@ class MODULE {
 		bool _drive_nulled;
 		bool _emergency;
 
-		SIMPLETIMEOUT _heartbeat_timeout;
-		SIMPLETIMEOUT _standing_timeout;
-		SIMPLETIMEOUT _voltage_timeout;
+		INTELLITIMEOUT _heartbeat_timeout;
+		INTELLITIMEOUT _standing_timeout;
+		INTELLITIMEOUT _voltage_timeout;
 
 		PWM_RAMP _pwm_drive;
 		PWM_RAMP _pwm_break;

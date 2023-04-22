@@ -1,19 +1,12 @@
 ## LOCO-Servo
 
-The module read values of CAN messages and set the motors. The four servos can be configured to react on different messages.
+The module read values of CAN messages and set the motors. The four servos can be configured to react to different messages.
 
 The min and max positions as well as a mapping of the message values provides a wide range of usecases like drive or break setting or measure values.
 
-When using a status message, up to 8 bits can be assigned to discrete servo motor positions.
+There are different types of operation that can be selected from.
 
-### V2.0/V2.1a-s
-The versions only differ in the pinout of the FDTI-interface.
-
-### FTDI Interface
-| V2.0     | V2.1x-s   |
-|:---------|:----------|
-| 1 DTS    | **1 DTS** |
-| 2 **TX** | **2 RX**  |
-| 3 **RX** | **3 TX**  |
-| 4 3V3    | **4 3V3** |
-| 5 GND    | **5 GND** |
+* An analog value of a analog message value can be mapped to a certain angle area, the motor will cover.
+* Up to 16 areas of an analog value can be assigned to descrete servo positions.
+* For binary messages the positions for false and true can be set.
+* When using a status message, up to 8 bits can be assigned to discrete servo motor positions.

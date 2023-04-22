@@ -5,7 +5,7 @@
 #include <RotaryEncoder.h>
 
 #include "can_com.h"
-#include "simpletimeout.h"
+#include "intellitimeout.h"
 #include "oled_display.h"
 #include "logger.h"
 #include "button.h"
@@ -32,7 +32,7 @@
 CAN_COM can;
 CAN_MESSAGE message;
 
-SIMPLETIMEOUT timeout;
+INTELLITIMEOUT timeout;
 LOG logger;
 LOCO loco;
 

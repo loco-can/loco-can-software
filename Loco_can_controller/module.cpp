@@ -11,7 +11,7 @@
 #include "config.h"
 
 
-#include "simpletimeout.h"
+#include "intellitimeout.h"
 #include "can_com.h"
 #include "can_protocol.h"
 #include "settings.h"
