@@ -12,6 +12,7 @@ LOOPSTART --> GET_DATA[/get data from CAN\];
 GET_DATA --> CHECK_ACTIVE[["check for active"]];
 CHECK_ACTIVE --> ISACTIVE{is active};
 ISACTIVE -->|Y| ACTIVE[[active main function]];
+ISACTIVE --> ENDLOOP;
 ACTIVE --> ENDLOOP;
 
 ENDLOOP[\end loop/];
