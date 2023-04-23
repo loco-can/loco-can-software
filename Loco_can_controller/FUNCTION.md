@@ -6,6 +6,6 @@ graph TD;
   Instr --> LED[["run LED init sequence\nred > orange > green"]];
   LED --> METER[["run Meter init sequence\nMax > Min"]];
   METER --> dark[instrument light off];
-  DARK --> INITEND[start main loop];
+  dark --> INITEND[start main loop];
 
 ```
