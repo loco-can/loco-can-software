@@ -6,6 +6,7 @@ graph TD;
     METHOD([method start/end])
     ROUTINE[[subroutine]]
     VAL>set value]
+    HE[/read/write hardware/];
     CAN{{send/receive\nmessage}}
 ```
 
