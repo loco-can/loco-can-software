@@ -1,7 +1,7 @@
 # Controller flowchart
 
 ## Function
-In a train setup many controllers and many locomotives can be connected but only one controller can be active. If more than one locomotive is connected (multi traktion) the telemetry data are displayed from only one locomotive. The headlights are only activated from the selected loco, all other keep dark. The active locomotive can be selected in the loco setup mode.
+In a train setup many controllers and many locomotives can be connected but only one controller can be active. If more than one locomotive is connected (multi traktion) the telemetry data are displayed from only one locomotive. The headlights are only activated from the selected loco, all others keep dark. The active locomotive can be selected in the loco setup mode.
 
 ## Legend
 ```mermaid
@@ -19,7 +19,7 @@ graph TD;
 ```mermaid
 graph TD;
     %% controller init
-    
+
     subgraph global;
         globalvars>bool active\nint status\n] --- globalmeter;
         globalmeter>INTELLILED status_led\nMETER volt\nMETER ampere\nMETER speed] --- globalbutton;
@@ -252,15 +252,17 @@ Enter setup mode:
 
 The status led blinks orange fastly.
 
-To save settings, long hold the horn button. To exit the setup mode, the mains switch must be switched off.
+To exit the setup mode, the mains switch must be switched off. All settings are saved.
 
 ### Loco pairing
-To select the paired loco in a multi traktion setup, the direction switch must be in off position. The selected loco is blinking with all lights.
+To select a loco as paired in a multi traktion setup, the direction switch must be in off position. The selected loco is blinking with all headlights. Short push the horn button to select the next loco.
 
 ### Loco direction setup
 To synchronize the position of the direction switch on the controller and the actual driving direction of the loco, this setup is used. It can be done for more locos in a multi traktion setup by stepping from loco to loco using the horn button.
 
 To select the forward direction of a loco, the direction switch has to be brought in the position, where the forward lights of the selected loco are blinking.
+
+Short push the horn button to select the next loco.
 
 ```mermaid
 graph TD;
@@ -286,17 +288,19 @@ graph TD;
         IS_NEW{new == true};
         SELECT_LOCO{{"send SETUP MODE to loco[index]"}};
         END_NEW>new = false];
-        CHECK_HORN{horn button};
+        subgraph select loco
+            CHECK_HORN{horn button = true};
+            STEP>index++];
+            STEP_OVER{index < max_locos};
+            RESET_INDEX>index = 0];
+        end
         GET_DIR{dir switch};
         SET_FORWARD>dir = forward];
         SET_BACKWARD>dir = reverse];
         SEND_DIR{{send DIR to active loco}};
-        STEP[increment loco index];
-        STEP_OVER{index < max_locos};
-        RESET_INDEX[reset loco list index];
-        END_SETUP[/send SAVE to active loco/];
         END_LOOP[\end loop/];
     end
+    END_SETUP[/send SAVE to active loco/];
     LED_OFF[/status led off/];
     RESET_LOCOS{{send END SETUP MODE\nto all locos}};
     ENDLOCOSETUP([return]);
@@ -305,24 +309,23 @@ graph TD;
     LOCOSETUP --> LED_SETUP --> SEL_FIRST -->|wait for horn button release| HORN_WAIT;
     HORN_WAIT --> |Y| HORN_WAIT;
     HORN_WAIT --> |N| SETUP_LOOP;
+
     SETUP_LOOP --> GET_HORN_BUTTON --> GET_MAINS{mains = on?};
     GET_MAINS --> |N| LED_OFF;
     GET_MAINS --> |Y| IS_NEW;
-    IS_NEW --> |N| CHECK_HORN;
+    IS_NEW --> |N| GET_DIR;
     IS_NEW --> |Y| INIT_LOCO --> SELECT_LOCO;
-    SELECT_LOCO --> END_NEW --> CHECK_HORN;
-    CHECK_HORN --> |N| END_LOOP;
-    CHECK_HORN --> |short| GET_DIR;
-    CHECK_HORN --> |long| END_SETUP;
-    GET_DIR --> |off| STEP;
+    SELECT_LOCO --> END_NEW --> GET_DIR;
+    GET_DIR --> |off| CHECK_HORN;
     GET_DIR --> |forward| SET_FORWARD --> SEND_DIR;
     GET_DIR --> |backward| SET_BACKWARD --> SEND_DIR;
+    CHECK_HORN --> |N| END_LOOP;
+    CHECK_HORN --> |Y| STEP;
     SEND_DIR --> END_LOOP
 
     STEP --> STEP_OVER;
     STEP_OVER --> |N| RESET_INDEX --> END_LOOP;
     STEP_OVER --> |Y| END_LOOP;
-    END_LOOP --> LED_OFF;
-    END_SETUP --> END_LOOP;
-    LED_OFF --> RESET_LOCOS --> ENDLOCOSETUP;
+    END_LOOP --> END_SETUP;
+    END_SETUP --> LED_OFF --> RESET_LOCOS --> ENDLOCOSETUP;
 ```
