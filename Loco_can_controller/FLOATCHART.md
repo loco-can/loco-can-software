@@ -1,4 +1,4 @@
-# Controller flowchart
+# Controller floatchart
 
 ## Function
 In a train setup many controllers and many locomotives can be connected but only one controller can be active. If more than one locomotive is connected (multi traktion) the telemetry data are displayed from only one locomotive. The headlights are only activated from the selected loco, all others keep dark. The active locomotive can be selected in the loco setup mode.
@@ -7,6 +7,7 @@ In a train setup many controllers and many locomotives can be connected but only
 ```mermaid
 graph TD;
     %% legend
+
     BOOT((power up));
     METHOD([method start/end])
     ROUTINE[[subroutine]]
@@ -83,13 +84,13 @@ graph TD;
 ### Main loop
 ```mermaid
 graph TD;
-    %%controller main loop
+    %% controller main loop
 
     subgraph global
         globalvars>METER speed];
     end
 
-    %%node definitions
+    %% node definitions
     LOOPSTART[/main loop\];
 
     subgraph get data
@@ -114,7 +115,7 @@ graph TD;
     SET_SPEEDO[/"speed.set(message.speed)"/];
     ENDLOOP[\end main loop/];
 
-    %%flow
+    %% flow
     LOOPSTART --> GET_DATA --> GET_SWITCHES --> GET_POTS --> GET_STATI --> SWITCH_STATUS;
     SWITCH_STATUS --> |off| ACTION_OFF;
     SWITCH_STATUS --> |standby| ACTION_STANDBY;
