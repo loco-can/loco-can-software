@@ -63,27 +63,35 @@ void MODULE::begin(void) {
 
 
 	// ===================================================================
+	// ===================================================================
+	// start digital switches
+	_signal.begin(SIGNAL);
+	_signal_1.begin(SIGNAL_1);
+
+
+	// ===================================================================
+	// ===================================================================
 	// start analog switches
 	#ifdef DEBUG
 		Serial.println("# start switches");
 	#endif
 
 	// start analog mains switch 
-	_mains_switch.begin(ANALOG_MAINS_SWITCH);
+	_mains_switch.begin(ANALOG_MAINS_SWITCH, ANALOG_VAL_MAX);
 
 	_mains_switch.learn(MAINS_OFF);
 	_mains_switch.learn(MAINS_ON);
-	_mains_switch.learn(MAINS_PUMP);
+	_mains_switch.learn(MAINS_AUX);
 
 	// start analog direction switch 
-	_dir_switch.begin(ANALOG_DIR_SWITCH);
+	_dir_switch.begin(ANALOG_DIR_SWITCH, ANALOG_VAL_MAX);
 
 	_dir_switch.learn(DIR_REVERSE);
 	_dir_switch.learn(DIR_MID);
 	_dir_switch.learn(DIR_FORWARD);
 
 	// start analog light switch
-	_light_switch.begin(ANALOG_LIGHT_SWITCH);
+	_light_switch.begin(ANALOG_LIGHT_SWITCH, ANALOG_VAL_MAX);
 
 	_light_switch.learn(LIGHT_OFF);
 	_light_switch.learn(LIGHT_LOW);
@@ -96,7 +104,7 @@ void MODULE::begin(void) {
 
 	// start second analog light switch
 	#ifdef ANALOG_LIGHT_1_SWITCH
-		_light_1_switch.begin(ANALOG_LIGHT_SWITCH);
+		_light_1_switch.begin(ANALOG_LIGHT_SWITCH, ANALOG_VAL_MAX);
 
 		_light_1_switch.learn(LIGHT_1_OFF);
 		_light_1_switch.learn(LIGHT_1_LOW);
@@ -259,16 +267,17 @@ void MODULE::update(void) {
 	}
 	// ?????????????
 
+	// set switches and analog values
+	// _mains();
+	// _activate();
+	// _dir();
+	// _light();
+	// _drive_break();
 
-	_set_status(message);
+
+	// _set_status(message);
 
 
-// 	// set switches and analog values
-// 	_mains();
-// 	_activate();
-// 	_dir();
-// 	_light();
-// 	_drive_break();
 
 
 //     // *****************
@@ -280,11 +289,14 @@ void MODULE::update(void) {
 //     // *****************
 
 
-// // Serial.print(_active);
-// // Serial.print(" ");
-// // Serial.print(_switches.get(), BIN);
-// // Serial.print(" ");
-// // Serial.println(_status.get(), BIN);
+// Serial.print(_active);
+// Serial.print(" ");
+Serial.print(_dir_switch.get_analog());
+Serial.print(" ");
+Serial.print(_dir_switch.get());
+// Serial.print(" ");
+// Serial.print(_status.get(), BIN);
+Serial.println();
 
 // 	// send data to CAN bus
 // 	_send();
@@ -380,11 +392,11 @@ uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 	if (_check_activate()) {
 
 		// got mains on from vehicle
-		if (_status.get_flag(MAINS_FLAG)) {
+		if (_switches.get_flag(MAINS_FLAG)) {
 
 			// check if horn is pressed to enter setup
-			if (_switches.get_flag(HORN)) {
-
+			if (_signal.pushed() == true) {
+				_controller_status = CONTROLLER_STATUS_SETUP;
 			}
 		}
 
@@ -395,6 +407,7 @@ uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 		_active = false;
 		_controller_status = CONTROLLER_STATUS_OFF;
 	}
+
 
 	// set status led state
 	_set_status_led();
@@ -412,7 +425,8 @@ bool MODULE::_check_activate() {
 
 // set status led status by controller status
 void MODULE::_set_status_led(void) {
-
+	_status_led.color(GREEN);
+	_status_led.on();
 }
 
 

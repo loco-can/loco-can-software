@@ -224,6 +224,8 @@
 
 	#define INSTRUMENT_LIGHT 25
 
+	#define ANALOG_RESOLUTION 4096
+
 #else
 	#error "No valid board version selected"
 #endif

@@ -58,13 +58,14 @@
 #if BOARD_VERSION == BOARD_WIFI_V_2_0 || BOARD_VERSION == BOARD_WIFI_V_2_1
 
     #define ANALOG_VAL_MAX 4095
+
     #define SPEED_MID_HIGH 2328
     #define SPEED_MID_LOW 908
 
     // analog switches
-    #define MAINS_OFF 0
-    #define MAINS_ON 1023
-    #define MAINS_PUMP 4095
+    #define MAINS_OFF 0xFF
+    #define MAINS_ON 0x1FD
+    #define MAINS_AUX 0x2A7
 
     #define DIR_REVERSE 0
     #define DIR_MID 1023
@@ -82,6 +83,7 @@
         #define LIGHT_1_HIGH_TRAIN 4095
     #endif
 
+// ======================================
 // Atmega 328 10-bit ADC
 #else
 
@@ -90,9 +92,9 @@
     #define SPEED_MID_LOW 227
 
     // analog switches
-    #define MAINS_OFF 0
-    #define MAINS_ON 1024
-    #define MAINS_PUMP 2048
+    #define MAINS_OFF 254
+    #define MAINS_ON 508
+    #define MAINS_AUX 678
 
     #define DIR_REVERSE 0
     #define DIR_MID 1024
