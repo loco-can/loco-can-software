@@ -16,6 +16,8 @@
 #include "can_protocol.h"
 #include "can_com.h"
 
+#define DEBUG 1
+
 
 // =====================================
 // The main module methods

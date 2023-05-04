@@ -11,7 +11,7 @@
 #include "config.h"
 
 
-#include "intelliTimeout.h"
+#include "intellitimeout.h"
 #include "can_com.h"
 #include "can_protocol.h"
 #include "settings.h"
@@ -25,7 +25,7 @@ SETTINGS settings;
 void MODULE::begin(void) {
 
   #ifdef DEBUG
-	Serial.println("start controller module");
+    Serial.println("start controller module");
   #endif
   
 	// SET TIMEOUTS
@@ -50,6 +50,9 @@ void MODULE::begin(void) {
 	settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
 
 
+	// begin IO
+	pinMode(ANALOG_DIR_SWITCH, INPUT);
+
 	// begin flags
 	_switches.begin();
 	_lights.begin();
@@ -63,12 +66,7 @@ void MODULE::begin(void) {
 
 
 	// ===================================================================
-	// start analog switches
-	#ifdef DEBUG
-		Serial.println("# start switches");
-	#endif
-
-	// start analog mains switch 
+	// start analog direction switch
 	_mains_switch.begin(ANALOG_MAINS_SWITCH);
 
 	_mains_switch.learn(MAINS_OFF);
@@ -90,9 +88,6 @@ void MODULE::begin(void) {
 	_light_switch.learn(LIGHT_LOW_TRAIN);
 	_light_switch.learn(LIGHT_HIGH_TRAIN);
 
-	// start analog horn switches
-
-
 
 	// start second analog light switch
 	#ifdef ANALOG_LIGHT_1_SWITCH
@@ -104,13 +99,8 @@ void MODULE::begin(void) {
 		_light_1_switch.learn(LIGHT_1_HIGH_TRAIN);
 	#endif
 
-
 	// ===================================================================
 	// start Analog meters
-	#ifdef DEBUG
-		Serial.println("# start meters");
-	#endif
-
 	_meter_volt.begin(METER_VOLT, METER_TYPE_SERVO);
 	_meter_volt.set_limits(130, 55);
 	_meter_volt.set_value_limits(100, METER_VOLT_VALUE);
@@ -129,33 +119,11 @@ void MODULE::begin(void) {
 
 
 	// ===================================================================
-	// set controller inactive
-	_active = false;
-
-
-	// ===================================================================
-	// ===================================================================
 	// INIT SEQUENCE
-	// ===================================================================
-	// ===================================================================
-
-
-	#ifdef DEBUG
-	Serial.println("start self test");
-  #endif
-
-
-	// test instrument light
-	#ifdef DEBUG
-	Serial.println("> test instrument light");
-  #endif
-
-	digitalWrite(INSTRUMENT_LIGHT, HIGH);
-
-
 	// set meters to max
 	#ifdef DEBUG
-	Serial.println("> set meters to max");
+    Serial.println("start self test");
+    Serial.println("> set meters to max");
   #endif
 	
 	_meter_volt.set(METER_VOLT_VALUE);
@@ -169,27 +137,23 @@ void MODULE::begin(void) {
 	#endif
 
 
-	// show startup on status led
-  #ifdef DEBUG
-		Serial.println("> led red");
+	// test instrument light
+	#ifdef DEBUG
+    Serial.println("> test instrument light");
   #endif
 
+	digitalWrite(INSTRUMENT_LIGHT, HIGH);
+
+
+	// show startup on status led
 	_status_led.color(RED);
 	_status_led.on();
 
 	delay(500);
 
-  #ifdef DEBUG
-		Serial.println("> led yellow");
-  #endif
-
 	_status_led.color(YELLOW);
 	_status_led.on();
 	delay(500);
-
-  #ifdef DEBUG
-		Serial.println("> led green");
-  #endif
 
 	_status_led.color(GREEN);
 	_status_led.on();
@@ -198,9 +162,8 @@ void MODULE::begin(void) {
 	_status_led.off();
 
   #ifdef DEBUG
-		Serial.println("> led off");
+		Serial.println("> reset status led");
   #endif
-
 
 	// reset meters
   #ifdef DEBUG
@@ -222,8 +185,12 @@ void MODULE::begin(void) {
 	digitalWrite(INSTRUMENT_LIGHT, LOW);
 
 
+	// ===================================================================
+	// set controller inactive
+	_active = false;
+
   #ifdef DEBUG
-	Serial.println("end test");
+    Serial.println("end test");
   #endif
 
 	delay(1000);
@@ -249,7 +216,6 @@ void MODULE::update(void) {
 
 
 	// RECEIVE DATA
-	// ?????????????
 	_receive(message);
 
 	// check for CAN drive connection
@@ -257,46 +223,42 @@ void MODULE::update(void) {
 		_status.set(0);
 		_active = false;
 	}
-	// ?????????????
 
 
-	_set_status(message);
+	// set switches and analog values
+	_mains();
+	_activate();
+	_dir();
+	_light();
+	_drive_break();
 
 
-// 	// set switches and analog values
-// 	_mains();
-// 	_activate();
-// 	_dir();
-// 	_light();
-// 	_drive_break();
+    // *****************
+	// switch instrument light if output is present
+	#ifdef INSTRUMENT_LIGHT
 
 
-//     // *****************
-// 	// switch instrument light if output is present
-// 	#ifdef INSTRUMENT_LIGHT
+	#endif
+    // *****************
 
 
-// 	#endif
-//     // *****************
+// Serial.print(_active);
+// Serial.print(" ");
+// Serial.print(_switches.get(), BIN);
+// Serial.print(" ");
+// Serial.println(_status.get(), BIN);
 
+	// send data to CAN bus
+	_send();
 
-// // Serial.print(_active);
-// // Serial.print(" ");
-// // Serial.print(_switches.get(), BIN);
-// // Serial.print(" ");
-// // Serial.println(_status.get(), BIN);
+	// set status led
+	_led();
 
-// 	// send data to CAN bus
-// 	_send();
+	// update _status LED
+	_status_led.update();
 
-// 	// set status led
-// 	_led();
-
-// 	// update _status LED
-// 	_status_led.update();
-
-// 	// send module heartbeat
-// 	settings.heartbeat();
+	// send module heartbeat
+	settings.heartbeat();
 }
 
 
@@ -371,48 +333,6 @@ void MODULE::_receive(CAN_MESSAGE message) {
 
 		}
 	}
-}
-
-
-uint8_t MODULE::_set_status(CAN_MESSAGE message) {
-
-	// can be activated
-	if (_check_activate()) {
-
-		// got mains on from vehicle
-		if (_status.get_flag(MAINS_FLAG)) {
-
-			// check if horn is pressed to enter setup
-			if (_switches.get_flag(HORN)) {
-
-			}
-		}
-
-	}
-
-	// no activation -> switch off
-	else {
-		_active = false;
-		_controller_status = CONTROLLER_STATUS_OFF;
-	}
-
-	// set status led state
-	_set_status_led();
-}
-
-
-// ========================================================================
-// TODO
-// check, if no other controller is active
-// true if can be activated
-bool MODULE::_check_activate() {
-	return true;
-}
-
-
-// set status led status by controller status
-void MODULE::_set_status_led(void) {
-
 }
 
 

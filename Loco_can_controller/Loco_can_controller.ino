@@ -20,7 +20,7 @@
  *
  * STATUS
  * byte 0:   7      6      5      4      3      2      1      0
- *         error  ready   stop                 dir   drive  mains
+ *         error  ready   stop   horn   aux    dir   drive  mains
  *
  * DRIVE VALUE: 10-bit value of drive voltage
  * byte 1: drive bit 8-9
@@ -67,7 +67,7 @@ void setup() {
     #endif
 
 	can_com.begin(CAN_BUS_SPEED, CAN_STATUS_LED); // set CAN speed
-	can_com.set_alive(500); // set live timeout for CAN communication (this module sends heartbeat)
+	can_com.set_alive(500); // set live time for CAN communication timeout
 
 
 	// register can filters
@@ -90,12 +90,6 @@ void setup() {
 	can_com.register_filter(CAN_SETUP_MASK, CAN_ID_REPLY);
 	can_com.register_filter(CAN_REPLY_MASK, CAN_ID_REPLY);
 
-
-	#ifdef DEBUG
-		Serial.println();
-		Serial.print("Device UUID: ");
-		Serial.println(can_com.uuid(), HEX);
-	#endif
 
 	// start module
 	module.begin();

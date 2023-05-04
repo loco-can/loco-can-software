@@ -16,14 +16,20 @@
 #include "config.h"
 
 #include "can_com.h"
-#include "intelliled.h"
-#include "intellitimeout.h"
 #include "flags.h"
-#include "AnalogSwitch.h"
+#include "intelliLed.h"
+#include "intelliTimeout.h"
+#include "analogSwitch.h"
+#include "intelliButton.h"
 #include "meter.h"
 
 // #include "settings.h"
 
+#define CONTROLLER_STATUS_OFF 0;
+#define CONTROLLER_STATUS_STANDBY 1;
+#define CONTROLLER_STATUS_NO_DIR 2;
+#define CONTROLLER_STATUS_READY 3;
+#define CONTROLLER_STATUS_MOVING 4;
 
 class MODULE {
 
@@ -33,6 +39,11 @@ class MODULE {
 
 	private:
 		void _receive(CAN_MESSAGE);
+		uint8_t _set_status(CAN_MESSAGE);
+		bool _check_activate(void);
+		void _set_status_led(void);
+
+
 		void _mains(void);
 		void _dir(void);
 		void _light(void);
@@ -61,6 +72,7 @@ class MODULE {
 			FLAGS _lights_1;
 		#endif
 
+		uint8_t _controller_status;
 		FLAGS _status;
 		FLAGS _switches;
 		FLAGS _lights;

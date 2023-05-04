@@ -137,7 +137,7 @@
 	#define STATUS_RED 2
 	#define STATUS_GREEN 3
 
-	#define CAN_STATUS_LED 2
+	#define CAN_STATUS_LED 0
 
 	#define METER_VOLT 6
 	// #define METER_MOTOR_VOLT 7

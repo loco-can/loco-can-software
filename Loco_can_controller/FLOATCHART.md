@@ -142,7 +142,7 @@ graph TD;
     GET_CAN([get CAN data]);
     MESSAGE_AVAILABLE{message available};
     SWITCH_MESSAGE{select by type};
-    GET_MOTOR>"message_buffer[uuid] = message"];
+    GET_MOTOR>"register in vehicle list"];
     GET_VOLTAGE>"voltage = message.data"];
     GET_CURRENT>"current = message.data"];
     GET_SPEED>"speed = message.data"];
@@ -153,7 +153,7 @@ graph TD;
     GET_CAN --> MESSAGE_AVAILABLE;
     MESSAGE_AVAILABLE --> |N| PARSE_MESSAGES;
     MESSAGE_AVAILABLE --> |Y| SWITCH_MESSAGE;
-    SWITCH_MESSAGE --> |drive| GET_MOTOR;
+    SWITCH_MESSAGE --> |vehicle| GET_MOTOR;
     SWITCH_MESSAGE --> |voltage| GET_VOLTAGE;
     SWITCH_MESSAGE --> |current| GET_CURRENT;
     SWITCH_MESSAGE --> |speed| GET_SPEED;
@@ -211,32 +211,49 @@ graph TD;
     %% node definitions
     GET_STATUS([set status]);
     CHECK_ACTIVE[["check for activatable"]];
-    IS_ACTIVE{can be activated?};
-    SET_ACT_OFF>active = false];
+
+    subgraph active
+        IS_ACTIVE{can be activated?};
+        IS_SETUP{status == setup};
+        IS_MAINS{switches.mains = on?};
+        SWITCHING_ON{is activated};
+        COLLECT_VEHICLES>write current vehicle in list];
+        STATUS_STANDBY>status = standby];
+        CHECK_SETUP{"horn == true &&\nactive == false"};
+        SET_SETUP>status = setup];
+        SET_ACT_ON>active = true];
+        IS_DRIVE{drive on?};
+        STATUS_STANDBY>status = standby];
+        CHECK_MOVING{is moving?};
+        STATUS_READY>status = ready];
+        STATUS_MOVING>status = moving];
+    end
+
+    subgraph inactive
+        STATUS_OFF>status = off];
+        SET_ACT_OFF>active = false\nclear vehicle list];
+        STATUS_LOCKED>status = locked];
+    end
+
     STATUS_OFF>status = off];
-    IS_MAINS{can.status.mains = on?};
-    STATUS_STANDBY>status = standby];
-    CHECK_SETUP{"horn == true &&\nactive == false"};
-    START_SETUP[[loco setup]];
-    SET_ACT_ON>active = true];
-    IS_DRIVE{drive on?};
-    STATUS_NO_DIR>status = no direction];
-    CHECK_MOVING{is moving?};
-    STATUS_READY>status = ready];
-    STATUS_MOVING>status = moving];
     LED_STATUS[[set status led]];
     END_STATUS([return]);
 
     %% flow
-    GET_STATUS ==> CHECK_ACTIVE ==> IS_ACTIVE;
-    IS_ACTIVE --> |N| SET_ACT_OFF --> STATUS_OFF --> LED_STATUS;
-    IS_ACTIVE ==> |Y| IS_MAINS;
-    IS_MAINS --> |N| STATUS_STANDBY --> LED_STATUS;
-    IS_MAINS ==> |Y| CHECK_SETUP;
+    GET_STATUS ==> CHECK_ACTIVE ==> IS_MAINS;
+    IS_MAINS --> |N| STATUS_OFF -->  SET_ACT_OFF;
+    IS_MAINS ==> |Y| IS_ACTIVE;
+    IS_ACTIVE --> |N| STATUS_LOCKED --> SET_ACT_OFF;
+    IS_ACTIVE ==> |Y| SWITCHING_ON;
+    SWITCHING_ON --> |N| COLLECT_VEHICLES -->IS_SETUP;
+    SWITCHING_ON ==> |Y| IS_SETUP;
+    SET_ACT_OFF --> LED_STATUS
+    IS_SETUP --> |N| CHECK_SETUP;
+    IS_SETUP --> |Y| LED_STATUS;
     CHECK_SETUP ==> |N| SET_ACT_ON;
-    CHECK_SETUP --> |Y| START_SETUP;
-    START_SETUP --> SET_ACT_ON ==> IS_DRIVE;
-    IS_DRIVE --> |N| STATUS_NO_DIR --> LED_STATUS;
+    CHECK_SETUP --> |Y| SET_SETUP;
+    SET_SETUP --> SET_ACT_ON --> IS_DRIVE;
+    IS_DRIVE --> |N| STATUS_STANDBY --> LED_STATUS;
     IS_DRIVE ==> |Y| CHECK_MOVING;
     CHECK_MOVING --> |N| STATUS_READY --> LED_STATUS;
     CHECK_MOVING ==> |Y| STATUS_MOVING --> LED_STATUS;
