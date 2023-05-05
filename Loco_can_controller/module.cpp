@@ -24,9 +24,99 @@ SETTINGS settings;
 
 void MODULE::begin(void) {
 
-  #ifdef DEBUG
-	Serial.println("start controller module");
-  #endif
+	// ===================================================================
+	// INIT SEQUENCE
+	// ===================================================================
+
+	_initialize();
+	_selftest();
+
+	// ===================================================================
+	// set controller inactive
+	_active = false;
+
+
+	delay(1000);
+}
+
+
+// ===================================================================
+// ===================================================================
+// update module
+void MODULE::update(void) {
+
+	CAN_MESSAGE message;
+
+	_drive_val = 0;
+	_break_val = 0;
+	_power_val = 0;
+
+
+	// RECEIVE DATA
+	_receive(message);
+
+	// get switches
+	_mains();
+	_dir();
+	_light();
+	_horn();
+
+
+	// calculate status
+	_set_status(message);
+
+
+	// get potiometers
+	_drive_break();
+
+Serial.print(" switches ");
+Serial.print(_switches.get(), BIN);
+Serial.print(" contr-stat ");
+Serial.println(_controller_status);
+
+
+
+
+	// check for CAN drive connection
+	// if (!can_com.alive() || _drive_timeout.check()) {
+	// 	_status.set(0);
+	// 	_active = false;
+	// }
+	// ?????????????
+
+
+
+
+
+//     // *****************
+// 	// switch instrument light if output is present
+// 	#ifdef INSTRUMENT_LIGHT
+
+
+// 	#endif
+//     // *****************
+
+
+
+// 	// send data to CAN bus
+// 	_send();
+
+// 	// set status led
+// 	_led();
+
+// 	// update _status LED
+// 	_status_led.update();
+
+// 	// send module heartbeat
+// 	settings.heartbeat();
+}
+
+
+void MODULE::_initialize(void) {
+
+	#ifdef DEBUG
+		Serial.println("start controller module");
+	#endif
   
 	// SET TIMEOUTS
 	_timeout.begin(200); // drive send
@@ -35,16 +125,16 @@ void MODULE::begin(void) {
 
 
 	// init settings
-  SETTINGS_CONFIG config;
+	SETTINGS_CONFIG config;
 
-  config.can_com = &can_com;
-  config.version = SOFTWARE_VERSION;
-  config.module_type = MODULE_CONTROLLER;
-  config.settings_count = MODULE_MAX_SETTINGS;
-  config.name_size = 16;
-  config.request_id = 0x7FF;
-  config.reply_id = 0x700;
-  config.setup_id = 0x600;
+	config.can_com = &can_com;
+	config.version = SOFTWARE_VERSION;
+	config.module_type = MODULE_CONTROLLER;
+	config.settings_count = MODULE_MAX_SETTINGS;
+	config.name_size = 16;
+	config.request_id = 0x7FF;
+	config.reply_id = 0x700;
+	config.setup_id = 0x600;
 
 	settings.begin(config);
 	settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
@@ -63,13 +153,11 @@ void MODULE::begin(void) {
 
 
 	// ===================================================================
-	// ===================================================================
 	// start digital switches
 	_signal.begin(SIGNAL);
 	_signal_1.begin(SIGNAL_1);
 
 
-	// ===================================================================
 	// ===================================================================
 	// start analog switches
 	#ifdef DEBUG
@@ -134,37 +222,31 @@ void MODULE::begin(void) {
 		_meter_motor.set_limits(130, 58);
 		_meter_motor.set_value_limits(100, METER_MOTOR_VALUE);
 	#endif
+}
 
 
-	// ===================================================================
-	// set controller inactive
-	_active = false;
-
-
-	// ===================================================================
-	// ===================================================================
-	// INIT SEQUENCE
-	// ===================================================================
-	// ===================================================================
-
+/*
+ * module selftest
+ */
+void MODULE::_selftest(void) {
 
 	#ifdef DEBUG
-	Serial.println("start self test");
-  #endif
+		Serial.println("start self test");
+	#endif
 
 
 	// test instrument light
 	#ifdef DEBUG
-	Serial.println("> test instrument light");
-  #endif
+		Serial.println("> test instrument light");
+	#endif
 
 	digitalWrite(INSTRUMENT_LIGHT, HIGH);
 
 
 	// set meters to max
 	#ifdef DEBUG
-	Serial.println("> set meters to max");
-  #endif
+		Serial.println("> set meters to max");
+	#endif
 	
 	_meter_volt.set(METER_VOLT_VALUE);
 
@@ -178,26 +260,26 @@ void MODULE::begin(void) {
 
 
 	// show startup on status led
-  #ifdef DEBUG
+	#ifdef DEBUG
 		Serial.println("> led red");
-  #endif
+	#endif
 
 	_status_led.color(RED);
 	_status_led.on();
 
 	delay(500);
 
-  #ifdef DEBUG
+	#ifdef DEBUG
 		Serial.println("> led yellow");
-  #endif
+	#endif
 
 	_status_led.color(YELLOW);
 	_status_led.on();
 	delay(500);
 
-  #ifdef DEBUG
+	#ifdef DEBUG
 		Serial.println("> led green");
-  #endif
+	#endif
 
 	_status_led.color(GREEN);
 	_status_led.on();
@@ -205,15 +287,15 @@ void MODULE::begin(void) {
 
 	_status_led.off();
 
-  #ifdef DEBUG
+	#ifdef DEBUG
 		Serial.println("> led off");
-  #endif
+	#endif
 
 
 	// reset meters
-  #ifdef DEBUG
+	#ifdef DEBUG
 		Serial.println("> reset meters");
-  #endif
+	#endif
 
 	_meter_volt.set(0);
 
@@ -230,87 +312,10 @@ void MODULE::begin(void) {
 	digitalWrite(INSTRUMENT_LIGHT, LOW);
 
 
-  #ifdef DEBUG
-	Serial.println("end test");
-  #endif
-
-	delay(1000);
-
-
-	// DEBUG set voltage to 13,5V
-	// _meter_volt.set(1250);
-
-	// // set amp to 50 A
-	// #ifdef METER_AMP
-	// 	_meter_amp.set(5500);
-	// #endif
+	#ifdef DEBUG
+		Serial.println("end test");
+	#endif
 }
-
-
-void MODULE::update(void) {
-
-	CAN_MESSAGE message;
-
-	_drive_val = 0;
-	_break_val = 0;
-	_power_val = 0;
-
-
-	// RECEIVE DATA
-	// ?????????????
-	_receive(message);
-
-	// check for CAN drive connection
-	if (!can_com.alive() || _drive_timeout.check()) {
-		_status.set(0);
-		_active = false;
-	}
-	// ?????????????
-
-	// set switches and analog values
-	// _mains();
-	// _activate();
-	// _dir();
-	// _light();
-	// _drive_break();
-
-
-	// _set_status(message);
-
-
-
-
-//     // *****************
-// 	// switch instrument light if output is present
-// 	#ifdef INSTRUMENT_LIGHT
-
-
-// 	#endif
-//     // *****************
-
-
-// Serial.print(_active);
-// Serial.print(" ");
-Serial.print(_dir_switch.get_analog());
-Serial.print(" ");
-Serial.print(_dir_switch.get());
-// Serial.print(" ");
-// Serial.print(_status.get(), BIN);
-Serial.println();
-
-// 	// send data to CAN bus
-// 	_send();
-
-// 	// set status led
-// 	_led();
-
-// 	// update _status LED
-// 	_status_led.update();
-
-// 	// send module heartbeat
-// 	settings.heartbeat();
-}
-
 
 
 // ========================================================================
@@ -388,26 +393,83 @@ void MODULE::_receive(CAN_MESSAGE message) {
 
 uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
-	// can be activated
-	if (_check_activate()) {
 
-		// got mains on from vehicle
-		if (_switches.get_flag(MAINS_FLAG)) {
+	// mains is on
+	if (_switches.get_flag(CONTROL_MAINS_FLAG)) {
 
-			// check if horn is pressed to enter setup
-			if (_signal.pushed() == true) {
-				_controller_status = CONTROLLER_STATUS_SETUP;
+
+		// check if activatable
+		if (_activate()) {
+
+Serial.print("activated ");
+
+			// is active?
+			if (_active) {
+
+Serial.print(" active ");
+
+				// is not in setup mode
+				if (_controller_status != CONTROLLER_STATUS_SETUP) {
+
+
+					// check if horn is pressed and not active to enter setup
+					if (_signal.pushed() == true && _active == false) {
+Serial.print(" enter-setup ");
+						_controller_status = CONTROLLER_STATUS_SETUP;
+					}
+
+
+					// activate controller
+					_active = true;
+
+
+					// drive is on
+					if (_switches.get_flag(CONTROL_DRIVE_FLAG)) {
+
+
+						// vehicle is moving
+						if (!_status.get_flag(STOP_FLAG)) {
+Serial.print(" moving ");
+							_controller_status = CONTROLLER_STATUS_MOVING;
+						}
+
+
+						// ready to drive
+						// drive=on, direction selected
+						else {
+Serial.print(" ready ");
+							_controller_status = CONTROLLER_STATUS_READY;
+						}
+					}
+
+
+					// is in standby
+					else {
+Serial.print(" standby ");
+						_controller_status = CONTROLLER_STATUS_STANDBY;
+					}
+				}
 			}
 		}
 
+
+		// not activated -> lock
+		else {
+Serial.print(" locked ");
+			_controller_status = CONTROLLER_STATUS_LOCKED;
+			_active = false;
+		}
 	}
 
-	// no activation -> switch off
+
+	// mains is off
 	else {
-		_active = false;
+Serial.print(" off ");
 		_controller_status = CONTROLLER_STATUS_OFF;
+		_active = false;
 	}
 
+Serial.println();
 
 	// set status led state
 	_set_status_led();
@@ -415,18 +477,12 @@ uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
 
 // ========================================================================
-// TODO
-// check, if no other controller is active
-// true if can be activated
-bool MODULE::_check_activate() {
-	return true;
-}
-
-
 // set status led status by controller status
 void MODULE::_set_status_led(void) {
 	_status_led.color(GREEN);
-	_status_led.on();
+	_status_led.blink(1000);
+
+	_status_led.update();
 }
 
 
@@ -434,14 +490,16 @@ void MODULE::_set_status_led(void) {
 // ACTIVATE
 bool MODULE::_activate(void) {
 
+	bool activate;
+
 	// foreign drive commands
 // ========================================================================
 // TODO
 // check for other controllers
-// only one may be avtive
+// only one may be active
 
 	if (_collision) {
-		_active = false;
+		activate = false;
 	}
 
 	else {
@@ -449,13 +507,16 @@ bool MODULE::_activate(void) {
 		// no other drive commands found and mains is on
 		// set active
 		if (_mains_switch.get() > 1) {
-			_active = true;
+			activate = true;
 		}
 
 		else {
-			_active = false;
+			activate = false;
 		}
 	}
+
+	return true;
+	// return activate;
 }
 
 
@@ -515,6 +576,13 @@ void MODULE::_send(void) {
 
 
 // ========================================================================
+// get potiometers and set variables
+void MODULE::_get_pots(void) {
+
+}
+
+
+// ========================================================================
 // SET MAINS SWITCH
 // analog tri-state input
 // 0V > off
@@ -527,22 +595,22 @@ void MODULE::_mains(void) {
 		// is reverse
 		// set dir and drive on
 		case 1:
-			_switches.set_flag(MAINS_FLAG, LOW);
-			_switches.set_flag(PUMP_FLAG, LOW);
+			_switches.set_flag(CONTROL_MAINS_FLAG, LOW);
+			_switches.set_flag(CONTROL_AUX_FLAG, LOW);
 			break;
 
 		// mid
 		// set drive off
 		case 2:
-			_switches.set_flag(MAINS_FLAG, HIGH);
-			_switches.set_flag(PUMP_FLAG, LOW);
+			_switches.set_flag(CONTROL_MAINS_FLAG, HIGH);
+			_switches.set_flag(CONTROL_AUX_FLAG, LOW);
 			break;
 
 		// is forward
 		// set dir and drive on
 		case 3:
-			_switches.set_flag(MAINS_FLAG, HIGH);
-			_switches.set_flag(PUMP_FLAG, HIGH);
+			_switches.set_flag(CONTROL_MAINS_FLAG, HIGH);
+			_switches.set_flag(CONTROL_AUX_FLAG, HIGH);
 			break;
 	}
 }
@@ -555,26 +623,27 @@ void MODULE::_mains(void) {
 // 2,5V > off
 // 5V < reverse
 void MODULE::_dir(void) {
+
 	switch (_dir_switch.get()) {
 
 		// is reverse
 		// set dir and drive on
 		case 3:
-			_switches.set_flag(DIR_FLAG, HIGH);
-			_switches.set_flag(DRIVE_FLAG, HIGH);
+			_switches.set_flag(CONTROL_DIR_FLAG, HIGH);
+			_switches.set_flag(CONTROL_DRIVE_FLAG, HIGH);
 			break;
 
 		// mid
 		// set drive off
 		case 1:
-			_switches.set_flag(DRIVE_FLAG, LOW);
+			_switches.set_flag(CONTROL_DRIVE_FLAG, LOW);
 			break;
 
 		// is forward
 		// set dir and drive on
 		case 2:
-			_switches.set_flag(DIR_FLAG, LOW);
-			_switches.set_flag(DRIVE_FLAG, HIGH);
+			_switches.set_flag(CONTROL_DIR_FLAG, LOW);
+			_switches.set_flag(CONTROL_DRIVE_FLAG, HIGH);
 			break;
 	}
 
@@ -668,13 +737,18 @@ void MODULE::_light(void) {
 }
 
 
+void MODULE::_horn(void) {
+
+}
+
+
 // ========================================================================
 // set drive/break
 // is drive
 void MODULE::_drive_break(void) {
 
 	// only if drive is on
-	if (_switches.get_flag(DRIVE_FLAG)) {
+	if (_switches.get_flag(CONTROL_DRIVE_FLAG)) {
 
 		_value = analogRead(ANALOG_DRIVE);
 
@@ -707,73 +781,73 @@ void MODULE::_drive_break(void) {
 void MODULE::_led() {
 
 	// assume no error
-	_status_led.color(GREEN);
+	// _status_led.color(GREEN);
 
 
-	// CAN is dead
-	if (!can_com.alive()) {
-		_status_led.color(RED);
-		_status_led.flash(STATUS_ERROR_FLASH);
-	}
+	// // CAN is dead
+	// if (!can_com.alive()) {
+	// 	_status_led.color(RED);
+	// 	_status_led.flash(STATUS_ERROR_FLASH);
+	// }
 
 
-	// ERROR status
-	else  if (_status.get_flag(ERROR_FLAG)) {
-		_status_led.color(RED);
-		_status_led.blink(STATUS_ERROR_BLINK);
-	}
+	// // ERROR status
+	// else  if (_status.get_flag(CONTROL_ERROR_FLAG)) {
+	// 	_status_led.color(RED);
+	// 	_status_led.blink(STATUS_ERROR_BLINK);
+	// }
 
 
-	// MAINS is on
-	else if (_status.get_flag(MAINS_FLAG)) {
+	// // MAINS is on
+	// else if (_status.get_flag(CONTROL_MAINS_FLAG)) {
 
 
-		// ready to drive
-		if (_status.get_flag(DRIVE_FLAG) && !_status.get_flag(ERROR_FLAG)) {
+	// 	// ready to drive
+	// 	if (_status.get_flag(CONTROL_DRIVE_FLAG) && !_status.get_flag(CONTROL_ERROR_FLAG)) {
 
-			// standing (5)
-			if (_status.get_flag(STOP_FLAG)) {
-				_status_led.color(YELLOW);
-			}
+	// 		// standing (5)
+	// 		if (_status.get_flag(STOP_FLAG)) {
+	// 			_status_led.color(YELLOW);
+	// 		}
 
-			// driving (6)
-			else {
-				_status_led.color(GREEN);
-			}
+	// 		// driving (6)
+	// 		else {
+	// 			_status_led.color(GREEN);
+	// 		}
 
-			_status_led.on();
-		}
+	// 		_status_led.on();
+	// 	}
 
-		// drive not ready (3)
-		else {
-			_status_led.color(YELLOW);
-			_status_led.blink(STATUS_READY_BLINK);
-		}
+	// 	// drive not ready (3)
+	// 	else {
+	// 		_status_led.color(YELLOW);
+	// 		_status_led.blink(STATUS_READY_BLINK);
+	// 	}
 
-		// zero position error
-		if (_status.get_flag(ERROR_FLAG)) {
-			_status_led.color(RED);
-			_status_led.blink(STATUS_ERROR_BLINK);
-		}
-	}
+	// 	// zero position error
+	// 	if (_status.get_flag(ERROR_FLAG)) {
+	// 		_status_led.color(RED);
+	// 		_status_led.blink(STATUS_ERROR_BLINK);
+	// 	}
+	// }
 
 
-	// MAINS is off (3)
-	else {
+	// // MAINS is off (3)
+	// else {
 
-		// off but active
-		if (_active) {
-			_status_led.color(YELLOW);
-		}
+	// 	// off but active
+	// 	if (_active) {
+	// 		_status_led.color(YELLOW);
+	// 	}
 
-		// off and inactive
-		// other controller is active
-		else {
-			_status_led.color(RED);
-		}
+	// 	// off and inactive
+	// 	// other controller is active
+	// 	else {
+	// 		_status_led.color(RED);
+	// 	}
 
-		_status_led.flash(STATUS_OFF_FLASH);
-	}
+	// 	_status_led.flash(STATUS_OFF_FLASH);
+	// }
 
 
 

@@ -129,10 +129,10 @@
 
 #elif BOARD_VERSION == BOARD_UNIV_V_2_1
 
-	#define A0 10
-	#define A1 11
-	#define A2 12
-	#define A3 13
+	// #define A0 10
+	// #define A1 11
+	// #define A2 12
+	// #define A3 13
 
 	#define STATUS_RED 2
 	#define STATUS_GREEN 3
@@ -194,11 +194,6 @@
 //  4   GND
 
 #elif BOARD_VERSION == BOARD_WIFI_V_2_1
-
-	#define A0 10
-	#define A1 11
-	#define A2 12
-	#define A3 13
 
 	#define STATUS_RED 27
 	#define STATUS_GREEN 26

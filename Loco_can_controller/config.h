@@ -83,6 +83,7 @@
         #define LIGHT_1_HIGH_TRAIN 4095
     #endif
 
+
 // ======================================
 // Atmega 328 10-bit ADC
 #else
@@ -96,9 +97,9 @@
     #define MAINS_ON 508
     #define MAINS_AUX 678
 
-    #define DIR_REVERSE 0
-    #define DIR_MID 1024
-    #define DIR_FORWARD 2048
+    #define DIR_REVERSE 679
+    #define DIR_MID 254
+    #define DIR_FORWARD 509
 
     #define LIGHT_OFF 0
     #define LIGHT_LOW 676

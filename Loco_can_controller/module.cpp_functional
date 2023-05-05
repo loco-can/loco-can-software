@@ -434,21 +434,21 @@ void MODULE::_mains(void) {
 		// set dir and drive on
 		case 1:
 			_switches.set_flag(MAINS_FLAG, LOW);
-			_switches.set_flag(PUMP_FLAG, LOW);
+			_switches.set_flag(AUX_FLAG, LOW);
 			break;
 
 		// mid
 		// set drive off
 		case 2:
 			_switches.set_flag(MAINS_FLAG, HIGH);
-			_switches.set_flag(PUMP_FLAG, LOW);
+			_switches.set_flag(AUX_FLAG, LOW);
 			break;
 
 		// is forward
 		// set dir and drive on
 		case 3:
 			_switches.set_flag(MAINS_FLAG, HIGH);
-			_switches.set_flag(PUMP_FLAG, HIGH);
+			_switches.set_flag(AUX_FLAG, HIGH);
 			break;
 	}
 }

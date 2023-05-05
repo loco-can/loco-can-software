@@ -5,27 +5,19 @@
 
 void setup(void) {
 
-
-	pinMode(2, OUTPUT);
-	pinMode(3, OUTPUT);
+  Serial.begin(115200);
+	pinMode(A3, INPUT);
 
 }
 
 
 void loop(void) {
 
-	digitalWrite(2, HIGH);
-	digitalWrite(3, LOW);
+  int val;
 
-	delay(500);
+  val = analogRead(A3);
 
-	digitalWrite(2, HIGH);
-	digitalWrite(3, HIGH);
-
-	delay(500);
-
-	digitalWrite(2, LOW);
-	digitalWrite(3, HIGH);
+  Serial.println(val);
 
 	delay(500);
 

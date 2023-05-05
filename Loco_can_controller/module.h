@@ -26,12 +26,14 @@
 // #include "settings.h"
 
 #define CONTROLLER_STATUS_OFF 0
-#define CONTROLLER_STATUS_STANDBY 1
-#define CONTROLLER_STATUS_NO_DIR 2
-#define CONTROLLER_STATUS_READY 3
-#define CONTROLLER_STATUS_MOVING 4
+#define CONTROLLER_STATUS_LOCKED 1
 
-#define CONTROLLER_STATUS_SETUP 5
+#define CONTROLLER_STATUS_STANDBY 2
+#define CONTROLLER_STATUS_NO_DIR 3
+#define CONTROLLER_STATUS_READY 4
+#define CONTROLLER_STATUS_MOVING 5
+
+#define CONTROLLER_STATUS_SETUP 6
 
 class MODULE {
 
@@ -40,15 +42,22 @@ class MODULE {
 		void update(void);
 
 	private:
-		void _receive(CAN_MESSAGE);
-		uint8_t _set_status(CAN_MESSAGE);
-		bool _check_activate(void);
-		void _set_status_led(void);
+		void _initialize(void);
+		void _selftest(void);
 
+		void _receive(CAN_MESSAGE);
 
 		void _mains(void);
 		void _dir(void);
 		void _light(void);
+		void _horn(void);
+
+		void _get_pots(void);
+
+		uint8_t _set_status(CAN_MESSAGE);
+		void _set_status_led(void);
+
+
 		void _led(void);
 		
 		void _drive_break(void);
