@@ -24,6 +24,12 @@ void VEHICLES::begin(void) {
 // add vehicle and remove outtimed entries
 // return number of new entry
 uint8_t VEHICLES::add(uint16_t uuid) {
+	add(uuid, 0);
+}
+
+
+// add with status
+uint8_t VEHICLES::add(uint16_t uuid, uint8_t status) {
 
 	// has free places
 	if (count() < VEHICLES_MAX_COUNT) {
@@ -90,8 +96,11 @@ void VEHICLES::reset(void) {
 void VEHICLES::_purge(void) {
 
 	_count = 0;
+	_or = 0;
+	_and = 0;
+	_xor = 0;
 
-	 for (_i = 0; _i < VEHICLES_MAX_COUNT; _i++) {
+	for (_i = 0; _i < VEHICLES_MAX_COUNT; _i++) {
 
 	 	// timed out => purge
 	 	if (_vehicle[_i].uuid != 0 && (_vehicle[_i].time + VEHICLES_LIVETIME) >= millis()) {
@@ -102,6 +111,11 @@ void VEHICLES::_purge(void) {
 	 	// count
 		if (_vehicle[_i].uuid != 0) {
 			_count++;
+
+			// calculate bit operators
+			_or |= _vehicle[_i].status;
+			_and &= _vehicle[_i].status;
+			_xor ^= _vehicle[_i].status;
 		}
 	}
 }
@@ -112,4 +126,33 @@ void VEHICLES::_purge(void) {
 uint8_t VEHICLES::count(void) {
 
 	return _count;
+}
+
+
+// check status bits by function
+// bit = bit of status (see status bit list in LocoCAN library)
+bool VEHICLES::get_status(uint8_t bit, uint8_t op) {
+
+	bool ret = false;
+
+	// valid bit
+	if (bit < 8) {
+
+		switch(op) {
+
+			case VEHICEL_STATUS_OR:
+				ret = (bool)(_or >> bit);
+				break;
+
+			case VEHICEL_STATUS_AND:
+				ret = (bool)(_and >> bit);
+				break;
+
+			case VEHICEL_STATUS_XOR:
+				ret = (bool)(_xor >> bit);
+				break;
+		}
+	}
+
+	return ret;
 }

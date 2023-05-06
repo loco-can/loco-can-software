@@ -216,22 +216,26 @@ graph TD;
         IS_ACTIVE{can be activated?};
         IS_SETUP{status == setup};
         IS_MAINS{switches.mains = on?};
-        SWITCHING_ON{is activated};
+        IS_ACTIVATED{active = true};
         COLLECT_VEHICLES>write current vehicle in list];
+        CLEAR_VEHICLES>reset vehicle list];
         STATUS_STANDBY>status = standby];
-        CHECK_SETUP{"horn == true &&\nactive == false"};
+        CHECK_SETUP{"horn == true"};
         SET_SETUP>status = setup];
         SET_ACT_ON>active = true];
         IS_DRIVE{drive on?};
         STATUS_STANDBY>status = standby];
-        CHECK_MOVING{is moving?};
+        CHECK_MOVING{CAN.moving = true?};
         STATUS_READY>status = ready];
         STATUS_MOVING>status = moving];
+        NOT_NULLED>status = not nulled];
+        IS_NEUTRAL{"nulled == true ||\n(nulled == false &&\ndrive_val == 0)"}
+        NULLED>nulled = true];
     end
 
     subgraph inactive
         STATUS_OFF>status = off];
-        SET_ACT_OFF>active = false\nclear vehicle list];
+        SET_ACT_OFF>active = false\nnulled = false];
         STATUS_LOCKED>status = locked];
     end
 
@@ -240,19 +244,21 @@ graph TD;
     END_STATUS([return]);
 
     %% flow
-    GET_STATUS ==> CHECK_ACTIVE ==> IS_MAINS;
-    IS_MAINS --> |N| STATUS_OFF -->  SET_ACT_OFF;
-    IS_MAINS ==> |Y| IS_ACTIVE;
-    IS_ACTIVE --> |N| STATUS_LOCKED --> SET_ACT_OFF;
-    IS_ACTIVE ==> |Y| SWITCHING_ON;
-    SWITCHING_ON --> |N| COLLECT_VEHICLES -->IS_SETUP;
-    SWITCHING_ON ==> |Y| IS_SETUP;
-    SET_ACT_OFF --> LED_STATUS
-    IS_SETUP --> |N| CHECK_SETUP;
+    GET_STATUS ==> CHECK_ACTIVE ==> IS_ACTIVE;
+    IS_ACTIVE --> |N|CLEAR_VEHICLES --> STATUS_LOCKED --> SET_ACT_OFF;
+    IS_ACTIVE ==> |Y| IS_MAINS;
+    IS_MAINS --> |N| COLLECT_VEHICLES --> STATUS_OFF -->  SET_ACT_OFF;
+    IS_MAINS ==> |Y| IS_ACTIVATED;
+    IS_ACTIVATED --> |N| SET_ACT_ON --> CHECK_SETUP;
+    IS_ACTIVATED ==> |Y| IS_SETUP;
+    IS_SETUP --> |N| IS_NEUTRAL;
+    IS_NEUTRAL --> |N| NOT_NULLED --> LED_STATUS;
+    IS_NEUTRAL --> |Y| NULLED --> IS_DRIVE;
     IS_SETUP --> |Y| LED_STATUS;
-    CHECK_SETUP ==> |N| SET_ACT_ON;
+    SET_ACT_OFF --> LED_STATUS
+    CHECK_SETUP ==> |N| STATUS_STANDBY;
     CHECK_SETUP --> |Y| SET_SETUP;
-    SET_SETUP --> SET_ACT_ON --> IS_DRIVE;
+    SET_SETUP --> LED_STATUS;
     IS_DRIVE --> |N| STATUS_STANDBY --> LED_STATUS;
     IS_DRIVE ==> |Y| CHECK_MOVING;
     CHECK_MOVING --> |N| STATUS_READY --> LED_STATUS;
