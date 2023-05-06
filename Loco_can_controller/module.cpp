@@ -70,7 +70,30 @@ void MODULE::update(void) {
 	_set_status(message);
 
 
+	// select action by controller status
+	switch(_controller_status) {
 
+		case CONTROLLER_STATUS_LOCKED:
+			break;
+
+		case CONTROLLER_STATUS_OFF:
+			break;
+
+		case CONTROLLER_STATUS_NOT_NULLED:
+			break;
+
+		case CONTROLLER_STATUS_STANDBY:
+			break;
+
+		case CONTROLLER_STATUS_READY:
+			break;
+
+		case CONTROLLER_STATUS_MOVING:
+			break;
+
+		case CONTROLLER_STATUS_SETUP:
+			break;
+	}
 
 
 
