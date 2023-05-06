@@ -22,6 +22,8 @@
 #include "analogSwitch.h"
 #include "intelliButton.h"
 #include "meter.h"
+#include "vehicles.h"
+
 
 // #include "settings.h"
 
@@ -102,6 +104,8 @@ class MODULE {
 		#ifdef METER_MOTOR_VOLT
 			METER _meter_motor;
 		#endif
+
+		VEHICLES _vehicles;
 
 		INTELLILED _status_led;
 

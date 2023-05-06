@@ -15,6 +15,7 @@
 #include "can_com.h"
 #include "can_protocol.h"
 #include "settings.h"
+#include "vehicles.h"
 
 
 extern CAN_COM can_com;
@@ -118,10 +119,12 @@ void MODULE::_initialize(void) {
 		Serial.println("start controller module");
 	#endif
   
+  
 	// SET TIMEOUTS
-	_timeout.begin(200); // drive send
-	_drive_timeout.begin(1000); // drive check timeout for activation
-	_heartbeat.begin(500); // set heartbeat
+	_timeout.begin(200);			// drive send
+	_drive_timeout.begin(1000); 	// drive check timeout for activation
+	_heartbeat.begin(500); 			// set heartbeat
+	_vehicles.begin();				// start vehicle list
 
 
 	// init settings
