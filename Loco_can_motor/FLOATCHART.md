@@ -41,6 +41,47 @@ graph TD;
     POWERUP --> SETRAMP --> SETSPEED --> SETBREAK --> SETDIR --> SETNULLED --> ENDPOWERUP;
 ```
 
+## set status
+
+```mermaid
+graph TD;
+
+%% definitions
+LOOP([set status]);
+STAT_OFF>status = off];
+STAT_READY>status = ready];
+STAT_STANDBY>status = standby];
+STAT_DRIVING>status = driving];
+STAT_BREAKING>status = breaking];
+STAT_EMERGENCY>status = emergency];
+STAT_SETUP>status = setup];
+IS_HEARTBEAT{heartbeat.timeout};
+IS_SETUP{CAN.ID = setup message};
+IS_MAINS{CAN.mains == true};
+MAINS_ON>mains = true];
+MAINS_OFF>mains = false];
+STANDING{"STANDING?\nmotor.voltage < MIN &&\ntarget_speed == 0"};
+IS_DRIVE{CAN.drive = true};
+IS_BREAK{CAN.break != 0};
+ENDLOOP([return]);
+
+%% flow
+LOOP --> IS_HEARTBEAT;
+IS_HEARTBEAT --> |Y| STAT_EMERGENCY --> MAINS_OFF;
+IS_HEARTBEAT --> |N| IS_SETUP;
+IS_SETUP --> |N| IS_MAINS;
+IS_SETUP --> |Y| STAT_SETUP --> ENDLOOP;
+IS_MAINS --> |N| STAT_OFF --> MAINS_OFF --> ENDLOOP;
+IS_MAINS --> |Y| MAINS_ON --> IS_DRIVE;
+IS_DRIVE --> |N| STAT_STANDBY --> ENDLOOP;
+IS_DRIVE --> |Y| STANDING;
+STANDING --> |N| IS_BREAK;
+STANDING --> |Y| STAT_READY --> ENDLOOP;
+IS_BREAK --> |N| STAT_DRIVING --> ENDLOOP;
+IS_BREAK --> |Y| STAT_BREAKING --> ENDLOOP;
+```
+
+
 ## Main
 ### Main loop
 graph TD;
