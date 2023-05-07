@@ -82,6 +82,51 @@ IS_BREAK --> |Y| STAT_BREAKING --> ENDLOOP;
 ```
 
 
+## update
+```mermaid
+graph TD;
+
+%% definitions
+START([update]);
+IS_EMERGENCY{emergency};
+IS_OFF{off};
+IS_STANDBY{standby};
+IS_READY{ready};
+IS_DRIVING{driving};
+IS_BREAKING{breaking};
+IS_SETUP{setup};
+
+ESTOP>"EMERGENCY STOP\nspeed = 0/nbreak-ramp = quick\nbreak = max"];
+SETUP[[setup]];
+STOP>"STOP\nspeed = 0/nbreak-ramp = normal\nbreak = 0"];
+SEND[[send CAN data]];
+DRIVING>"speed = CAN.speed\nbreak = 0\nbreak-ramp = normal"];
+BREAKING>"break = CAN.break\nspeed = 0\nbreak-ramp = normal"];
+HEARTBEAT[[send vehicle heartbeat]];
+
+END[[update PWM]];
+RETURN([return]);
+
+%% flow
+START --> IS_EMERGENCY;
+IS_EMERGENCY --> |N| IS_SETUP;
+IS_EMERGENCY --> |Y| ESTOP --> HEARTBEAT ---> END;
+IS_SETUP --> |N| IS_OFF;
+IS_SETUP --> |Y| SETUP --> ESTOP;
+IS_OFF --> |N| IS_STANDBY;
+IS_OFF --> |Y| ESTOP;
+IS_STANDBY --> |N| IS_READY;
+IS_STANDBY --> |Y| STOP --> SEND;
+IS_READY --> |N| IS_BREAKING;
+IS_READY --> |Y| STOP;
+IS_BREAKING --> |N| IS_DRIVING;
+IS_BREAKING --> |Y| BREAKING --> SEND;
+IS_DRIVING --> |N| SEND;
+IS_DRIVING --> |Y| DRIVING --> SEND;
+SEND --> END;
+END --> RETURN;
+```
+
 ## Main
 ### Main loop
 graph TD;
@@ -189,3 +234,4 @@ graph TD;
     CHECKSTART --> TIMEOUT;
     TIMEOUT --> |N| RETURN;
     TIMEOUT --> |Y| LOST --> RETURN;
+```
