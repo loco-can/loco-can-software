@@ -107,12 +107,13 @@ IS_DRIVING ==> |Y| STAT_DRIVING ==> ENDLOOP;
 
 ## update motor
 ```mermaid
+
 graph TD;
 
 %% definitions
 START([update motor]);
 IS_EMERGENCY{status = emergency};
-DIR_IS_STANDING{status == standing};
+IS_STANDING{status == standing};
 
 subgraph inactive
     HEARTBEAT[[send vehicle heartbeat]];
@@ -127,6 +128,8 @@ subgraph active
     subgraph drive
         IS_DRIVING{status = driving};
         IS_BREAKING{status = breaking};
+        IS_IDLE{status = idle};
+        IDLE>"speed = 0\nbreak = 0"];
         DRIVING>"speed = CAN.speed\nbreak = 0\nbreak-ramp = normal"];
         BREAKING>"break = CAN.break\nspeed = 0\nbreak-ramp = normal"];
         SET_DIR[[set direction]];
@@ -160,17 +163,21 @@ IS_OFF --> |N| IS_STANDBY;
 IS_OFF --> |Y| ESTOP;
 IS_STANDBY --> |N| IS_READY;
 IS_STANDBY --> |Y| STOP;
-IS_READY --> |N| DIR_IS_STANDING;
+IS_READY --> |N| IS_STANDING;
 IS_READY --> |Y| STOP;
+IS_IDLE --> |N| IS_BREAKING;
+IS_IDLE --> |Y| IDLE --> SEND;
 STOP --> SEND;
-DIR_IS_STANDING --> |N| IS_BREAKING;
-DIR_IS_STANDING --> |Y| SET_DIR --> SEND;
+IS_STANDING --> |N| IS_IDLE;
+IS_STANDING --> |Y| SET_DIR --> SEND;
 IS_BREAKING --> |N| IS_DRIVING;
 IS_BREAKING --> |Y| BREAKING --> SEND;
 IS_DRIVING --> |N| SEND;
 IS_DRIVING --> |Y| DRIVING --> SEND;
 SEND --> END;
 END --> RETURN;
+
+
 ```
 
 ## Main
