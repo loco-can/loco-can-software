@@ -184,7 +184,6 @@ graph TD;
 ```
 
 ### Hardware access
-
 ```mermaid
 graph TD;
     %% get hardware data

@@ -41,68 +41,111 @@ graph TD;
     POWERUP --> SETRAMP --> SETSPEED --> SETBREAK --> SETDIR --> SETNULLED --> ENDPOWERUP;
 ```
 
-## set status
+## Status parser
+
+The motor module can be in 8 different stati, that depend on the locomotive movement and the CAN drive message.
+
+* emenrgency: controller heartbeat has timed out
+
+All following stati depend on a valid controller heartbeat:
+
+* off: mains is off
+* standby: mains = on but no direction selected
+* standing: mains = on, direction selected (drive = true) but loco is not moving
+* idle: mains = on, direction selected and moving without drive or break
+* driving: mains = on, direction selected, target_speed set
+* breaking: mains = on, direction selected, target_break set
+
+* setup: the controller is in loco setup mode
 
 ```mermaid
 graph TD;
 
 %% definitions
 LOOP([set status]);
-STAT_OFF>status = off];
-STAT_READY>status = ready];
-STAT_STANDBY>status = standby];
-STAT_DRIVING>status = driving];
-STAT_BREAKING>status = breaking];
-STAT_EMERGENCY>status = emergency];
-STAT_SETUP>status = setup];
-IS_HEARTBEAT{heartbeat.timeout};
-IS_SETUP{CAN.ID = setup message};
-IS_MAINS{CAN.mains == true};
-MAINS_ON>mains = true];
-MAINS_OFF>mains = false];
-STANDING{"STANDING?\nmotor.voltage < MIN &&\ntarget_speed == 0"};
-IS_DRIVE{CAN.drive = true};
-IS_BREAK{CAN.break != 0};
+IS_HEARTBEAT{CAN.heartbeat timeout};
+subgraph inactive
+    STAT_EMERGENCY>status = emergency];
+    STAT_OFF>status = off];
+    MAINS_OFF>mains = false];
+end
+subgraph active
+    IS_SETUP{CAN.ID = setup message};
+    IS_MAINS{CAN.mains == true};
+    MAINS_ON>mains = true];
+    IS_DRIVE{"DIR SELECTED\nCAN.drive = true"};
+    IS_STANDING{"STANDING?\nmotor.voltage < MIN &&\ntarget_speed == 0"};
+    IS_BREAKING{CAN.break != 0};
+    IS_DRIVING{CAN.drive != 0};
+    STAT_STANDBY>status = standby];
+    STAT_READY>status = idle];
+    STAT_STANDING>status = standing];
+    STAT_DRIVING>status = driving];
+    STAT_BREAKING>status = breaking];
+    STAT_SETUP>status = setup];
+end
 ENDLOOP([return]);
 
 %% flow
 LOOP --> IS_HEARTBEAT;
 IS_HEARTBEAT --> |Y| STAT_EMERGENCY --> MAINS_OFF;
-IS_HEARTBEAT --> |N| IS_SETUP;
-IS_SETUP --> |N| IS_MAINS;
+IS_HEARTBEAT ==> |N| IS_SETUP;
+IS_SETUP ==> |N| IS_MAINS;
 IS_SETUP --> |Y| STAT_SETUP --> ENDLOOP;
 IS_MAINS --> |N| STAT_OFF --> MAINS_OFF --> ENDLOOP;
-IS_MAINS --> |Y| MAINS_ON --> IS_DRIVE;
+IS_MAINS ==> |Y| MAINS_ON ==> IS_DRIVE;
 IS_DRIVE --> |N| STAT_STANDBY --> ENDLOOP;
-IS_DRIVE --> |Y| STANDING;
-STANDING --> |N| IS_BREAK;
-STANDING --> |Y| STAT_READY --> ENDLOOP;
-IS_BREAK --> |N| STAT_DRIVING --> ENDLOOP;
-IS_BREAK --> |Y| STAT_BREAKING --> ENDLOOP;
+IS_DRIVE ==> |Y| IS_STANDING;
+IS_STANDING ==> |N| IS_BREAKING;
+IS_STANDING --> |Y| STAT_STANDING --> ENDLOOP;
+IS_BREAKING ==> |N| IS_DRIVING;
+IS_BREAKING ==> |Y| STAT_BREAKING --> ENDLOOP;
+IS_DRIVING --> |N| STAT_READY --> ENDLOOP;
+IS_DRIVING ==> |Y| STAT_DRIVING ==> ENDLOOP;
 ```
 
 
-## update
+## update motor
 ```mermaid
 graph TD;
 
 %% definitions
-START([update]);
-IS_EMERGENCY{emergency};
-IS_OFF{off};
-IS_STANDBY{standby};
-IS_READY{ready};
-IS_DRIVING{driving};
-IS_BREAKING{breaking};
-IS_SETUP{setup};
+START([update motor]);
+IS_EMERGENCY{status = emergency};
+DIR_IS_STANDING{status == standing};
 
-ESTOP>"EMERGENCY STOP\nspeed = 0/nbreak-ramp = quick\nbreak = max"];
-SETUP[[setup]];
-STOP>"STOP\nspeed = 0/nbreak-ramp = normal\nbreak = 0"];
-SEND[[send CAN data]];
-DRIVING>"speed = CAN.speed\nbreak = 0\nbreak-ramp = normal"];
-BREAKING>"break = CAN.break\nspeed = 0\nbreak-ramp = normal"];
-HEARTBEAT[[send vehicle heartbeat]];
+subgraph inactive
+    HEARTBEAT[[send vehicle heartbeat]];
+    ESTOP>"EMERGENCY STOP\nspeed = 0/nbreak-ramp = quick\nbreak = max"];
+end
+
+subgraph active
+    subgraph stop
+        STOP>"STOP\nspeed = 0/nbreak-ramp = normal\nbreak = 0"];
+    end
+
+    subgraph drive
+        IS_DRIVING{status = driving};
+        IS_BREAKING{status = breaking};
+        DRIVING>"speed = CAN.speed\nbreak = 0\nbreak-ramp = normal"];
+        BREAKING>"break = CAN.break\nspeed = 0\nbreak-ramp = normal"];
+        SET_DIR[[set direction]];
+    end
+
+    SEND[[send CAN data]];
+end
+
+subgraph setup
+    SETUP_STOP>"speed = 0\nbreak = 0"];
+    SETUP[[setup]];
+    SEND_SETUP[[send setup CAN data]];
+end
+
+IS_OFF{status = off};
+IS_STANDBY{status = standby};
+IS_READY{status = ready};
+
+IS_SETUP{status = setup};
 
 END[[update PWM]];
 RETURN([return]);
@@ -112,13 +155,16 @@ START --> IS_EMERGENCY;
 IS_EMERGENCY --> |N| IS_SETUP;
 IS_EMERGENCY --> |Y| ESTOP --> HEARTBEAT ---> END;
 IS_SETUP --> |N| IS_OFF;
-IS_SETUP --> |Y| SETUP --> ESTOP;
+IS_SETUP --> |Y| SETUP_STOP --> SETUP --> SEND_SETUP --> RETURN;
 IS_OFF --> |N| IS_STANDBY;
 IS_OFF --> |Y| ESTOP;
 IS_STANDBY --> |N| IS_READY;
-IS_STANDBY --> |Y| STOP --> SEND;
-IS_READY --> |N| IS_BREAKING;
+IS_STANDBY --> |Y| STOP;
+IS_READY --> |N| DIR_IS_STANDING;
 IS_READY --> |Y| STOP;
+STOP --> SEND;
+DIR_IS_STANDING --> |N| IS_BREAKING;
+DIR_IS_STANDING --> |Y| SET_DIR --> SEND;
 IS_BREAKING --> |N| IS_DRIVING;
 IS_BREAKING --> |Y| BREAKING --> SEND;
 IS_DRIVING --> |N| SEND;
