@@ -1,4 +1,4 @@
-# Controller floatchart
+# Controller flowchart
 
 ## Function
 In a train setup many controllers and many locomotives can be connected but only one controller can be active. If more than one locomotive is connected (multi traktion) the telemetry data are displayed from only one locomotive. The headlights are only activated from the selected loco, all others keep dark. The active locomotive can be selected in the loco setup mode.
