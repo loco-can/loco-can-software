@@ -120,7 +120,7 @@ not paired: listen to not paired controller or
 |4    |power-7|power-6|power-5|power-4|power-3|power-2|power-1|power-0|
 |5    |       |       |       |       |       |       |break-9|break-8|
 |6    |break-7|break-6|break-5|break-4|break-3|break-2|break-1|break-0|
-|6    |uuid-7 |uuid-6 |uuid-5 |uuid-4 |uuid-3 |uuid-2 |uuid-1 |uuid-0 |
+|7    |uuid-7 |uuid-6 |uuid-5 |uuid-4 |uuid-3 |uuid-2 |uuid-1 |uuid-0 |
 
 
 `´`mermaid
