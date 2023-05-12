@@ -21,23 +21,27 @@ graph TD;
     %% motor init
 
     subgraph global;
-        globalvars>int target_speed\nint currend_speed\nint target_break\nint current_break\nbool target_dir\nbool current_dir\nint ramp_time\nbool drive_nulled\nbool emergency] --- globaltimeout;
         globaltimeout>INTELLITIMEOUT heartbeat_timeout\nINTELLITIMEOUT standing_timeout\nINTELLITIMEOUT voltage_timeout] --- globalpwm;
         globalpwm>PWM_RAMP pwm_drive\nPWM_RAMP pwm_break] --- globalmeasure;
         globalmeasure>MEASURE voltage\nMEASURE batt_volt_1\nMEASURE batt__volt_2] --- globalflags;
         globalflags>FLAGS switches\nFLAGS status];
+
     end
 
     %% node definitions
     POWERUP((power up));
-    SETRAMP>pwm_drive.ramp = 1000];
-    SETSPEED>target_speed = 127];
+    SETDRIVERAMP>LOAD FROM EEPROM\npwm_drive.ramp = 1000];
+    SETBREAKRAMP>LOAD FROM EEPROM\npwm_break.ramp = 300];
+    SETSPEED>target_speed = 0];
     SETBREAK>target_break = 0];
-    SETDIR>target_dir = 1];
+    SETDISABLED>LOAD FROM EEPROM\ndisabled = false];
+    SETSLAVE>slave = false];
+    SETDIR>target_dir = 0];
+    SETREVERSE>LOAD FROM EEPROM\nreverse = false];
     ENDPOWERUP[[main loop]];
 
     %% flow
-    POWERUP --> SETRAMP --> SETSPEED --> SETBREAK --> SETDIR --> ENDPOWERUP;
+    POWERUP --> SETDRIVERAMP --> SETBREAKRAMP --> SETSPEED --> SETBREAK --> SETDIR --> SETDISABLED --> SETSLAVE --> SETREVERSE --> ENDPOWERUP;
 ```
 
 ## Main loop
@@ -75,6 +79,10 @@ All following stati depend on a valid controller heartbeat:
 
 * setup: the controller is in loco setup mode
 
+If the controller sends a multi traktion uuid (bit 7 of byte 2 = true), and the uuid is not the own,
+light or pantograph functions are disabled.
+
+
 ```mermaid
 graph TD;
 %% motor status parser
@@ -107,9 +115,8 @@ subgraph inactive
     MAINS_OFF>mains = false];
 end
 subgraph active
-    IS_SETUP{CAN.ID = setup message};
+    IS_SETUP{CAN.ID = setup message &&\nCAN.setup.uuid == uuid};
     IS_MAINS{CAN.mains == true};
-    MAINS_ON>mains = true];
     IS_DRIVE{"DIR SELECTED\nCAN.drive = true"};
     DRIVE_ON>drive = true];
     IS_BREAKING{CAN.break != 0};
@@ -118,8 +125,20 @@ subgraph active
     STAT_READY>status = idle];
     STAT_DRIVING>status = driving];
     STAT_BREAKING>status = breaking];
+    SETUP_ON>setup = true];
+    SETUP_OFF>setup = false];
+    END_SETUP{CAN.setup == END};
+    SETUP_MAIN_OFF>setup = false];
     STAT_SETUP>status = setup];
+
+    subgraph slave mode
+        MAINS_ON>mains = true];
+        IS_MULTI{"CAN.status.multi == false ||\n(CAN.status.multi == true &&\nCAN.multi.uuid == UUID)"};
+        SET_SLAVE>slave = true];
+        CLEAR_SLAVE>slave = false];
+    end
 end
+
 ENDLOOP([return]);
 
 %% flow
@@ -130,10 +149,15 @@ DRIVE_OFF_TIMEOUT --> |N| IS_HEARTBEAT;
 DRIVE_OFF_TIMEOUT --> |Y| DRIVE_OFF --> IS_HEARTBEAT;
 IS_HEARTBEAT --> |Y| STAT_EMERGENCY --> MAINS_OFF;
 IS_HEARTBEAT ==> |N| IS_SETUP;
-IS_SETUP ==> |N| IS_MAINS;
-IS_SETUP --> |Y| STAT_SETUP --> ENDLOOP;
+IS_SETUP ==> |N| SETUP_MAIN_OFF --> IS_MAINS;
+IS_SETUP --> |Y| END_SETUP;
+END_SETUP --> |N| SETUP_ON --> STAT_SETUP;
+END_SETUP --> |Y| SETUP_OFF --> ENDLOOP;
+STAT_SETUP --> ENDLOOP;
 IS_MAINS --> |N| STAT_OFF --> MAINS_OFF --> ENDLOOP;
-IS_MAINS ==> |Y| MAINS_ON ==> IS_DRIVE;
+IS_MAINS ==> |Y| MAINS_ON ==> IS_MULTI;
+IS_MULTI --> |N| CLEAR_SLAVE --> IS_DRIVE;
+IS_MULTI ==> |N| SET_SLAVE ==> IS_DRIVE;
 IS_DRIVE --> |N| STAT_STANDBY;
 IS_DRIVE ==> |Y| DRIVE_ON;
 STAT_STANDBY --> ENDLOOP;
@@ -184,7 +208,9 @@ subgraph active
         IDLE>"speed = 0\nbreak = 0"];
         DRIVING>"speed = CAN.speed\nbreak = 0\nbreak-ramp = normal"];
         BREAKING>"break = CAN.break\nspeed = 0\nbreak-ramp = normal"];
-        SET_DIR[[set direction]];
+        IS_REVERSE{reverse == true};
+        SET_DIR[target_dir = CAN.dir];
+        SET_REV_DIR[target_tir = !CAN.dir];
     end
 
     SEND[[send CAN data]];
@@ -218,7 +244,9 @@ IS_IDLE --> |Y| IDLE --> SEND;
 STOP --> SEND;
 
 IS_STANDING_DIR --> |N| IS_IDLE;
-IS_STANDING_DIR --> |Y| SET_DIR --> SEND;
+IS_STANDING_DIR --> |Y| IS_REVERSE;
+IS_REVERSE --> |N| SET_DIR --> SEND;
+IS_REVERSE --> |Y| SET_REV_DIR --> SEND;
 IS_BREAKING --> |N| IS_DRIVING;
 IS_BREAKING --> |Y| BREAKING --> SEND;
 IS_DRIVING --> |N| SEND;
@@ -249,4 +277,35 @@ graph TD
     IS_BREAKING --> |Y| SET_BREAK --> END;
     IS_DRIVING --> |N| END;
     IS_DRIVING --> |Y| SET_DRIVE --> END;
+```
+
+# Setup
+```mermaid
+graph TD
+
+    %% motor setup
+
+    %% definitions
+    SETUP([setup]);
+    IS_SELECT{CONTROLLER DIR IN MIDDLE\nCAN.setup.status == SELECT};
+
+    subgraph reverse
+        SET_REV>CONTROLLER DIR ON REVERSE\nreverse = CAN.setup.reverse];
+        BLINK_FORWARD[["reverse = false: blink forward\nelse blink backside\nblink(reverse)"]];
+    end
+
+    subgraph select
+        BLINK_ALL[[blink all]];
+        IS_DISABLE{CAN.setup.disable = true};
+        DISABLE>TOGGLE DISABLED STATUS\ndisable = !disable];
+    end
+
+    END([return]);
+
+    %% flow
+    SETUP --> IS_SELECT;
+    IS_SELECT --> |N| SET_REV --> BLINK_FORWARD --> END;
+    IS_SELECT --> |Y| IS_DISABLE;
+    IS_DISABLE --> |N| BLINK_ALL --> END;
+    IS_DISABLE --> |Y| DISABLE --> END;
 ```
