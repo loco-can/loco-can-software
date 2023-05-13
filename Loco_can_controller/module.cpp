@@ -412,72 +412,79 @@ void MODULE::_receive(CAN_MESSAGE message) {
 uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
 
-
-	// check if activatable
-	if (_activate()) {
-
-
-		// mains is on
-		if (_switches.get_flag(CONTROL_MAINS_FLAG)) {
+	// mains is on
+	if (_switches.get_flag(CONTROL_MAINS_FLAG)) {
 
 
-			// is active?
-			if (_active == true) {
-
-				// is not in setup mode
-				if (_controller_status != CONTROLLER_STATUS_SETUP) {
+		// check if activatable
+		if (_activate()) {
 
 
-					// check for nulled controller
-					// => after power up, direction change or emergency
-					// the controller must be in middle position to get activated again
-					if (_nulled == true || (_nulled == false && _drive_val == 0)) {
+			// is not active
+			// check for nulled
+			// add vehicle to list
+			if (_active == false) {
 
-						_nulled = true;
+				// TODO add vehicle to list
+			}
+
+
+			// is not in setup mode
+			if (_controller_status != CONTROLLER_STATUS_SETUP) {
+
+
+				// check for nulled controller
+				// => after power up, direction change or emergency
+				// the controller must be in middle position
+				if (_drive_val == 0) {
+					_nulled = true;
+				}
+
+
+				// is nulled
+				else {
+
+					// // check if horn is pressed when not active to enter setup
+					if (_signal.pushed() == true && _active == false) {
+						_controller_status = CONTROLLER_STATUS_SETUP;
+					}
+
+
+					// is active
+					else {
+
+						// =====================
+						// activate controller
+						_active = true;
 
 						// drive is on
-						if (_switches.get_flag(CONTROL_DRIVE_FLAG)) {
-
+						// ready to drive
+						// drive=on, direction selected
+						if (_switches.get_flag(CONTROL_DRIVE_FLAG) == true) {
 
 							// vehicle is moving
 							if (_status.get_flag(MOVING_FLAG)) {
 								_controller_status = CONTROLLER_STATUS_MOVING;
 							}
 
-
-							// ready to drive
-							// drive=on, direction selected
+							// is standing
 							else {
 								_controller_status = CONTROLLER_STATUS_READY;
-							}
+							}						
 						}
 
-
-						// is in standby
+						// drive off => is in standby
 						else {
-							_controller_status = CONTROLLER_STATUS_STANDBY;
+							_nulled = false;
+							_controller_status = CONTROLLER_STATUS_STANDBY;						
 						}
 					}
 
 
 					// set unnulled status
-					else {
+					if (_nulled == false) {
 						_controller_status = CONTROLLER_STATUS_NOT_NULLED;
 					}
-				}
-			}
-
-			// =====================
-			// activate controller
-			else {
-
-				_active = true;
-				_controller_status = CONTROLLER_STATUS_STANDBY;
-
-
-				// check if horn is pressed to enter setup
-				if (_signal.pushed() == true) {
-					_controller_status = CONTROLLER_STATUS_SETUP;
 				}
 			}
 		}
@@ -485,18 +492,24 @@ uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
 		// mains is off
 		else {
-			_controller_status = CONTROLLER_STATUS_OFF;
+			_controller_status = CONTROLLER_STATUS_LOCKED;
 			_active = false;
 			_nulled = false;
+
+			// clear vehicle list
+			_vehicles.reset();
 		}
 	}
 
 
 	// can not be activated -> lock
 	else {
-		_controller_status = CONTROLLER_STATUS_LOCKED;
+		_controller_status = CONTROLLER_STATUS_OFF;
 		_active = false;
 		_nulled = false;
+
+		// clear vehicle list
+		_vehicles.reset();
 	}
 
 
