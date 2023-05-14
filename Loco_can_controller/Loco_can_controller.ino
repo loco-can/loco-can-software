@@ -72,7 +72,7 @@ void setup() {
 
 	// register can filters
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_LIGHT_CURRENT); // light current
-	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_STATUS); // drive status
+	can_com.register_filter(CAN_ID_MASK, CAN_ID_VEHICLE_STATUS); // status of vehicles
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);	// drive commands from other controllers
 
 

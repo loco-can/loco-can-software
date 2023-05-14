@@ -33,10 +33,10 @@ void setup(void) {
 
     can_com.begin(500E3, CAN_STATUS_LED);
     can_com.register_filter(CAN_ID_MASK, CAN_ID_VOLTAGE);
-    can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_STATUS);
+    can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
 
     module.register_message(CAN_ID_MASK, CAN_ID_VOLTAGE, 0, 2);
-    module.register_message(CAN_ID_MASK, CAN_ID_DRIVE_STATUS, 0, 1);
+    module.register_message(CAN_ID_MASK, CAN_ID_DRIVE, 0, 1);
 
     module.begin();
 }

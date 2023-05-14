@@ -141,27 +141,36 @@ graph TD;
     %% node definitions
     GET_CAN([get CAN data]);
     MESSAGE_AVAILABLE{message available};
-    SWITCH_MESSAGE{select by type};
-    GET_MOTOR>"register in vehicle list"];
-    GET_VOLTAGE>"voltage = message.data"];
-    GET_CURRENT>"current = message.data"];
-    GET_SPEED>"speed = message.data"];
-    PARSE_MESSAGES[[parse messages]];
+    SWITCH_MESSAGE{select by CAN.ID};
+    NO_COLLISION{"NO OTHER CONTROLLER ACTIVE\ncollision_timeout() == true"};
+    SET_UNCOLLIDE>collision = false];
+    COLLISION>collision = true];
+    COLLISION_RETRIGGER>"collision_timeout.retrigger()"];
+    IS_ACTIVE{active == false};
+    GET_MOTOR[[register in vehicle list]];
+    GET_VOLTAGE>"voltage.add_min(message.data)"];
+    GET_CURRENT>"current.add_max(message.data)"];
+    GET_SPEED>"speed.add_max(message.data)"];
     END_CAN([return]);
 
     %% flow
     GET_CAN --> MESSAGE_AVAILABLE;
-    MESSAGE_AVAILABLE --> |N| PARSE_MESSAGES;
-    MESSAGE_AVAILABLE --> |Y| SWITCH_MESSAGE;
-    SWITCH_MESSAGE --> |vehicle| GET_MOTOR;
+    MESSAGE_AVAILABLE --> |N| END_CAN;
+    MESSAGE_AVAILABLE --> |Y| NO_COLLISION;
+    NO_COLLISION --> |N| SWITCH_MESSAGE;
+    NO_COLLISION --> |Y| SET_UNCOLLIDE --> SWITCH_MESSAGE;
+    SWITCH_MESSAGE --> |vehicle| IS_ACTIVE;
+    SWITCH_MESSAGE --> |drive| COLLISION;
     SWITCH_MESSAGE --> |voltage| GET_VOLTAGE;
     SWITCH_MESSAGE --> |current| GET_CURRENT;
     SWITCH_MESSAGE --> |speed| GET_SPEED;
-    GET_MOTOR --> PARSE_MESSAGES;
-    GET_VOLTAGE --> PARSE_MESSAGES;
-    GET_CURRENT --> PARSE_MESSAGES;
-    GET_SPEED --> PARSE_MESSAGES;
-    PARSE_MESSAGES --> END_CAN;
+    IS_ACTIVE --> |N| END_CAN;
+    IS_ACTIVE --> |Y| GET_MOTOR;
+    COLLISION --> COLLISION_RETRIGGER --> END_CAN;
+    GET_MOTOR --> END_CAN;
+    GET_VOLTAGE --> END_CAN;
+    GET_CURRENT --> END_CAN;
+    GET_SPEED --> END_CAN;
 
     %% flow
 
@@ -169,7 +178,7 @@ graph TD;
     %% node definitions
     SENDDATA([send CAN data]);
     DATA_TIMEOUT{data timeout?};
-    DATA{{"send data:\nstatus\nswitches\npotentiometer"}};
+    DATA{{"send data:\nCAN-ID.drive\nstatus\nswitches\npotentiometer\n\nCAN-ID.signal\nCAN-ID.light"}};
     HB_TIMEOUT{"controller\nheartbeat\ntimeout?"};
     SEND_HB{{send heartbeat}};
     ENDSENDDATA([return]);
@@ -208,6 +217,9 @@ graph TD;
 graph TD;
     %% status parser
     
+    %% title
+    TITLE[TITE:\nset controller status\nby CAN.drive message\nand switche position];
+
     %% node definitions
     GET_STATUS([set status]);
     CHECK_ACTIVE[["check for activatable"]];

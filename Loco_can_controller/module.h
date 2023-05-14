@@ -90,18 +90,28 @@ class MODULE {
 		uint8_t _controller_status;
 		FLAGS _status;
 		FLAGS _switches;
+		FLAGS _switches_1;
 		FLAGS _lights;
 
 		FLAGS _light_status; //can light status
 
+		// measurement
+		MEASURE_CALCULATE _voltage;
 		METER _meter_volt;
 
 		#ifdef METER_AMP
+			MEASURE_CALCULATE _current;
 			METER _meter_amp;
 		#endif
 
 		#ifdef METER_MOTOR_VOLT
+			MEASURE_CALCULATE _voltage_motor;
 			METER _meter_motor;
+		#endif
+
+		#ifdef METER_SPEED
+			MEASURE_CALCULATE _speed;
+			METER _meter_speed;
 		#endif
 
 		VEHICLES _vehicles;
@@ -109,7 +119,7 @@ class MODULE {
 		INTELLILED _status_led;
 
 		INTELLITIMEOUT _timeout;
-		INTELLITIMEOUT _drive_timeout;
+		INTELLITIMEOUT _collision_timeout;
 		INTELLITIMEOUT _heartbeat;
 
 };

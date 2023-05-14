@@ -118,243 +118,55 @@ void MODULE::update(void) {
 }
 
 
-void MODULE::_initialize(void) {
-
-	#ifdef DEBUG
-		Serial.println("start controller module");
-	#endif
-
-
-	// init variables
-	_active = false;
-	_nulled = false;
-
-
-	// SET TIMEOUTS
-	_timeout.begin(200);			// drive send
-	_drive_timeout.begin(1000); 	// drive check timeout for activation
-	_heartbeat.begin(500); 			// set heartbeat
-	_vehicles.begin();				// start vehicle list
-
-
-	// init settings
-	SETTINGS_CONFIG config;
-
-	config.can_com = &can_com;
-	config.version = SOFTWARE_VERSION;
-	config.module_type = MODULE_CONTROLLER;
-	config.settings_count = MODULE_MAX_SETTINGS;
-	config.name_size = 16;
-	config.request_id = 0x7FF;
-	config.reply_id = 0x700;
-	config.setup_id = 0x600;
-
-	settings.begin(config);
-	settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
-
-
-	// begin flags
-	_switches.begin();
-	_lights.begin();
-
-
-	// init status led
-	_status_led.begin(STATUS_RED, STATUS_GREEN);
-
-	_status_led.off();
-	_status_led.color(GREEN);
-
-
-	// ===================================================================
-	// start digital switches
-	_signal.begin(SIGNAL);
-	_signal_1.begin(SIGNAL_1);
-
-
-	// ===================================================================
-	// start analog switches
-	#ifdef DEBUG
-		Serial.println("# start switches");
-	#endif
-
-	// start analog mains switch 
-	_mains_switch.begin(ANALOG_MAINS_SWITCH, ANALOG_VAL_MAX);
-
-	_mains_switch.learn(MAINS_OFF);
-	_mains_switch.learn(MAINS_ON);
-	_mains_switch.learn(MAINS_AUX);
-
-	// start analog direction switch 
-	_dir_switch.begin(ANALOG_DIR_SWITCH, ANALOG_VAL_MAX);
-
-	_dir_switch.learn(DIR_REVERSE);
-	_dir_switch.learn(DIR_MID);
-	_dir_switch.learn(DIR_FORWARD);
-
-	// start analog light switch
-	_light_switch.begin(ANALOG_LIGHT_SWITCH, ANALOG_VAL_MAX);
-
-	_light_switch.learn(LIGHT_OFF);
-	_light_switch.learn(LIGHT_LOW);
-	_light_switch.learn(LIGHT_LOW_TRAIN);
-	_light_switch.learn(LIGHT_HIGH_TRAIN);
-
-	// start analog horn switches
-
-
-
-	// start second analog light switch
-	#ifdef ANALOG_LIGHT_1_SWITCH
-		_light_1_switch.begin(ANALOG_LIGHT_SWITCH, ANALOG_VAL_MAX);
-
-		_light_1_switch.learn(LIGHT_1_OFF);
-		_light_1_switch.learn(LIGHT_1_LOW);
-		_light_1_switch.learn(LIGHT_1_LOW_TRAIN);
-		_light_1_switch.learn(LIGHT_1_HIGH_TRAIN);
-	#endif
-
-
-	// ===================================================================
-	// start Analog meters
-	#ifdef DEBUG
-		Serial.println("# start meters");
-	#endif
-
-	_meter_volt.begin(METER_VOLT, METER_TYPE_SERVO);
-	_meter_volt.set_limits(130, 55);
-	_meter_volt.set_value_limits(100, METER_VOLT_VALUE);
-
-	#ifdef METER_AMP
-		_meter_amp.begin(METER_AMP, METER_TYPE_SERVO);
-		_meter_amp.set_limits(135, 55);
-		_meter_amp.set_value_limits(500, METER_AMP_VALUE);
-	#endif
-
-	#ifdef METER_MOTOR_VOLT
-		_meter_motor.begin(METER_MOTOR_VOLT, METER_TYPE_SERVO);
-		_meter_motor.set_limits(130, 58);
-		_meter_motor.set_value_limits(100, METER_MOTOR_VALUE);
-	#endif
-}
-
-
-/*
- * module selftest
- */
-void MODULE::_selftest(void) {
-
-	#ifdef DEBUG
-		Serial.println("start self test");
-	#endif
-
-
-	// test instrument light
-	#ifdef DEBUG
-		Serial.println("> test instrument light");
-	#endif
-
-	digitalWrite(INSTRUMENT_LIGHT, HIGH);
-
-
-	// set meters to max
-	#ifdef DEBUG
-		Serial.println("> set meters to max");
-	#endif
-	
-	_meter_volt.set(METER_VOLT_VALUE);
-
-	#ifdef METER_AMP
-		_meter_amp.set(METER_AMP_VALUE);
-	#endif
-
-	#ifdef METER_MOTOR_VOLT
-		_meter_motor.set(METER_MOTOR_VALUE);
-	#endif
-
-
-	// show startup on status led
-	#ifdef DEBUG
-		Serial.println("> led red");
-	#endif
-
-	_status_led.color(RED);
-	_status_led.on();
-
-	delay(500);
-
-	#ifdef DEBUG
-		Serial.println("> led yellow");
-	#endif
-
-	_status_led.color(YELLOW);
-	_status_led.on();
-	delay(500);
-
-	#ifdef DEBUG
-		Serial.println("> led green");
-	#endif
-
-	_status_led.color(GREEN);
-	_status_led.on();
-	delay(500);
-
-	_status_led.off();
-
-	#ifdef DEBUG
-		Serial.println("> led off");
-	#endif
-
-
-	// reset meters
-	#ifdef DEBUG
-		Serial.println("> reset meters");
-	#endif
-
-	_meter_volt.set(0);
-
-	#ifdef METER_AMP
-		_meter_amp.set(0);
-	#endif
-
-	#ifdef METER_MOTOR_VOLT
-		_meter_motor.set(0);
-	#endif
-
-
-	// end instrument light test
-	digitalWrite(INSTRUMENT_LIGHT, LOW);
-
-
-	#ifdef DEBUG
-		Serial.println("end test");
-	#endif
-}
-
-
 // ========================================================================
 // RECEIVE CAN DATA
 void MODULE::_receive(CAN_MESSAGE message) {
 
 	uint16_t filter;
-	_collision = false;
+	MEASURE_VALUE value;
 
+
+	// message available
 	if (filter = can_com.read(&message)) {
 
-		// set _status
+
+		// collision has timed out
+		if (_collision_timeout.check() == true) {
+			_collision = false;
+		}
+
+
+		// SWITCH by CAN.ID
 		switch (filter) {
 
-			// status
-			case  CAN_ID_DRIVE_STATUS:
 
-				_status.set(message.data[0]);
-				_drive_timeout.retrigger();
+			// VEHICLE MESSAGE
+			case CAN_ID_VEHICLE_STATUS:
+
+				// not activated ==> save vehicle in list
+				if (_active == false) {
+					_vehicles.add(message.uuid, message.data[0]);
+				}
+
+				break;
+
+
+			// CONTROLLER MESSAGE
+			case  CAN_ID_DRIVE:
+
+				_collision = true;
+				_collision_timeout.retrigger();
+
 				break;
 
 
 			// set battery voltage
 			case CAN_ID_VOLTAGE:
-				_value = char2int(message.data[0], message.data[1]);
-				_meter_volt.set(map(_value, 0, 1023, 0, 1000));
+				value.set_package(message.data);
+
+				_voltage.add_min(value);
+				_meter_volt.set(map(_voltage.percentage(), 0, 1023, 0, 1000));
+
 				break;
 
 // *****************
@@ -362,8 +174,10 @@ void MODULE::_receive(CAN_MESSAGE message) {
 // display motor voltage
 #ifdef METER_MOTOR_VOLT
 			case CAN_ID_MOTOR_VOLTAGE:
-				_value = char2int(message.data[0], message.data[1]);
-				_meter_motor.set(map(_value, 0, 1023, 0, 1000));
+				value.set_package(message.data);
+				_voltage_motor.add_min(value);
+				
+				_meter_motor.set(map(_voltage_motor.percentage(), 0, 1023, 0, 1000));
 				break;
 #endif
 // *****************
@@ -375,16 +189,30 @@ void MODULE::_receive(CAN_MESSAGE message) {
 
 			// set system current
 			case CAN_ID_CURRENT:
-				_value = char2int(message.data[0], message.data[1]);
-				_meter_amp.set(map(_value, 0, 1023, 0, 1000));
+				value.set_package(message.data);
+				_current.add_max(value);
+
+				_meter_amp.set(map(_current.percentage(), 0, 1023, 0, 1000));
 				break;
 #endif
 // *****************
 
-			// check for other drive messages
-			case CAN_ID_DRIVE:
-				_collision = true;
+
+// *****************
+// OPTIONAL - depends on the board version
+// display current
+#ifdef METER_SPEED
+
+			// set system current
+			case CAN_ID_SPEED:
+				value.set_package(message.data);
+				_speed.add_max(value);
+
+				_meter_speed.set(map(_speed.percentage(), 0, 1023, 0, 1000));
 				break;
+#endif
+// *****************
+
 
 
 // *****************
@@ -412,12 +240,12 @@ void MODULE::_receive(CAN_MESSAGE message) {
 uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
 
-	// mains is on
-	if (_switches.get_flag(CONTROL_MAINS_FLAG)) {
+	// check if activatable
+	if (_activate()) {
 
 
-		// check if activatable
-		if (_activate()) {
+		// mains is on
+		if (_switches.get_flag(CONTROL_MAINS_FLAG)) {
 
 
 			// is not active
@@ -492,7 +320,7 @@ uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
 		// mains is off
 		else {
-			_controller_status = CONTROLLER_STATUS_LOCKED;
+			_controller_status = CONTROLLER_STATUS_OFF;
 			_active = false;
 			_nulled = false;
 
@@ -504,7 +332,7 @@ uint8_t MODULE::_set_status(CAN_MESSAGE message) {
 
 	// can not be activated -> lock
 	else {
-		_controller_status = CONTROLLER_STATUS_OFF;
+		_controller_status = CONTROLLER_STATUS_LOCKED;
 		_active = false;
 		_nulled = false;
 
@@ -570,6 +398,13 @@ void MODULE::_set_status_led(void) {
 
 // ========================================================================
 // ACTIVATE
+
+
+// ********************************
+// TODO check for other controllers
+// ********************************
+
+
 bool MODULE::_activate(void) {
 
 
@@ -608,31 +443,44 @@ bool MODULE::_activate(void) {
 void MODULE::_send(void) {
 
 	uint8_t buffer[8];
+	uint8_t vehicle_count;
 
 
 	// send data if active
 	if (_active && _timeout.update()) {
 
 
-		// _status value
+		// send CAN_ID_DRIVE
 		buffer[0] = _switches.get();
+		buffer[1] = _switches_1.get();
+
+
+		// ======================================
+		// get multi tracktion data
+		vehicle_count = _vehicles.count();
+
+		// is multi traktiion
+		if (vehicle_count > 0) {
+
+
+		}
 
 		// drive value
-		buffer[1] = (uint8_t)(_drive_val >> 8);
-		buffer[2] = (uint8_t)(_drive_val & 0xFF);
+		buffer[2] = (uint8_t)((_drive_val & 0x03) >> 8);
+		buffer[3] = (uint8_t)(_drive_val & 0xFF);
 
 		// power value
-		buffer[3] = (uint8_t)(_power_val >> 8);
-		buffer[4] = (uint8_t)(_power_val & 0xFF);
+		buffer[4] = (uint8_t)((_power_val & 0x03) >> 8);
+		buffer[5] = (uint8_t)(_power_val & 0xFF);
 
 		// break value
-		buffer[5] = (uint8_t)(_break_val >> 8);
-		buffer[6] = (uint8_t)(_break_val & 0xFF);
+		buffer[6] = (uint8_t)((_break_val & 0x03) >> 8);
+		buffer[7] = (uint8_t)(_break_val & 0xFF);
 
 		can_com.send(buffer, 7, CAN_ID_DRIVE);
 
 
-		// send light
+		// send CAN_ID_LIGHT
 		buffer[0] = _lights.get();
 
 
@@ -640,15 +488,17 @@ void MODULE::_send(void) {
 // combine light switch with second light switch
 // bitwise or combination
 #ifdef ANALOG_LIGHT_1_SWITCH
-		buffer[0] |= _lights_1.get();
-#endif
+		buffer[1] |= _lights_1.get();
+		can_com.send(buffer, 2, CAN_ID_LIGHT);
+#else
 // ****************
-
 		can_com.send(buffer, 1, CAN_ID_LIGHT);
+#endif
 
-		// send signal
-		buffer[0] = _lights.get();
-		can_com.send(buffer, 1, CAN_ID_LIGHT);
+
+		// send CAN_ID_SIGNAL
+		buffer[0] = _signal.pushed() < SIGNAL_HIGH | _signal_1.pushed() < SIGNAL_LOW;
+		can_com.send(buffer, 1, CAN_ID_SIGNAL);
 	}
 
 
@@ -853,4 +703,217 @@ void MODULE::_drive_break(void) {
 		_break_val = 0;
 		_power_val = 0;
 	}
+}
+
+
+void MODULE::_initialize(void) {
+
+	#ifdef DEBUG
+		Serial.println("start controller module");
+	#endif
+
+
+	// init variables
+	_active = false;
+	_nulled = false;
+
+
+	// SET TIMEOUTS
+	_timeout.begin(200);			// drive send
+	_collision_timeout.begin(1000); 	// drive check timeout for activation
+	_heartbeat.begin(500); 			// set heartbeat
+	_vehicles.begin();				// start vehicle list
+
+
+	// init settings
+	SETTINGS_CONFIG config;
+
+	config.can_com = &can_com;
+	config.version = SOFTWARE_VERSION;
+	config.module_type = MODULE_CONTROLLER;
+	config.settings_count = MODULE_MAX_SETTINGS;
+	config.name_size = 16;
+	config.request_id = 0x7FF;
+	config.reply_id = 0x700;
+	config.setup_id = 0x600;
+
+	settings.begin(config);
+	settings.set_heartbeat(MODULE_HEARTBEAT_TIMEOUT);
+
+
+	// begin flags
+	_switches.begin();
+	_lights.begin();
+
+
+	// init status led
+	_status_led.begin(STATUS_RED, STATUS_GREEN);
+
+	_status_led.off();
+	_status_led.color(GREEN);
+
+
+	// ===================================================================
+	// start digital switches
+	_signal.begin(SIGNAL);
+	_signal_1.begin(SIGNAL_1);
+
+
+	// ===================================================================
+	// start analog switches
+	#ifdef DEBUG
+		Serial.println("# start switches");
+	#endif
+
+	// start analog mains switch 
+	_mains_switch.begin(ANALOG_MAINS_SWITCH, ANALOG_VAL_MAX);
+
+	_mains_switch.learn(MAINS_OFF);
+	_mains_switch.learn(MAINS_ON);
+	_mains_switch.learn(MAINS_AUX);
+
+	// start analog direction switch 
+	_dir_switch.begin(ANALOG_DIR_SWITCH, ANALOG_VAL_MAX);
+
+	_dir_switch.learn(DIR_REVERSE);
+	_dir_switch.learn(DIR_MID);
+	_dir_switch.learn(DIR_FORWARD);
+
+	// start analog light switch
+	_light_switch.begin(ANALOG_LIGHT_SWITCH, ANALOG_VAL_MAX);
+
+	_light_switch.learn(LIGHT_OFF);
+	_light_switch.learn(LIGHT_LOW);
+	_light_switch.learn(LIGHT_LOW_TRAIN);
+	_light_switch.learn(LIGHT_HIGH_TRAIN);
+
+	// start analog horn switches
+
+
+
+	// start second analog light switch
+	#ifdef ANALOG_LIGHT_1_SWITCH
+		_light_1_switch.begin(ANALOG_LIGHT_SWITCH, ANALOG_VAL_MAX);
+
+		_light_1_switch.learn(LIGHT_1_OFF);
+		_light_1_switch.learn(LIGHT_1_LOW);
+		_light_1_switch.learn(LIGHT_1_LOW_TRAIN);
+		_light_1_switch.learn(LIGHT_1_HIGH_TRAIN);
+	#endif
+
+
+	// ===================================================================
+	// start Analog meters
+	#ifdef DEBUG
+		Serial.println("# start meters");
+	#endif
+
+	_meter_volt.begin(METER_VOLT, METER_TYPE_SERVO);
+	_meter_volt.set_limits(130, 55);
+	_meter_volt.set_value_limits(100, METER_VOLT_VALUE);
+
+	#ifdef METER_AMP
+		_meter_amp.begin(METER_AMP, METER_TYPE_SERVO);
+		_meter_amp.set_limits(135, 55);
+		_meter_amp.set_value_limits(500, METER_AMP_VALUE);
+	#endif
+
+	#ifdef METER_MOTOR_VOLT
+		_meter_motor.begin(METER_MOTOR_VOLT, METER_TYPE_SERVO);
+		_meter_motor.set_limits(130, 58);
+		_meter_motor.set_value_limits(100, METER_MOTOR_VALUE);
+	#endif
+}
+
+
+/*
+ * module selftest
+ */
+void MODULE::_selftest(void) {
+
+	#ifdef DEBUG
+		Serial.println("start self test");
+	#endif
+
+
+	// test instrument light
+	#ifdef DEBUG
+		Serial.println("> test instrument light");
+	#endif
+
+	digitalWrite(INSTRUMENT_LIGHT, HIGH);
+
+
+	// set meters to max
+	#ifdef DEBUG
+		Serial.println("> set meters to max");
+	#endif
+	
+	_meter_volt.set(METER_VOLT_VALUE);
+
+	#ifdef METER_AMP
+		_meter_amp.set(METER_AMP_VALUE);
+	#endif
+
+	#ifdef METER_MOTOR_VOLT
+		_meter_motor.set(METER_MOTOR_VALUE);
+	#endif
+
+
+	// show startup on status led
+	#ifdef DEBUG
+		Serial.println("> led red");
+	#endif
+
+	_status_led.color(RED);
+	_status_led.on();
+
+	delay(500);
+
+	#ifdef DEBUG
+		Serial.println("> led yellow");
+	#endif
+
+	_status_led.color(YELLOW);
+	_status_led.on();
+	delay(500);
+
+	#ifdef DEBUG
+		Serial.println("> led green");
+	#endif
+
+	_status_led.color(GREEN);
+	_status_led.on();
+	delay(500);
+
+	_status_led.off();
+
+	#ifdef DEBUG
+		Serial.println("> led off");
+	#endif
+
+
+	// reset meters
+	#ifdef DEBUG
+		Serial.println("> reset meters");
+	#endif
+
+	_meter_volt.set(0);
+
+	#ifdef METER_AMP
+		_meter_amp.set(0);
+	#endif
+
+	#ifdef METER_MOTOR_VOLT
+		_meter_motor.set(0);
+	#endif
+
+
+	// end instrument light test
+	digitalWrite(INSTRUMENT_LIGHT, LOW);
+
+
+	#ifdef DEBUG
+		Serial.println("end test");
+	#endif
 }

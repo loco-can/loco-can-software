@@ -29,6 +29,7 @@ uint8_t VEHICLES::add(uint16_t uuid) {
 
 
 // add with status
+// purge timeout entries
 uint8_t VEHICLES::add(uint16_t uuid, uint8_t status) {
 
 	// has free places
@@ -124,7 +125,6 @@ void VEHICLES::_purge(void) {
 // update count
 // return new count
 uint8_t VEHICLES::count(void) {
-
 	return _count;
 }
 
