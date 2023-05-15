@@ -15,32 +15,7 @@
  */
 
 /*
- * SEND:
- * 7 byte package
- *
- * STATUS
- * byte 0:   7      6      5      4      3      2      1      0
- *         error  ready   stop   horn   aux    dir   drive  mains
- *
- * DRIVE VALUE: 10-bit value of drive voltage
- * byte 1: drive bit 8-9
- * byte 2: drive bit 0-7
- *
- * POWER VALUE: 10-bit value of drive max power
- * byte 3: power bit 8-9
- * byte 4: power bit 0-7
- *
- * BREAK VALUE: 10-bit value of break intensity
- * byte 5: break bit 8-9
- * byte 6: break bit 0-7
- */
-
-/*
- * RECEIVE:
- * 
- * STATUS
- * byte 0:   7      6      5      4      3      2      1      0
- *         error  ready   stop          aux    dir   drive  mains
+ * The communication protocol is defined in the LocoCAN library.
  */
 
 

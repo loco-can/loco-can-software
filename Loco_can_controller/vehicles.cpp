@@ -38,7 +38,7 @@ uint8_t VEHICLES::add(uint16_t uuid, uint8_t status) {
 
 		// vehicle already exists => retrigger time
 		if ((_i = exists(uuid)) > 0) {
-			_vehicle[_i].time = millis();
+			_vehicles[_i].time = millis();
 		}
 
 		// new vehicle
@@ -47,9 +47,11 @@ uint8_t VEHICLES::add(uint16_t uuid, uint8_t status) {
 			// find free place and add new vehicle
 			for (_i = 0;_i < VEHICLES_MAX_COUNT; _i++) {
 
-				if (_vehicle[_i].uuid == 0) {
-					_vehicle[_i].uuid = uuid;
-					_vehicle[_i].time = millis();
+				if (_vehicles[_i].uuid == 0) {
+					_vehicles[_i].uuid = uuid;
+					_vehicles[_i].time = millis();
+
+					break;
 				}
 			}
 		}
@@ -67,16 +69,14 @@ uint8_t VEHICLES::add(uint16_t uuid, uint8_t status) {
 // return 0 if not exists
 uint8_t VEHICLES::exists(uint16_t uuid) {
 
-	uint8_t res = 0;
-
 	for (_i = 0;_i < VEHICLES_MAX_COUNT; _i++) {
 
-		if (_vehicle[_i].uuid == uuid) {
-			res = _i + 1;
+		if (_vehicles[_i].uuid == uuid) {
+			break;
 		}
 	}
 
-	return res;
+	return _i + 1;
 }
 
 
@@ -84,8 +84,8 @@ uint8_t VEHICLES::exists(uint16_t uuid) {
 void VEHICLES::reset(void) {
 
 	 for (_i = 0; _i < VEHICLES_MAX_COUNT; _i++) {
-	 	_vehicle[_i].uuid = 0;
-	 	_vehicle[_i].time = 0;
+	 	_vehicles[_i].uuid = 0;
+	 	_vehicles[_i].time = 0;
 	 }
 
 	 _count = 0;
@@ -103,20 +103,24 @@ void VEHICLES::_purge(void) {
 
 	for (_i = 0; _i < VEHICLES_MAX_COUNT; _i++) {
 
-	 	// timed out => purge
-	 	if (_vehicle[_i].uuid != 0 && (_vehicle[_i].time + VEHICLES_LIVETIME) >= millis()) {
-	 		_vehicle[_i].uuid = 0;
-	 		_vehicle[_i].time = 0;
-	 	}
+	 	// vehicle exists
+	 	if (_vehicles[_i].uuid != 0) {
 
-	 	// count
-		if (_vehicle[_i].uuid != 0) {
-			_count++;
+	 		// timed out => purge
+	 		if((_vehicles[_i].time + VEHICLES_LIVETIME) >= millis()) {
+		 		_vehicles[_i].uuid = 0;
+		 		_vehicles[_i].time = 0;
+		 	}
 
-			// calculate bit operators
-			_or |= _vehicle[_i].status;
-			_and &= _vehicle[_i].status;
-			_xor ^= _vehicle[_i].status;
+		 	else{	 		
+			 	// count
+				_count++;
+
+				// calculate bit operators
+				_or |= _vehicles[_i].status;
+				_and &= _vehicles[_i].status;
+				_xor ^= _vehicles[_i].status;
+		 	}
 		}
 	}
 }
@@ -129,7 +133,16 @@ uint8_t VEHICLES::count(void) {
 }
 
 
-// check status bits by function
+// get vehicle by id
+VEHICLE VEHICLES::get_vehicle(uint8_t id) {
+
+	if (id < VEHICLES_MAX_COUNT) {
+		return _vehicles[id];
+	}
+}
+
+
+// check summonded status of all registered vehicles bits by function
 // bit = bit of status (see status bit list in LocoCAN library)
 bool VEHICLES::get_status(uint8_t bit, uint8_t op) {
 
@@ -140,15 +153,15 @@ bool VEHICLES::get_status(uint8_t bit, uint8_t op) {
 
 		switch(op) {
 
-			case VEHICEL_STATUS_OR:
+			case VEHICLE_STATUS_OR:
 				ret = (bool)(_or >> bit);
 				break;
 
-			case VEHICEL_STATUS_AND:
+			case VEHICLE_STATUS_AND:
 				ret = (bool)(_and >> bit);
 				break;
 
-			case VEHICEL_STATUS_XOR:
+			case VEHICLE_STATUS_XOR:
 				ret = (bool)(_xor >> bit);
 				break;
 		}

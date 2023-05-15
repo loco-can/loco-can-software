@@ -278,6 +278,71 @@ graph TD;
     LED_STATUS --> END_STATUS;
 ```
 
+
+## Vehicles registry
+
+By adding the vehicle status messages to the registry the count and list of currently connected locomotives are collected. The registration is active, while the controller is inactive (mains is off). 
+
+```mermaid
+graph TD
+
+    %% ADD definition
+    ADD([add vehicle]);
+    NOT_MAX{count < MAX_COUNT};
+    EXISTS{"(i = exists()) != 0"};
+    RETRIGGER>"vehicle[i].time = millis()"];
+    NEW[/0 < i < MAX_COUNT\];
+    FREE{"vehicle[i].uuid == 0"};
+    ADD_NEW>"vehicle[i].uuid = uuid\nvehicle[i].time = millis()"];
+    LOOP_ADD[\loop/];
+    PURGE[[PURGE\nremove old entries]];
+    RETURN([return]);
+
+    %% EXISTS definitions
+    EXISTS_START([exists]);
+    EXISTS_LOOP[/0 < i < MAX_COUNT\];
+    EXISTS_CHECK{"vehicle[i].uuid == uuid"};
+    EXISTS_END_LOOP[\loop/];
+    EXISTS_END([return i+1]);
+
+    %% PURGE definitions
+    PURGE_START([purge]);
+    PURGE_INIT>"count=0\nor=0\nand=0\nxor=0"];
+    PURGE_LOOP[/0 < i < MAX_COUNT\];
+    PURGE_CHECK{"(vehicle[i].time + VEHICLES_LIVETIME)\n>= millis()"};
+    PURGE_EXISTS{"VEHICLE EXISTS\nvehicle[i].uuid != 0"};
+    PURGE_CALC>"CALCULATE STATI\nor |= vehicle[i].status\nand &= vehicle[i].status\nxor ^= vehicle[i].status"];
+    PURGE_COUNT>count++];
+    PURGE_DELETE>"DELETE ENTRY\nvehicle[i].uuid = 0\nvehicle[i].time = 0"];
+    PURGE_END_LOOP[\loop/];
+    PURGE_END([return]);
+
+    %% ADD flow
+    ADD --> NOT_MAX;
+    NOT_MAX --> |Y| PURGE;
+    NOT_MAX --> |N| EXISTS;
+    EXISTS --> |Y| RETRIGGER --> LOOP_ADD;
+    EXISTS --> |N| NEW --> FREE;
+    FREE --> |N| LOOP_ADD;
+    FREE --> |Y| ADD_NEW --> PURGE;
+    LOOP_ADD --> PURGE;
+    PURGE --> RETURN;
+
+    %% EXISTS flow
+    EXISTS_START --> EXISTS_LOOP --> EXISTS_CHECK;
+    EXISTS_CHECK --> |N| EXISTS_END_LOOP --> EXISTS_END;
+    EXISTS_CHECK --> |Y| EXISTS_END;
+
+    %% PURGE flow
+    PURGE_START --> PURGE_INIT --> PURGE_LOOP --> PURGE_EXISTS;
+    PURGE_EXISTS --> |N| PURGE_END_LOOP;
+    PURGE_EXISTS --> |Y| PURGE_CHECK;
+    PURGE_CHECK --> |N| PURGE_CALC --> PURGE_COUNT --> PURGE_END_LOOP;
+    PURGE_CHECK --> |Y| PURGE_DELETE --> PURGE_END_LOOP;
+    PURGE_END_LOOP --> PURGE_END;
+```
+
+
 ## Loco setup
 Select locomotive in multi traktion and set direction of locomotive. To enter the loco setup mode the controller must be activateable, so no other controller can be switched on.
 
