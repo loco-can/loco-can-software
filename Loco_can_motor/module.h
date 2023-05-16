@@ -37,6 +37,7 @@
 #include "intellitimeout.h"
 #include "pwm_ramp.h"
 #include "measure.h"
+#include "flags.h"
 
 
 #define MOTOR_STATUS_EMERGENCY 0
@@ -63,13 +64,11 @@ class MODULE {
 
 		void begin(uint16_t ramp_time);
 
-		void set_ramp(uint16_t ramp);
-
 		void direction(bool dir);
 		bool direction(void);
 
 		uint16_t get_speed(void);
-		uint16_t get_target_speed(void);
+		uint16_t get_target_drive(void);
 
 		uint16_t get_break(void);
 		uint16_t get_target_break(void);
@@ -80,7 +79,7 @@ class MODULE {
 
 
 	private:
-		uint16_t _target_speed;
+		uint16_t _target_drive;
 		uint16_t _current_speed;
 
 		uint16_t _target_break;
@@ -94,16 +93,20 @@ class MODULE {
 		bool _slave;			// is slave in multi traktion
 
 		uint16_t _ramp_time;
-		uint8_t _status;
 
 		uint8_t _motor_status;
 		bool _main_relais;
 
+		void _receive(CAN_MESSAGE);
+
+		void _set_ramp(uint16_t ramp);
+
 		void _set_status(CAN_MESSAGE);
+		void _update_motor(void);
 		void _update_pwm(void);
 
 		bool _stopped(void); // all standing and switched off
-		bool _standing(void); // not driving
+		bool _is_standing(void); // not driving
 		int16_t _motor_voltage(void);
 
 		void _set_mains(bool); // set mains relais
@@ -116,10 +119,12 @@ class MODULE {
 
 		bool _has_direction(void); // check if direction is set
 
-		bool _send(void);
+		bool _send(uint8_t*, uint8_t, uint32_t);
+		void _send_drive(void);
+		void _send_vehicle(void);
+		void _send_setup();
 
 		void _setup(void);
-		void _send_setup();
 
 		bool _drive_nulled;
 		bool _emergency;
@@ -127,7 +132,7 @@ class MODULE {
 
 		FLAGS _switches;
 		FLAGS _switches_1;
-		FLAGS _status;
+		FLAGS _status_flags;
 
 		INTELLITIMEOUT _heartbeat_timeout;
 		INTELLITIMEOUT _standing_timeout;

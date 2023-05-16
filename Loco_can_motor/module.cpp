@@ -50,6 +50,7 @@ void MODULE::begin(uint16_t ramp_time) {
 	// reset direction outputs
 	_clear_dir();
 
+
 	// start drive PWM
 	_pwm_drive.begin(PWM_DRIVE, PWM_RAMP_UPDATE_RATE, DRIVE_FREQUENCY);
 	_pwm_drive.set_ramp(MOTOR_DEFAULT_RAMP);
@@ -63,6 +64,7 @@ void MODULE::begin(uint16_t ramp_time) {
 	_drive_nulled = false;
 	_emergency = false;
 	_standing = false;
+
 	_motor_status = MOTOR_STATUS_EMERGENCY;
 
 	// start drive data and standing and voltage timeout
@@ -102,6 +104,8 @@ void MODULE::_receive(CAN_MESSAGE) {
 
 	uint32_t filter;
 
+	CAN_MESSAGE message;
+
 
 	// check for message
 	if (filter = can_com.read(&message)) {
@@ -123,12 +127,12 @@ void MODULE::_receive(CAN_MESSAGE) {
 				// =======================================
 				// set values
 				// set direction
-				module.direction(_switches.get_flag(DIR_FLAG));
+				_status_flags.set_flag(DIR_FLAG, _switches.get_flag(DIR_FLAG));
 
 
 				// set switches
-				status.set_flag(MAINS_FLAG, _switches.get_flag(MAINS_FLAG));
-				status.set_flag(DRIVE_FLAG, _switches.get_flag(DRIVE_FLAG));
+				_status_flags.set_flag(MAINS_FLAG, _switches.get_flag(MAINS_FLAG));
+				_status_flags.set_flag(DRIVE_FLAG, _switches.get_flag(DRIVE_FLAG));
 
 
 				// get driving data (10 bits)
@@ -147,18 +151,18 @@ void MODULE::_receive(CAN_MESSAGE) {
 
 					// remove multi flag and set multi status
 					multi_uuid &= 0x7FFF;
-					_motor_status.set_flag(MULTI_FLAG, true);
+					_status_flags.set_flag(MULTI_FLAG, true);
 					_slave = true;
 
 
 					// check if main loco
-					if (can_com.uuid() = _multi_uuid) {
+					if (can_com.uuid() == multi_uuid) {
 						_slave = false;
 					}
 				}
 
 				else {
-					_motor_status.set_flag(MULTI_FLAG, false);
+					_status_flags.set_flag(MULTI_FLAG, false);
 				}
 
 
@@ -196,12 +200,12 @@ void MODULE::_receive(CAN_MESSAGE) {
 
 
 // get motor status from can message
-void MODULE::_set_status(CAN_MESSAGE) {
+void MODULE::_set_status(CAN_MESSAGE message) {
 
 
 	// ========================================
 	// vehicle is standing
-	if (_standing() == false) {
+	if (_is_standing() == false) {
 		_standing = false;
 		_standing_timeout.retrigger();
 	}
@@ -211,7 +215,7 @@ void MODULE::_set_status(CAN_MESSAGE) {
 
 		// standing timed out => switch off main relais
 		if (_standing_timeout.check() == true) {
-			_mains_relais = false;
+			_main_relais = false;
 		}
 	}
 
@@ -220,7 +224,7 @@ void MODULE::_set_status(CAN_MESSAGE) {
 	// heartbeat timeout > EMERGENCY STOP
 	if (_heartbeat_timeout.check()) {
 		_motor_status = MOTOR_STATUS_EMERGENCY;
-		_status.set_flag(MAINS_FLAG, false);
+		_status_flags.set_flag(MAINS_FLAG, false);
 	}
 
 
@@ -230,7 +234,7 @@ void MODULE::_set_status(CAN_MESSAGE) {
 
 	// ========================================
 	// setup message for me
-	if (message.id == CAN_ID_LOCO_SETUP && message.uuid = can_com.uuid()) {
+	if (message.id == CAN_ID_LOCO_SETUP && message.uuid == can_com.uuid()) {
 		_motor_status == MOTOR_STATUS_SETUP;
 	}
 
@@ -248,11 +252,11 @@ void MODULE::_set_status(CAN_MESSAGE) {
 			if (_switches.get_flag(CONTROL_DRIVE_FLAG) == true) {
 
 				// mains relais on
-				_mains_relais = true;
+				_main_relais = true;
 
 
 				// is breaking
-				if (_break_val != 0) {
+				if (_target_break != 0) {
 					_motor_status = MOTOR_STATUS_BREAKING;
 				}
 
@@ -260,7 +264,7 @@ void MODULE::_set_status(CAN_MESSAGE) {
 
 
 					// is driving
-					if (_drive_val != 0) {
+					if (_target_drive != 0) {
 						_motor_status = MOTOR_STATUS_DRIVING;
 					}
 
@@ -282,7 +286,7 @@ void MODULE::_set_status(CAN_MESSAGE) {
 		// mains off
 		else {
 			_motor_status = MOTOR_STATUS_OFF;
-			_status.set_flag(MAINS_FLAG, false);
+			_status_flags.set_flag(MAINS_FLAG, false);
 		}
 	}
 }
@@ -290,7 +294,7 @@ void MODULE::_set_status(CAN_MESSAGE) {
 
 // update hardware
 // set relais and motor pwm
-void _update_motor(void) {
+void MODULE::_update_motor(void) {
 
 
 	// normal operation
@@ -305,7 +309,7 @@ void _update_motor(void) {
 
 
 			// stopped
-			if (_motor_status == MOTOR_STATUS_STANDBY || _motor_status == MOTOR_STATUS_READY) {
+			if (_motor_status == MOTOR_STATUS_STANDBY) {
 				_set_speed(0);
 				_set_break(0);
 			}
@@ -316,7 +320,7 @@ void _update_motor(void) {
 
 				// ========================================
 				// loco is in motion
-				if (standing() == false) {
+				if (_is_standing() == false) {
 
 					switch(_motor_status) {
 
@@ -327,11 +331,11 @@ void _update_motor(void) {
 
 						case MOTOR_STATUS_BREAKING:
 							_set_speed(0);
-							_set_break(_break_val);
+							_set_break(_target_break);
 							break;
 
 						case MOTOR_STATUS_DRIVING:
-							_set_speed(_drive_val);
+							_set_speed(_target_drive);
 							_set_break(0);
 							break;
 					}
@@ -343,17 +347,17 @@ void _update_motor(void) {
 				else {
 
 					// loco is reversed
-					if (_status.get_flag(REVERSE) == true) {
-						_set_dir(!_status.get_flag(DIR_FLAG));
+					if (_status_flags.get_flag(REVERSE) == true) {
+						_set_dir(!_status_flags.get_flag(DIR_FLAG));
 					}
 
 					else {
-						_set_dir(_status.get_flag(DIR_FLAG));
+						_set_dir(_status_flags.get_flag(DIR_FLAG));
 					}
 				}
 			}
 
-			_send();
+			_send_drive();
 		}
 
 
@@ -363,7 +367,7 @@ void _update_motor(void) {
 			_set_ramp(MOTOR_EMERGENCY_RAMP);
 
 			_set_speed(0);
-			_Set_break(MOTOR_EMERGENCY_BREAK);
+			_set_break(MOTOR_EMERGENCY_BREAK);
 
 			_send_vehicle();
 		}
@@ -377,7 +381,7 @@ void _update_motor(void) {
 		_set_break(0);
 
 		_setup();
-		_send_seup();
+		_send_setup();
 	}
 
 
@@ -388,17 +392,17 @@ void _update_motor(void) {
 // ========================================
 // update hardware
 // prevent hardware shot circuit between drive and break
-void _update_pwm(void) {
+void MODULE::_update_pwm(void) {
 
 
 	// ========================================
 	// switch mains relais
 	// drive is on
-	if (_status.get_flag(DRIVE_FLAG) = true) {
+	if (_status_flags.get_flag(DRIVE_FLAG) == true) {
 
 
 		// is standing
-		if (_standing() == true) {
+		if (_is_standing() == true) {
 			_set_mains(false);
 		}
 
@@ -424,13 +428,13 @@ void _update_pwm(void) {
 	// driving driving value
 	else {
 
-		if (_target_speed != 0) {
+		if (_target_drive != 0) {
 
 			_pwm_break.pwmWrite(0);
 
 			// only drive when break stopped
 			if (_pwm_break.stopped() == true) {
-				_pwm_drive.pwmWrite(_target_speed);
+				_pwm_drive.pwmWrite(_target_drive);
 			}
 		}
 	}
@@ -443,7 +447,7 @@ void _update_pwm(void) {
 
 
 // send active CAN data
-void _send(void) {
+void _send_drive(void) {
 
 }
 
@@ -458,6 +462,13 @@ void _send_setup(void) {
 }
 
 
+// send data to can
+bool MODULE::_send(uint8_t* data, uint8_t length, uint32_t id) {
+
+	// send data
+	can_com.send(data, length, id);
+}
+
 
 // ========================================
 // setup method
@@ -469,7 +480,13 @@ void _setup(void) {
 
 
 
+void MODULE::_set_speed(uint16_t drive_val) {
+	_target_drive = drive_val;
+}
 
+void MODULE::_set_break(uint16_t break_val) {
+	_target_break = break_val;
+}
 
 // set acceleration
 void MODULE::_set_ramp(uint16_t ramp) {
@@ -503,16 +520,16 @@ bool MODULE::_has_direction(void) {
 // pwm drive and break is null
 // voltage is under limit
 bool MODULE::_stopped(void) {
-	return _pwm_drive.stopped() && _standing() && _pwm_break.stopped();
+	return _pwm_drive.stopped() && _is_standing() && _pwm_break.stopped();
 }
 
 
 // check if motor is standing
 // use timeout to delay status change
-bool MODULE::_standing(void) {
+bool MODULE::_is_standing(void) {
 
 	// voltage under limit and controller not driving
-	if (abs(_motor_voltage()) <= VOLTAGE_ZERO && _target_speed == 0) {
+	if (abs(_motor_voltage()) <= VOLTAGE_ZERO && _target_drive == 0) {
 
 		_voltage_timeout.retrigger();
 
@@ -535,15 +552,6 @@ bool MODULE::_standing(void) {
 int16_t MODULE::_motor_voltage(void) {
 	return _voltage.get(MEASURE_VALUE_RELATIVE);
 }
-
-
-// send data to can
-bool MODULE::send(uint8_t* data, uint8_t length, long id) {
-
-	// send data
-	can_com.send(data, length, id);
-}
-
 
 
 
@@ -647,7 +655,7 @@ bool MODULE::send(uint8_t* data, uint8_t length, long id) {
 
 // 		// set drive if break is stopped and nulled and direction is valid
 // 		if (_pwm_break.stopped() && _drive_nulled && _current_dir == _target_dir && _has_direction()) {
-// 			_pwm_drive.pwmWrite(_target_speed);
+// 			_pwm_drive.pwmWrite(_target_drive);
 // 		}
 
 // 		// set break if drive is stopped

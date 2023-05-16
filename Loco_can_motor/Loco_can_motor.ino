@@ -93,12 +93,6 @@ void setup() {
 	// init module
 	module.begin(RAMP_DEFAULT);
 
-	module.set_ramp(1000);
-	module.set_speed(127);
-	module.set_break(0);
-
-	module.direction(1);
-
 
 	// start status
 	status.begin();
