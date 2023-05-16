@@ -125,13 +125,9 @@ subgraph active
     STAT_READY>status = idle];
     STAT_DRIVING>status = driving];
     STAT_BREAKING>status = breaking];
-    SETUP_ON>setup = true];
-    SETUP_OFF>setup = false];
-    END_SETUP{CAN.setup == END};
-    SETUP_MAIN_OFF>setup = false];
     STAT_SETUP>status = setup];
 
-    subgraph slave mode
+    subgraph "slave mode => move to CAN receive"
         MAINS_ON>mains = true];
         IS_MULTI{"CAN.status.multi == false ||\n(CAN.status.multi == true &&\nCAN.multi.uuid == UUID)"};
         SET_SLAVE>slave = true];
@@ -149,11 +145,8 @@ DRIVE_OFF_TIMEOUT --> |N| IS_HEARTBEAT;
 DRIVE_OFF_TIMEOUT --> |Y| DRIVE_OFF --> IS_HEARTBEAT;
 IS_HEARTBEAT --> |Y| STAT_EMERGENCY --> MAINS_OFF;
 IS_HEARTBEAT ==> |N| IS_SETUP;
-IS_SETUP ==> |N| SETUP_MAIN_OFF --> IS_MAINS;
-IS_SETUP --> |Y| END_SETUP;
-END_SETUP --> |N| SETUP_ON --> STAT_SETUP;
-END_SETUP --> |Y| SETUP_OFF --> ENDLOOP;
-STAT_SETUP --> ENDLOOP;
+IS_SETUP ==> |N| IS_MAINS;
+IS_SETUP --> |Y| STAT_SETUP -->ENDLOOP;
 IS_MAINS --> |N| STAT_OFF --> MAINS_OFF --> ENDLOOP;
 IS_MAINS ==> |Y| MAINS_ON ==> IS_MULTI;
 IS_MULTI --> |N| CLEAR_SLAVE --> IS_DRIVE;
@@ -178,13 +171,6 @@ graph TD;
 START([update motor]);
 IS_EMERGENCY{"status == emergency || \nstatus == off"};
 
-subgraph power switch
-    IS_DRIVE_ON{drive == true};
-    MAIN_ON[/main relais on/];
-    MAIN_IS_STANDING{standing == true};
-    MAIN_OFF[/main relais off/];
-end
-
 subgraph inactive
     BREAK_RAMP_MAX>break_ramp = max];
     HEARTBEAT[[send vehicle heartbeat]];
@@ -197,7 +183,7 @@ subgraph active
     BREAK_RAMP_NORMAL>break_ramp = normal];
 
     subgraph stop
-        STOP>"STOP\nspeed = 0/nbreak-ramp = normal\nbreak = 0"];
+        STOP>"STOP\nspeed = 0\nbreak = 0"];
     end
 
     subgraph drive
@@ -206,11 +192,11 @@ subgraph active
         IS_BREAKING{status == breaking};
         IS_IDLE{status == idle};
         IDLE>"speed = 0\nbreak = 0"];
-        DRIVING>"speed = CAN.speed\nbreak = 0\nbreak-ramp = normal"];
-        BREAKING>"break = CAN.break\nspeed = 0\nbreak-ramp = normal"];
+        DRIVING>"speed = CAN.speed\nbreak = 0"];
+        BREAKING>"break = CAN.break\nspeed = 0"];
         IS_REVERSE{reverse == true};
-        SET_DIR[target_dir = CAN.dir];
-        SET_REV_DIR[target_tir = !CAN.dir];
+        SET_DIR>target_dir = CAN.dir];
+        SET_REV_DIR>target_tir = !CAN.dir];
     end
 
     SEND[[send CAN data]];
@@ -228,11 +214,7 @@ END[[update PWM]];
 RETURN([return]);
 
 %% flow
-START --> IS_DRIVE_ON;
-IS_DRIVE_ON --> |N| MAIN_IS_STANDING;
-MAIN_IS_STANDING --> |N| IS_SETUP;
-MAIN_IS_STANDING --> |Y| MAIN_OFF --> IS_SETUP;
-IS_DRIVE_ON --> |Y| MAIN_ON --> IS_SETUP;
+START --> IS_SETUP;
 IS_SETUP --> |N| IS_EMERGENCY;
 IS_SETUP --> |Y| SETUP_STOP --> SETUP --> SEND_SETUP --> END;
 IS_EMERGENCY --> |N| BREAK_RAMP_NORMAL --> IS_STANDBY;
@@ -262,21 +244,48 @@ graph TD
     START([update PWM]);
     END([return]);
 
+    subgraph power switch
+        IS_DRIVE_ON{drive == true};
+        MAIN_ON[/main relais on/];
+        MAIN_IS_STANDING{standing == true};
+        MAIN_OFF[/main relais off/];
+    end
 
     %% definitions
-    IS_BREAKING{status == breaking};
-    IS_DRIVING{status == driving};
-    SET_BREAK_TIME>"_pwm_break.setRamp(break_ramp)"];
-    SET_DRIVE>"_pwm_drive.pwmWrite(target_speed)"];
-    SET_BREAK>"_pwm_break.pwmWrite(target_break)"];
+    subgraph breaking
+        IS_BREAKING{"IS BREAKING\n_target_break != 0"};
+        STOP_DRIVE[/"STOP DRIVE PWM\n_pwm_drive.writePWM(0)"/];
+        IS_DRIVE_STOPPED{"DRIVE STOPPED?\n_drive_pwm.stopped() == true"};
+        SET_BREAK>"_pwm_break.pwmWrite(target_break)"];
+    end
+
+    subgraph driving
+        STOP_BREAK[/"STOP BREAK PWM\n_pwm_break.writePWM(0)"/];
+        IS_DRIVING{"IS DRIVING\nstatus == driving"};
+        IS_BREAK_STOPPED{"BREAK STOPPED?\n_break_pwm.stopped() == true"};
+        SET_DRIVE>"_pwm_drive.pwmWrite(target_speed)"];
+    end
+
+    UPDATE[/"drivePWM.uptate()\nbreakPWM.update()"/];
 
 
     %% flow
-    START --> SET_BREAK_TIME --> IS_BREAKING;
+    START --> IS_DRIVE_ON;
+    IS_DRIVE_ON --> |N| MAIN_IS_STANDING;
+    MAIN_IS_STANDING --> |N| IS_BREAKING;
+    MAIN_IS_STANDING --> |Y| MAIN_OFF --> IS_BREAKING;
+    IS_DRIVE_ON --> |Y| MAIN_ON --> IS_BREAKING;
+
     IS_BREAKING --> |N| IS_DRIVING;
-    IS_BREAKING --> |Y| SET_BREAK --> END;
-    IS_DRIVING --> |N| END;
-    IS_DRIVING --> |Y| SET_DRIVE --> END;
+    IS_BREAKING --> |Y| STOP_DRIVE --> IS_DRIVE_STOPPED;
+    IS_DRIVE_STOPPED --> |N| UPDATE;
+    IS_DRIVE_STOPPED --> |Y| SET_BREAK --> UPDATE;
+    IS_DRIVING --> |N| UPDATE;
+    IS_DRIVING --> |Y| STOP_BREAK --> IS_BREAK_STOPPED;
+    IS_BREAK_STOPPED --> |N| UPDATE;
+    IS_BREAK_STOPPED --> |Y| SET_DRIVE --> UPDATE;
+    UPDATE --> END;
+
 ```
 
 # Setup

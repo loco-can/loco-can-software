@@ -39,6 +39,23 @@
 #include "measure.h"
 
 
+#define MOTOR_STATUS_EMERGENCY 0
+#define MOTOR_STATUS_OFF 1
+
+#define MOTOR_STATUS_STANDBY 2
+
+#define MOTOR_STATUS_IDLE 3
+#define MOTOR_STATUS_DRIVING 4
+#define MOTOR_STATUS_BREAKING 5
+
+#define MOTOR_STATUS_SETUP 6
+
+#define MOTOR_DEFAULT_RAMP 1000
+#define MOTOR_EMERGENCY_RAMP 100
+
+#define MOTOR_EMERGENCY_BREAK 1024
+
+
 class MODULE {
 
 	public:
@@ -46,15 +63,10 @@ class MODULE {
 
 		void begin(uint16_t ramp_time);
 
-		void heartbeat(void);
-
 		void set_ramp(uint16_t ramp);
 
 		void direction(bool dir);
 		bool direction(void);
-
-		void set_speed(uint16_t speed);
-		void set_break(uint16_t break_val);
 
 		uint16_t get_speed(void);
 		uint16_t get_target_speed(void);
@@ -65,7 +77,6 @@ class MODULE {
 		void update(void);
 		bool ready(void);
 
-		bool send(uint8_t*, uint8_t, long);
 
 
 	private:
@@ -78,22 +89,45 @@ class MODULE {
 		bool _target_dir;
 		bool _current_dir;
 
+		bool _standing;
+		bool _multi;			// is multi traction
+		bool _slave;			// is slave in multi traktion
+
 		uint16_t _ramp_time;
 		uint8_t _status;
 
-		void init(void);
-		void ramp(void);
-		bool stopped(void); // all standing and switched off
-		bool standing(void); // not driving
+		uint8_t _motor_status;
+		bool _main_relais;
+
+		void _set_status(CAN_MESSAGE);
+		void _update_pwm(void);
+
+		bool _stopped(void); // all standing and switched off
+		bool _standing(void); // not driving
 		int16_t _motor_voltage(void);
 
 		void _set_mains(bool); // set mains relais
+
 		void _set_dir(bool); // set direction
 		void _clear_dir(void); // clear all directions
+
+		void _set_speed(uint16_t);
+		void _set_break(uint16_t);
+
 		bool _has_direction(void); // check if direction is set
+
+		bool _send(void);
+
+		void _setup(void);
+		void _send_setup();
 
 		bool _drive_nulled;
 		bool _emergency;
+		bool _mains;
+
+		FLAGS _switches;
+		FLAGS _switches_1;
+		FLAGS _status;
 
 		INTELLITIMEOUT _heartbeat_timeout;
 		INTELLITIMEOUT _standing_timeout;

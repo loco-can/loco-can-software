@@ -87,6 +87,7 @@ void setup() {
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
 	can_com.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_HEARTBEAT);
+	can_com.register_filter(CAN_LOCO_SETUP_MASK, CAN_ID_LOCO_SETUP);
 
 
 	// init module
@@ -107,67 +108,6 @@ void setup() {
 
 
 void loop() {
-
-	CAN_MESSAGE message;
-
-	uint16_t speed_val;
-	uint16_t break_val;
-	uint16_t power_val;
-
-	uint32_t filter;
-
-
-	// check for message
-	if (filter = can_com.read(&message)) {
-
-		switch(filter) {
-
-			case CAN_ID_DRIVE:
-
-				// remove messy data
-				if (message.data[0] != 0) {
-					switches.set(message.data[0]);
-				}
-
-// Serial.print(filter);
-// Serial.print(" ");
-// Serial.println(switches.get(), BIN);
-
-				// =======================================
-				// set values
-				module.direction(switches.get_flag(DIR_FLAG));
-
-				status.set_flag(MAINS_FLAG, switches.get_flag(MAINS_FLAG));
-				status.set_flag(DRIVE_FLAG, switches.get_flag(DRIVE_FLAG));
-
-				speed_val = char2int (message.data[1], message.data[2]);
-				break_val = char2int (message.data[3], message.data[4]);
-				break_val = char2int (message.data[5], message.data[6]);
-
-				module.set_speed(speed_val / 4);
-				module.set_break(break_val / 4);
-
-				module.heartbeat();
-
-				break;
-
-			case CAN_ID_DRIVE_HEARTBEAT:
-				module.heartbeat();
-				break;
-
-			// case CAN_ID_LIGHT:
-			// 	Serial.print("Light ");
-			// 	break;
-
-			// case CAN_ID_MOTOR_CURRENT:
-			// 	Serial.print("Motor Current ");
-			// 	break;
-
-			// case CAN_ID_BATT_VOLTAGE:
-			// 	Serial.print("Battery voltage ");
-			// 	break;
-		}
-	}
 
 	// update module
 	module.update();
