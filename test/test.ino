@@ -1,65 +1,119 @@
 #include <Arduino.h>
 
 
-#include "value.h"
-#include "measure_calculate.h"
+#include "loco_config.h"
+#include "can_protocol.h"
+#include "can_com.h"
+#include "intellitimeout.h"
 
+// servo = 9
+// motor = 5
+#define CAN_STATUS_LED 5
 
-MEASURE_CALCULATE value_calc;
-VALUE value;
+#define SEND_TIMEOUT 500
+#define SEND_ID CAN_ID_DRIVE_HEARTBEAT
+#define DEBUG
 
+CAN_COM can_com;
+CAN_MESSAGE message;
+
+INTELLITIMEOUT send_timeout;
+
+int8_t msg;
+uint8_t send_msg;
+uint8_t msg_cnt;
 
 void setup(void) {
 
+	Serial.begin(115200);
 
-  Serial.begin(115200);
+	can_com.begin(CAN_BUS_SPEED, CAN_STATUS_LED);
 
-  value.begin(12);
-  value_calc.begin();
+	send_timeout.begin(SEND_TIMEOUT);
 
+	Serial.println("input binary 8 bit value to be sent");
+
+	send_msg = 0;
 }
 
 
 void loop(void) {
 
-  uint16_t v;
-  uint16_t i;
-
-  for (i=0;i<10;i++) {
-
-    v = random(12000);
-
-    value.set(v);
-
-    Serial.print(value.percentage());
-    Serial.print(" ");
-
-    value_calc.add_max(value);
-  }
-
-  Serial.println();
-
-  Serial.print(" avr ");
-  Serial.println(value_calc.percentage());
-
-  delay(500);
-
-  value_calc.reset();
-
-}
+	uint8_t i;
+	uint16_t filter;
+	uint8_t buffer[8];
 
 
-void print(VALUE value) {
+	msg = Serial.read();
 
-  Serial.println("stuct MEASURE_VALUE {");
-  Serial.print("  reference=");
-  Serial.println(value.reference());
-  Serial.print("  precission=");
-  Serial.println(value.precission());
-  Serial.print("  percentage=");
-  Serial.println(value.percentage());
-  Serial.print("  index=");
-  Serial.println(value.index());
-  Serial.println("}");
+
+// 	// get data from serial
+// 	if (msg != -1) {
+// Serial.println(msg);
+
+// 		// not end of message
+// 		if (msg != 10 && msg_cnt < 8) {
+
+// 			switch(msg) {
+
+// 				// add 0
+// 				case 48:
+
+// 					break;
+
+// 				// add 1
+// 				case 49:
+// 					break;
+// 			}
+// 		}
+
+// 		// end of message
+// 		else {
+// 			send_msg = msg;
+// 		}
+// 	}
+
+	// =========================================
+	// send message
+	if (send_timeout.update()) {
+
+		buffer[0] = 0xFF;
+		buffer[1] = 0x88;
+		buffer[2] = 0x00;
+		buffer[3] = 0xAA;
+		can_com.send(buffer, 4, CAN_ID_DRIVE);
+
+		buffer[0] = 0x12;
+		can_com.send(buffer, 1, CAN_ID_SPEED);
+	}
+
+
+	// =========================================
+	// received message
+	filter = can_com.read(&message);
+
+
+	// receive message
+	if (filter) {
+		Serial.print("receive id 0x");
+		Serial.print(filter, HEX);
+
+		Serial.print(" data ");
+		Serial.println(message.data[0], BIN);
+	}
+
+
+	// no message
+	// else {
+		// Serial.print(".");
+
+		// i++;
+
+		// if (i > 30) {
+		// 	Serial.println();
+		// 	i = 0;
+		// }
+	// }
+
 
 }

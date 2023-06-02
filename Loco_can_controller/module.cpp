@@ -127,105 +127,105 @@ void MODULE::_receive(CAN_MESSAGE message) {
   if (filter = can_com.read(&message)) {
 
 
-	// collision has timed out
-	if (_collision_timeout.check() == true) {
-	  _collision = false;
-	}
-
-
-	// SWITCH by CAN.ID
-	switch (filter) {
-
-
-	  // VEHICLE MESSAGE
-	  case CAN_ID_VEHICLE_STATUS:
-
-		// not activated ==> save vehicle in list
-		if (_active == false) {
-		  _vehicles.add(message.uuid, message.data[0]);
+		// collision has timed out
+		if (_collision_timeout.check() == true) {
+		  _collision = false;
 		}
 
-		break;
+
+		// SWITCH by CAN.ID
+		switch (filter) {
 
 
-	  // CONTROLLER MESSAGE
-	  case CAN_ID_DRIVE:
+		  // VEHICLE MESSAGE
+		  case CAN_ID_VEHICLE_STATUS:
 
-		_collision = true;
-		_collision_timeout.retrigger();
+			// not activated ==> save vehicle in list
+			if (_active == false) {
+			  _vehicles.add(message.uuid, message.data[0]);
+			}
 
-		break;
-
-
-	  // set battery voltage
-	  case CAN_ID_VOLTAGE:
-		value.set_package(message.data);
-
-		_voltage.add_min(value);
-		_meter_volt.set(map(_voltage.percentage(), 0, 1023, 0, 1000));
-
-		break;
-
-// *****************
-// OPTIONAL - depends on the board version
-// display motor voltage
-#ifdef METER_MOTOR_VOLT
-	  case CAN_ID_MOTOR_VOLTAGE:
-		value.set_package(message.data);
-		_voltage_motor.add_min(value);
-
-		_meter_motor.set(map(_voltage_motor.percentage(), 0, 1023, 0, 1000));
-		break;
-#endif
-// *****************
-
-// *****************
-// OPTIONAL - depends on the board version
-// display current
-#ifdef METER_AMP
-
-	  // set system current
-	  case CAN_ID_CURRENT:
-		value.set_package(message.data);
-		_current.add_max(value);
-
-		_meter_amp.set(map(_current.percentage(), 0, 1023, 0, 1000));
-		break;
-#endif
-// *****************
+			break;
 
 
-// *****************
-// OPTIONAL - depends on the board version
-// display current
-#ifdef METER_SPEED
+		  // CONTROLLER MESSAGE
+		  case CAN_ID_DRIVE:
 
-	  // set system current
-	  case CAN_ID_SPEED:
-		value.set_package(message.data);
-		_speed.add_max(value);
+			_collision = true;
+			_collision_timeout.retrigger();
 
-		_meter_speed.set(map(_speed.percentage(), 0, 1023, 0, 1000));
-		break;
-#endif
-// *****************
+			break;
 
 
+		  // set battery voltage
+		  case CAN_ID_VOLTAGE:
+			value.set_package(message.data);
 
-// *****************
-// OPTIONAL - depends on the board version
-// switch instrument light by light message if output is present
-#ifdef INSTRUMENT_LIGHT
+			_voltage.add_min(value);
+			_meter_volt.set(map(_voltage.percentage(), 0, 1023, 0, 1000));
 
-	  // set instrument light
-	  case CAN_ID_LIGHT:
-		digitalWrite(INSTRUMENT_LIGHT, message.data[0] & LIGHT_INSTR);
-		break;
+			break;
 
-#endif
-// *****************
+	// *****************
+	// OPTIONAL - depends on the board version
+	// display motor voltage
+	#ifdef METER_MOTOR_VOLT
+		  case CAN_ID_MOTOR_VOLTAGE:
+			value.set_package(message.data);
+			_voltage_motor.add_min(value);
 
-	}
+			_meter_motor.set(map(_voltage_motor.percentage(), 0, 1023, 0, 1000));
+			break;
+	#endif
+	// *****************
+
+	// *****************
+	// OPTIONAL - depends on the board version
+	// display current
+	#ifdef METER_AMP
+
+		  // set system current
+		  case CAN_ID_CURRENT:
+			value.set_package(message.data);
+			_current.add_max(value);
+
+			_meter_amp.set(map(_current.percentage(), 0, 1023, 0, 1000));
+			break;
+	#endif
+	// *****************
+
+
+	// *****************
+	// OPTIONAL - depends on the board version
+	// display current
+	#ifdef METER_SPEED
+
+		  // set system current
+		  case CAN_ID_SPEED:
+			value.set_package(message.data);
+			_speed.add_max(value);
+
+			_meter_speed.set(map(_speed.percentage(), 0, 1023, 0, 1000));
+			break;
+	#endif
+	// *****************
+
+
+
+	// *****************
+	// OPTIONAL - depends on the board version
+	// switch instrument light by light message if output is present
+	#ifdef INSTRUMENT_LIGHT
+
+		  // set instrument light
+		  case CAN_ID_LIGHT:
+			digitalWrite(INSTRUMENT_LIGHT, message.data[0] & LIGHT_INSTR);
+			break;
+
+	#endif
+	// *****************
+
+		}
   }
 }
 
