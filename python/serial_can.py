@@ -1,78 +1,74 @@
-import serial
 import time
+import signal
 
-# ser = serial.Serial('/dev/ttyS3', 115200, timeout=1)
+from multiprocessing import Process
 
-serialPort = serial.Serial(
-    port="/dev/ttyS6", baudrate=115200, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-)
-
-serialString = ""  # Used to hold data coming over UART
-
-start_bit = 255
-start_bit_count = 2
-end_string = "LOCO"
+from modules.message import Message
+from modules.http import HTTP
+from modules.serial import SerialCAN
 
 
-def parse(data):
-
-    ret = {}
-    valid = True;
-    data_list = list(data);
-
-
-    # check for valid format
-    # [0,1] == 0xFF
-    # [end] == LOCO\r\n
-    start = data_list[0:2]
-    end = data_list[-1*(len(end_string)+2):-2]
-
-    # check start
-    for i in start:
-        if (i != start_bit):
-            valid = False
-
-    # check end
-    for k, i in enumerate(end):
-        if i != end[k]:
-            valid = False
+# handler for program abort
+def handler(signum, frame):
+	# res = input("ctrl-c pressed: exit?")
+	# if (res == 'y'):
+	exit(1)
 
 
-    # is valid
-    if valid:
-
-        # get identifiers
-        ret["can_id"] = int.from_bytes(bytes(data_list[3:7]), byteorder="big")
-        ret["uuid"] = int.from_bytes(bytes(data_list[7:9]), byteorder="big")
+# clear console
+def cls():
+	os.system('cls' if os.name=='nt' else 'clear')
 
 
-        # get data
-        ret["size"] = data_list[2]
+# http server
+def server():
 
-        ret["data"] = [];
-        for d in data_list[9:9+ret["size"]]:
-            ret["data"].append(d)
-
-
-        # get checksum
-        ret["checksum"] = data_list[len(data_list) - len(end_string) - 3]
+	http = HTTP()
+	http.start(34567)
 
 
-    return ret
-    pass
+# logger
+def logger():
+
+	print("start CAN logger")
+
+	sCAN = SerialCAN()
+
+	serialPort = sCAN.connect()
+	serialString = ""  # Used to hold data coming over UART
+
+	m = Message()
+
+	print("start logging")
+
+	while 1:
+
+		# Wait until there is data waiting in the serial buffer
+		if sCAN.available():
+
+			# Read data out of the buffer until a carraige return / new line is found
+			data = sCAN.read()
+
+			# end of line
+			if data:
+
+				m.add(data)
+
+				# cls()
+				# print(Message.can_id())
+				print(m.uuid())
 
 
-while 1:
+# main routine
+if __name__ == "__main__":
 
-    # Wait until there is data waiting in the serial buffer
-    if serialPort.in_waiting > 0:
+	signal.signal(signal.SIGINT, handler)
 
-        # Read data out of the buffer until a carraige return / new line is found
-        data = serialPort.readline()
+	p1 = Process(target=server)
+	p1.start()
 
+	p2 = Process(target=logger)
+	p2.start()
 
-        # end of line
-        if (data):
-
-            print(parse(data))
-
+	p1.join()
+	p2.join()

@@ -8,6 +8,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+
+#define DEBUG
+
+
 /*
  * list of boards
  */
@@ -41,6 +45,11 @@
 #define AP_PASSWORD "123456789"
 #define AP_PORT 80
 
+/*
+ * WIKI LED configuration
+ */
+#define WIFI_LED_CONNECT_FLASH 200
+#define WIFI_CONNECT_WAIT 500
 
 /*
  * HTTP parameter settings

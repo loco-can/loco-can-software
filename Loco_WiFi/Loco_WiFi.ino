@@ -23,7 +23,7 @@
 #include "config.h"
 #include "module_board.h"
 
-#include "intelliled.h"
+#include "intelliLed.h"
 #include "can_protocol.h"
 #include "loco_config.h"
 
@@ -33,53 +33,71 @@
 
 
 struct DATA {
-  double uuid;
-  int type;
+	double uuid;
+	int type;
 };
 
 
-INTELLILED led(CAN_STATUS_LED);
+INTELLILED wifi_led(WIFI_STATUS_LED);
 WEBSERVER server(WIFI_PORT);
+CAN_COM can_com(CAN_RX, CAN_TX);
+CAN_MESSAGE message;
 
 
 void setup() {
 
-  // disable watchdogs
-  disableCore0WDT();
-  disableCore1WDT();
-  disableLoopWDT();
+	wifi_led.flash(1000);
 
-  led.off();
+	// while(!Serial) {
+	// 	wifi_led.update();
+	// }
 
-  Serial.begin(115200);
+	#ifdef DEBUG
+		Serial.begin(115200);
+		Serial.println("");
+	#endif
 
-  Serial.println("");
+	// disable watchdogs
+	disableCore0WDT();
+	disableCore1WDT();
+	disableLoopWDT();
 
-  // select WiFi connection type
-  if (WIFI_AP_MODE == true) {
-    server.ap((char*)AP_SSID, (char*)AP_PASSWORD);
-  }
-  else {
-    server.wifi((char*)WIFI_SSID, (char*)WIFI_PASSWORD);
-  }
+	wifi_led.on();
 
-  server.begin();
+	// ===================================
+	// select WiFi connection type
+	#ifdef DEBUG
+		Serial.println("Start WiFi module");
+	#endif
 
-  led.blink(BLINKTIME);
+	if (WIFI_AP_MODE == true) {
+		server.ap((char*)AP_SSID, (char*)AP_PASSWORD, wifi_led);
+	}
+	else {
+		server.wifi((char*)WIFI_SSID, (char*)WIFI_PASSWORD, wifi_led);
+	}
 
-  DATA data[16];
+	server.begin();
+	wifi_led.off();
 
-  data[0].uuid = 1234567;
-  data[0].type = 0x47;
 
-  data[1].uuid = 9876543;
-  data[1].type = 0xF1;
+	// ===================================
+	// CAN initialisation
+    can_com.begin(500E3, CAN_STATUS_LED);
+
+	wifi_led.flash(500);
 }
 
 
 void loop() {
 
-  // blink heartbeat
-  led.update();
+	uint16_t filter;
 
+	if (filter = can_com.read(&message)) {
+		Serial.println(filter);
+	}
+
+
+	// blink heartbeat
+	wifi_led.update();
 }

@@ -1,0 +1,35 @@
+<html>
+	<head>
+		<title>CAN logger</title>
+
+		<script type="text/javascript">
+
+			function get() {
+
+				setTimeout(get, 1000);
+
+
+				// Create an XMLHttpRequest object
+				const xhttp = new XMLHttpRequest();
+
+				// Define a callback function
+				xhttp.onload = function() {
+				  // Here you can use the Data
+				}
+
+				// Send a request
+				xhttp.open("GET", "data.html");
+			}
+
+			get();
+
+		</script>
+	</head>
+
+	<body>
+		<h2>CAN-logger</h2>
+
+		<div id="page">
+		</div>
+	</body>
+</html>

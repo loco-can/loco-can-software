@@ -10,25 +10,39 @@
 #include "config.h"
 #include "can_protocol.h"
 
+#include "intelliLed.h"
+
 #include "webserver.h"
 
 
 // init webserver on port
-WEBSERVER::WEBSERVER(int port) {
-
+WEBSERVER::WEBSERVER(uint16_t port) {
 	_server = new AsyncWebServer(port);
+	_port = port;
 }
 
 
 // connect to wifi
-void WEBSERVER::wifi(char* ssid, char* password) {
-    _connect(false, ssid, password);
+void WEBSERVER::wifi(char* ssid, char* password, INTELLILED wifi_led) {
+
+	_wifi_led = wifi_led;
+	_wifi_led.flash(WIFI_LED_CONNECT_FLASH);
+
+	_connect(false, ssid, password);
+
+	_wifi_led.off();
 }
 
 
 // create access point
-void WEBSERVER::ap(char* ssid, char* password) {
-    _connect(true, ssid, password);
+void WEBSERVER::ap(char* ssid, char* password, INTELLILED wifi_led) {
+
+	_wifi_led = wifi_led;
+	_wifi_led.flash(WIFI_LED_CONNECT_FLASH);
+
+	_connect(true, ssid, password);
+
+	_wifi_led.off();
 }
 
 
@@ -47,7 +61,10 @@ void WEBSERVER::_connect(bool ap, char* ssid, char* password) {
 void WEBSERVER::disconnect(void) {
 	WiFi.disconnect();
 
-    Serial.println("WiFi disconnected");
+	#ifdef DEBUG
+		Serial.println("WiFi disconnected");
+		Serial.println();
+	#endif
 }
 
 
@@ -55,148 +72,189 @@ void WEBSERVER::disconnect(void) {
 void WEBSERVER::begin() {
 
 
-    SPIFFS.begin();
-
-
 	// create ACCESS POINT
-    if (_ap == true) {
+	if (_ap == true) {
 
-        Serial.println("Configuring access point");
+		#ifdef DEBUG
+			Serial.println("Configuring access point");
+		#endif
 
-        WiFi.softAP(_ssid, _password);
+		WiFi.softAP(_ssid, _password);
+		// WiFi.begin();  
 
-        // WiFi.begin();
-  
-        Serial.println("Server started");
+		_ip = WiFi.softAPIP();
 
-        _ip = WiFi.softAPIP();
+		#ifdef DEBUG
+			Serial.println("Server started");
+			Serial.print("Wifi access point IP ");
+		#endif
+	}
 
-        Serial.print("Wifi access point IP ");
-    }
+	// use WIFI client mode
+	else {
 
-    // use WIFI client mode
-    else {
+		#ifdef DEBUG
+			Serial.print("Connect to WiFi ");
+			Serial.print(_ssid);
+			Serial.print(" ");
+		#endif
 
-        Serial.print("Connect to WiFi ");
-        Serial.println(_ssid);
+		WiFi.begin(_ssid, _password);
 
-        WiFi.begin(_ssid, _password);
+		// wait for connection
+		while (WiFi.status() != WL_CONNECTED) {
 
-        // wait for connection
-        while (WiFi.status() != WL_CONNECTED) {
-            delay(500);
-            Serial.print(".");
-        }
+			_wifi_led.on();
+			delay(20);
+			_wifi_led.off();
 
-        _ip = WiFi.localIP();
+			#ifdef DEBUG
+				Serial.print(".");
+			#endif
 
-        Serial.print("WiFi connected with IP ");
-    }
+			delay(WIFI_CONNECT_WAIT);
+		}
 
-    Serial.println(_ip);
+		#ifdef DEBUG
+			Serial.println();
+		#endif
 
+		_ip = WiFi.localIP();
+	}
 
-    // =============================================
-    // serve static pages
-    _server->serveStatic("/", SPIFFS, "/").setDefaultFile("index.htm");
+	#ifdef DEBUG
+		Serial.print("Create WebServer at ");
+		Serial.print(_ip);
+		Serial.print(":");
+		Serial.println(_port);
+		Serial.print("web status led port ");
+		Serial.println(_wifi_led.port());
 
+		Serial.println("start SPIFFS");
+		Serial.println();
+		Serial.println("WiFi starup OK!");
+	#endif
 
-    // =============================================
-    // administration page
-    // _server->on("/admin", HTTP_GET, [this] (AsyncWebServerRequest *request) {
-    //     request->send(200, "text/html", _ip.toString());
-    // });
-
-
-    // =============================================
-    // GET API call
-    _server->on("/api", HTTP_GET, [this] (AsyncWebServerRequest *request) {
-      
-        String cmd;
-        StaticJsonDocument<256> json;
-        String output;
-
-
-        // int cnt = request->params();
-
-        if (request->hasParam("cmd")) {
-
-            cmd = request->getParam("cmd")->value();
-
-            Serial.print("API access: ");
-            Serial.println(cmd);
-
-            // ADD STATUS
-            json["status"]["ip"] = _ip.toString();
-
-            if (_ap) {
-                json["status"]["type"] = "Access Point Mode";
-            }
-
-            else {
-                json["status"]["type"] = "WiFi Client";
-            }
+	SPIFFS.begin();
 
 
-            // =======================================
-            // LOAD DATA
-            if (cmd == "load") {
-                json["data"][0]["type"] = "DRIVE";
-                json["data"][0]["uuid"] = "2237498787";
-                json["data"][0]["data"] = "0100010010";
-
-                json["data"][1]["type"] = "LIGHT";
-                json["data"][1]["uuid"] = "098745828";
-                json["data"][1]["data"] = "00010010";
-            }
+	// =============================================
+	// serve static pages
+	_server->serveStatic("/", SPIFFS, "/").setDefaultFile("index.htm");
 
 
-
-        }
-        
-        else {
-            json["error"] = "no command";
-        }
-
-        serializeJson(json, output);
-
-        // request->addHeader("Access-Control-Allow-Origin", "*");
-        request->send(200, "application/json", output);
-    });
+	// =============================================
+	// administration page
+	// _server->on("/admin", HTTP_GET, [this] (AsyncWebServerRequest *request) {
+	//     request->send(200, "text/html", _ip.toString());
+	// });
 
 
-    // =============================================
-    // POST to API
-    _server->on("/api", HTTP_POST, [this](AsyncWebServerRequest *request) {
-      
-        String message;
+	// =============================================
+	// GET API call
+	_server->on("/api", HTTP_GET, [this] (AsyncWebServerRequest *request) {
+	  
+		String cmd;
+		StaticJsonDocument<256> json;
+		String output;
 
-        Serial.println("POST received");
+		_wifi_led.on();
 
-        int cnt = request->params();
-        Serial.print("params ");
-        Serial.println(cnt);
+		// int cnt = request->params();
 
-        if (request->hasParam("cmd", true)) {
-            message = request->getParam("cmd", true)->value();
-        }
-        
-        else {
-            message = "No message sent";
-        }
-        
-        request->send(200, "text/plain", "POST: " + message + " with " + String(cnt) + " params");
-    });
+		if (request->hasParam("cmd")) {
+
+			cmd = request->getParam("cmd")->value();
+
+			#ifdef DEBUG
+				Serial.print("API access: ");
+				Serial.println(cmd);
+			#endif
+
+			// ADD STATUS
+			json["status"]["ip"] = _ip.toString();
+
+			if (_ap) {
+				json["status"]["type"] = "Access Point Mode";
+			}
+
+			else {
+				json["status"]["type"] = "WiFi Client";
+			}
 
 
-    // =============================================
-    // nothing found
-    _server->onNotFound( [](AsyncWebServerRequest *request) {
-   		request->send(404, "text/plain", "page Not found");
-    });
+			// =======================================
+			// LOAD DATA
+			if (cmd == "load") {
+				json["data"][0]["type"] = "DRIVE";
+				json["data"][0]["uuid"] = "2237498787";
+				json["data"][0]["data"] = "0100010010";
+
+				json["data"][1]["type"] = "LIGHT";
+				json["data"][1]["uuid"] = "098745828";
+				json["data"][1]["data"] = "00010010";
+			}
 
 
-    _server->begin();
+
+		}
+		
+		else {
+			json["error"] = "no command";
+		}
+
+		serializeJson(json, output);
+
+		// request->addHeader("Access-Control-Allow-Origin", "*");
+		request->send(200, "application/json", output);
+
+		_wifi_led.off();
+	});
+
+
+	// =============================================
+	// POST to API
+	_server->on("/api", HTTP_POST, [this](AsyncWebServerRequest *request) {
+	  
+		String message;
+
+		_wifi_led.on();
+
+		int cnt = request->params();
+
+		#ifdef DEBUG
+			Serial.println("POST received");
+			Serial.print("params ");
+			Serial.println(cnt);
+		#endif
+
+		if (request->hasParam("cmd", true)) {
+			message = request->getParam("cmd", true)->value();
+		}
+		
+		else {
+			message = "No message sent";
+		}
+		
+		request->send(200, "text/plain", "POST: " + message + " with " + String(cnt) + " params");
+
+		_wifi_led.off();
+	});
+
+
+	// =============================================
+	// nothing found
+	_server->onNotFound( [](AsyncWebServerRequest *request) {
+
+		// _wifi_led.on();
+
+		request->send(404, "text/plain", "page Not found");
+
+		// _wifi_led.off();
+	});
+
+
+	_server->begin();
 }
 
 

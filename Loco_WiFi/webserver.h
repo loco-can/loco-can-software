@@ -21,17 +21,18 @@
 	#include <ESPAsyncTCP.h>
 #endif
 
-#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWebSrv.h>
 #include <ArduinoJson.h>
+#include "intelliLed.h"
 
 
 
 class WEBSERVER {
 
 	public:
-		WEBSERVER(int port); // create webserver
-		void wifi(char* ssid, char* password); // connect to wifi
-		void ap(char* ssid, char* password); // create access point
+		WEBSERVER(uint16_t port); // create webserver
+		void wifi(char* ssid, char* password, INTELLILED wifi_led); // connect to wifi
+		void ap(char* ssid, char* password, INTELLILED wifi_led); // create access point
 		void disconnect(void); // end wifi connection
 
 		void begin(void); // start server
@@ -39,8 +40,10 @@ class WEBSERVER {
 	private:
 		bool _ap;
 		IPAddress _ip;
+		uint16_t _port;
 		char* _ssid;
 		char* _password;
+		INTELLILED _wifi_led;
 
 		void _connect(bool, char*, char*);
 		void _notFound(void);
