@@ -11,7 +11,7 @@ SERIALCAN s_can;
 // servo = 9
 // motor = 5
 // controll = 6
-#define CAN_STATUS_LED 9
+#define CAN_STATUS_LED 5
 
 
 void setup() {
