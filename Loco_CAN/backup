@@ -1,0 +1,181 @@
+/*
+ * LOCO-CAN
+ * 
+ * @author: Thomas H Winkler
+ * @copyright: 2018-2025
+ * @lizence: GG0
+ */
+
+/*
+ * 
+ */
+
+
+/*
+ * SEND:
+ * 
+ * STATUS
+ * byte 0:   7      6      5      4      3      2      1      0
+ *         error  ready   stop                 dir   drive  mains
+ */
+
+/*
+ * RECEIVE:
+ * 7 byte package
+ *
+ * STATUS
+ * byte 0:   7      6      5      4      3      2      1      0
+ *         error  ready   stop                 dir   drive  mains
+ *
+ * DRIVE VALUE: 10-bit value of drive voltage
+ * byte 1: drive bit 8-9
+ * byte 2: drive bit 0-7
+ *
+ * POWER VALUE: 10-bit value of drive max power
+ * byte 3: power bit 8-9
+ * byte 4: power bit 0-7
+ *
+ * BREAK VALUE: 10-bit value of break intensity
+ * byte 5: break bit 8-9
+ * byte 6: break bit 0-7
+ */
+
+#include "config.h"
+#include "module.h"
+
+#include "intelliLed.h"
+#include "intelliTimeout.h"
+// #include "flags.h"
+
+#include "local.h"
+
+
+
+INTELLILED led_can;
+INTELLILED led_status;
+
+INTELLITIMEOUT timer;
+INTELLITIMEOUT pwm_timer;
+
+
+MODULE module;
+
+LOCAL local;
+
+
+int speed, dir;
+
+void setup() {
+
+	Serial.begin(115200);
+	Serial.println("startup");
+
+
+	// INIT CAN LED
+	led_can.begin(LED_CAN);
+
+	led_can.on();
+	delay(1000);
+	led_can.off();
+
+	led_can.flash(1000);
+
+
+	// INIT STATUS LED
+	led_status.begin(LED_STATUS_RED, LED_STATUS_GREEN);
+	led_status.color(INTELLILED_RED);
+	led_status.on();
+	delay(500);
+	led_status.color(INTELLILED_YELLOW);
+	led_status.on();
+	delay(500);
+	led_status.color(INTELLILED_GREEN);
+	led_status.on();
+
+
+	// INIT module
+	module.begin();
+
+
+	// init timer
+	timer.begin(5000);
+	pwm_timer.begin(10);
+	// status = 0;
+
+	speed = 0;
+	dir = 1;
+
+
+	module.stop();
+	// module.forw();
+	// module.rev();
+	// module.brk();00
+
+	// Serial.println("init complete");
+
+	// INIT LOCAL CONTROL
+	local.begin(LOCAL_CONTROL, LOCAL_MAINS, LOCAL_DIR, LOCAL_HORN);
+}                   
+
+
+void loop() {
+
+	LOCAL_DATA data;
+
+	data = local.get();
+
+	Serial.print("mains ");
+	Serial.print(data.mains);
+	Serial.print(" - dir ");
+	Serial.print(data.dir);
+	Serial.print(" - break ");
+	Serial.print(data.breaking);
+	Serial.print(" - analog ");
+	Serial.print(analogRead(LOCAL_CONTROL));
+	Serial.print(" - controler ");
+	Serial.println(local.controler());
+
+
+	switch (data.dir) {
+		case 3:
+			module.stop();
+			break;
+		case 2:
+			module.stop();
+			module.forw();
+			break;
+		case 1:
+			module.stop();
+			module.rev();
+			break;
+	} 
+
+
+	if (data.breaking) {
+		module.brk();
+	}
+	else {
+		module.drive();
+	}
+
+
+	// if (data.mains == 2) {
+
+	// }
+	
+	module.set_pwm(data.control);
+
+
+	// if (pwm_timer.update()) {
+	// 	// Serial.println(s);
+	// }
+
+
+
+
+	led_can.update();
+	led_status.update();
+
+	module.update();
+
+}
