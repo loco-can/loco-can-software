@@ -7,9 +7,7 @@
  */
 
 
-#ifndef CONFIG_H
-#define CONFIG_H
-
+#pragma once
 #include <Arduino.h>
 
 
@@ -80,6 +78,3 @@
 
 // max settings bytes
 // #define MODULE_MAX_SETTINGS 1
-
-
-#endif

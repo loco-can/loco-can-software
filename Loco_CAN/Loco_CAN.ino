@@ -29,7 +29,7 @@
  */
 #include "config.h"
 #include "boards.h"
-#include "can_com.h"
+// #include "src/core/can_com.h"
 // #include "settings.h"
 
 

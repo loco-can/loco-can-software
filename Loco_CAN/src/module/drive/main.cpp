@@ -33,8 +33,10 @@
 /*
  * used additional class includes
  */
-#include "driver/ledc.h"
-
+// LED dim library for ESP32
+#ifdef BOARD_PLATFORM_ESP32
+    #include "driver/ledc.h"
+#endif
 
 
 /* *************************************************

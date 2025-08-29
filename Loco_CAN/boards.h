@@ -28,14 +28,14 @@
  * universal board settings
  */
 #if BOARD_VERSION == UNIVERSAL_BOARD_V_2_0
-	#include "module_universal.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/universal/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
 #if BOARD_VERSION == UNIVERSAL_BOARD_V_2_1
-	#include "module_universal.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/universal/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -44,20 +44,20 @@
  * controller board settings
  */
 #if BOARD_VERSION == CONTROLLER_BOARD_V_2_0
-	#include "module_controller.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/controller/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
 #if BOARD_VERSION == CONTROLLER_BOARD_V_2_1
-	#include "module_controller.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/controller/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
 #if BOARD_VERSION == CONTROLLER_BOARD_V_3_0
-	#include "module_controller.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/controller/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -66,14 +66,14 @@
  * switch board settings
  */
 #if BOARD_VERSION == SWITCH_BOARD_V_2_0
-	#include "module_switch.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/switch/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
 #if BOARD_VERSION == SWITCH_BOARD_V_2_1
-	#include "module_switch.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/switch/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -82,8 +82,8 @@
  * sensor board settings
  */
 #if BOARD_VERSION == SENSOR_BOARD_V_2_0
-	#include "module_sensor.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/sensor/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -92,8 +92,8 @@
  * servo board settings
  */
 #if BOARD_VERSION == SERVO_BOARD_V_2_0
-	#include "module_servo.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/servo/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -102,8 +102,8 @@
  * motor board settings
  */
 #if BOARD_VERSION == MOTOR_BOARD_V_2_0
-	#include "module_motor.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/motor/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -112,8 +112,8 @@
  * LED board settings
  */
 #if BOARD_VERSION == LED_BOARD_V_3_0
-	#include "module_led.h"
-	#define BOARD_PLATFORM ATMEGA
+	#include "src/module/led/main.h"
+	#define BOARD_PLATFORM_ATMEGA
 
 #endif
 
@@ -134,8 +134,8 @@
  ****************************************** */
 #if BOARD_VERSION == DRIVE_BOARD_V_3_0
 
-	#include "module_drive.h"
-	#define BOARD_PLATFORM ESP32
+	#include "src/module/drive/main.h"
+	#define BOARD_PLATFORM_ESP32
 
 	/* ******************************************
 	 * hardware settings
@@ -217,8 +217,8 @@
 
 #if BOARD_VERSION == DRIVE_BOARD_V_3_1
 
-	#include "module_drive.h"
-	#define BOARD_PLATFORM ESP32S3
+	#include "src/module/drive.h"
+	#define BOARD_PLATFORM_ESP32S3
 
 	/* ******************************************
 	 * hardware settings
