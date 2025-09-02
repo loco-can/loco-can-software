@@ -25,25 +25,22 @@
  * config.h: all module settings
  * board.h: hardware settings depending on hw version
  * can_com.h: CAN communication class
- * settings.h: configure parameters via CAN
  */
 #include "config.h"
-#include "boards.h"
-// #include "src/core/can_com.h"
-// #include "settings.h"
+// #include "src/core/can/can_com.h"
+// #include "src/LocoCANcore.h"
 
 
 /*
  * create CAN communication
  */
-CAN_COM can_com(CAN_RX, CAN_TX);
+// CAN_COM can_com(CAN_RX, CAN_TX);
 
 
 /*
- * The main routines of the module are included by selecting
- * the module in config.h
+ * create core
  */
-MODULE module;
+// LocoCANcore core
 
 
 
@@ -53,10 +50,11 @@ void setup() {
 	Serial.println("startup");
 
 	// start module
-	module.begin();
+	Serial.println("start core");
+	// core.begin();
 }                   
 
 
 void loop() {
-	module.update();
+	// core.update();
 }

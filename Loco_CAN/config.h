@@ -8,73 +8,129 @@
 
 
 #pragma once
-#include <Arduino.h>
 
 
-/* =====================================
- * The main module methods
- * are declared in module.h
- *
- * The board definitions are
- * defined in module_board.h
- *
- * Valid board versions:
- */
+/*
+In the config.h all supported modules are listed with the module include
+file and the available versions. To select a module for compilation the MODULE
+and MODULE_VERSION must be set.
+ 
+	ATMEGA based boards V2.x
+	ESP32 based boards V3.x
 
-/* ================================
- * ATMEGA based boards V2.x
- * ESP32 based boards V3.x
+	The MODULE_PLATFORM must be set in the included module definitions.
  */
 
 
-// universal module
-#define UNIVERSAL_BOARD_V_2_0 0x20
-#define UNIVERSAL_BOARD_V_2_1 0x21
+/* ========================================================================
+UNIVERSAL MODULE
+	The universal module has no special hardware. It has GPIO ports, that
+	can be used for different functions.
 
-// controller module
-#define CONTROLLER_BOARD_V_2_0 0x20
-#define CONTROLLER_BOARD_V_2_1 0x21
-#define CONTROLLER_BOARD_V_3_0 0x30
-
-// six MOSFET switched outputs (ex LIGHT BOARD)
-#define SWITCH_BOARD_V_2_0 0x20
-#define SWITCH_BOARD_V_2_1 0x21
-
-// 50A current, 4-pin Voltage, pulse sensor
-#define SENSOR_BOARD_V_2_0 0x20
-
-// servo module for 4 model servos
-#define SERVO_BOARD_V_2_0 0x20
-#define SERVO_BOARD_V_2_1 0x21
-
-// motor adapter to connect to power driver
-#define MOTOR_BOARD_V_2_0 0x20
-#define MOTOR_BOARD_V_2_1 0x21
-
-// 8 LED drivers
-#define LED_BOARD_V_3_0 0x30
-
-// 4q motor driver
-#define DRIVE_BOARD_V_3_0 0x30
-#define DRIVE_BOARD_V_3_1 0x31
+Versions:
+	V_2_0
+	V_2_1
+======================================================================== */
+#define UNIVERSAL_MODULE "src/module/uinversal.h"
 
 
-// =====================================
+/* ========================================================================
+CONTROLLER MODULE
+	The controller module is the interface to control locomotives. Pots,
+	switches, status lights, OLED displays and gauges are connected to it.
+
+Versions:
+	V_2_0
+	V_2_1
+	V_3_0
+======================================================================== */
+#define CONTROLLER_MODULE "src/module/controller.h"
+
+
+/* ========================================================================
+MOTOR MODULE
+	The motor module is the interface to control an external power driver
+	to the Loco-CAN system.
+
+Versions:
+	V_2_0
+	V_2_1
+======================================================================== */
+#define MOTOR_MODULE "src/module/uinversal.h"
+
+
+/* ========================================================================
+SWITCH MODULE
+	The switch module offers six outputs capable of switching up to 5 Amps
+	and 30 Volts per pin.
+
+Versions:
+	V_2_0
+	V_2_1
+======================================================================== */
+#define SWITCH_MODULE "src/module/switch.h"
+
+
+/* ========================================================================
+SENSOR MODULE
+	The sensor module has a 50 Amps current sensor, four voltage inputs and
+	a pulse input.
+
+Versions:
+	V_2_0
+======================================================================== */
+#define SENSOR_MODULE "src/module/sensor.h"
+
+
+/* ========================================================================
+SERVO MODULE
+	Up to four RC model servo motors can be controlled by this module.
+
+Versions:
+	V_2_0
+	V_2_1
+======================================================================== */
+#define SERVO_MODULE "src/module/servo.h"
+
+
+/* ========================================================================
+LED MODULE
+	A module with LED drivers.
+
+Versions:
+	V_2_0
+======================================================================== */
+#define LED_MODULE "src/module/led.h"
+
+
+/* ========================================================================
+DRIVE MODULE
+	A 4Q motor driver.
+
+Versions:
+	V_3_0
+	V_3_1
+======================================================================== */
+#define DRIVE_MODULE "src/module/drive.h"
+
+
+/* ===================================================================== */
+// VERSIONS
+#define V_1_0 10
+#define V_2_0 20
+#define V_2_1 21
+#define V_3_0 30
+#define V_3_1 31
+
+
+/* ===================================================================== */
 //
-// select board version
+// select module and version
 //
-// =====================================
-// #define BOARD_VERSION DRIVE_BOARD_V_3_0
-#define BOARD_VERSION CONTROLLER_BOARD_V_2_1
-
-#include "boards.h"
+/* ===================================================================== */
+#define MODULE CONTROLLER_MODULE
+#define MODULE_VERSION V_3_0
 
 
-// =====================================
-//
-// module settings definitions
-//
-// =====================================
-
-// max settings bytes
-// #define MODULE_MAX_SETTINGS 1
+#include MODULE
+/* ====================================================================== */
