@@ -4,6 +4,8 @@
  * @author: Thomas H Winkler
  * @copyright: 2025
  * @lizence: GG0
+ *
+ * Version 3.0
  */
 
 
@@ -11,14 +13,16 @@
 
 
 /*
-In the config.h all supported modules are listed with the module include
-file and the available versions. To select a module for compilation the MODULE
-and MODULE_VERSION must be set.
- 
-	ATMEGA based boards V2.x
-	ESP32 based boards V3.x
+	In the config.h all supported modules are listed with the module include
+	file and the available versions. To select a module for compilation the MODULE
+	and MODULE_VERSION must be set at the end of this file.
 
-	The MODULE_PLATFORM must be set in the included module definitions.
+	Take care, that the correct platform is selected in the Arduino IDE. The platform
+	to be used is set in the module definitions depending on the version. For simple
+	selection use this platforms:
+	 
+		ATMEGA based boards V2.x
+		ESP32 based boards V3.x
  */
 
 
@@ -129,7 +133,7 @@ Versions:
 //
 /* ===================================================================== */
 #define MODULE CONTROLLER_MODULE
-#define MODULE_VERSION V_3_0
+#define MODULE_VERSION V_2_0
 
 
 #include MODULE

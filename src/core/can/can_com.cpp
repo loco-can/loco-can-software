@@ -210,7 +210,8 @@ bool CAN_COM::send(uint8_t* data, uint8_t length, uint32_t id) {
   message.size = length;
 
   while (i < length && i < 8) {
-    message.data[i] = data[i++];  
+    message.data[i] = data[i];
+    i++;  
   }
 
   _can_handler.send(message);
@@ -305,8 +306,9 @@ uint16_t CAN_COM::read(CAN_MESSAGE* message) {
 }
 
 
-bool CAN_COM::clear_filter() {
+void CAN_COM::clear_filter() {
   _filter_count = 0;
+
 }
 
 

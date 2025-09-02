@@ -22,28 +22,29 @@
 
 /*
  * basic includes
- * config.h: all module settings
- * board.h: hardware settings depending on hw version
+ * config.h: module selection and parameter settings
  * can_com.h: CAN communication class
+ * can_com.h: CAN communication class
+ * LocoCANcore.h: The main class
  */
 #include "config.h"
-// #include "src/core/can/can_com.h"
-// #include "src/LocoCANcore.h"
+#include "src/core/can/can_com.h"
+#include "src/LocoCANcore.h"
 
 
 /*
  * create CAN communication
  */
-// CAN_COM can_com(CAN_RX, CAN_TX);
+CAN_COM can_com(CAN_RX, CAN_TX);
 
 
 /*
  * create core
  */
-// LocoCANcore core
+LocoCANcore core;
 
 
-
+// STARTUP
 void setup() {
 
 	Serial.begin(115200);
@@ -51,10 +52,11 @@ void setup() {
 
 	// start module
 	Serial.println("start core");
-	// core.begin();
+	core.begin();
 }                   
 
 
+// MAIN LOOP
 void loop() {
-	// core.update();
+	core.update();
 }

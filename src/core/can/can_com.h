@@ -64,7 +64,7 @@ class CAN_COM {
 
     bool send(byte* data, byte length, uint32_t id); // send data
     
-    bool clear_filter();
+    void clear_filter();
     bool register_filter(uint16_t mask, uint16_t filter); // add mask and filter
     uint16_t read(CAN_MESSAGE* message); // receive data > true if no filter or filter match
 
