@@ -40,7 +40,7 @@
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-	// #include "../function/controller/main.h"
+	#include "../function/controller/main.h"
 	#include "../function/servo/main.h"
 	#include "../function/gauge/main.h"
 	#include "../function/switch/main.h"
