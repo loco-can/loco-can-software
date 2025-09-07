@@ -82,7 +82,7 @@ void FUNCTION_CONTROLLER::begin(CAN_COM can) {
     #endif
     // **********************************
 
-
+/*
     // **********************************
     // GAUGES
 
@@ -121,7 +121,7 @@ void FUNCTION_CONTROLLER::begin(CAN_COM can) {
 		#endif
 		_motor_current_gauge.begin(CONTROLLER_MOTOR_CURRENT_PORT);
 	#endif
-
+*/
 }
 
 
