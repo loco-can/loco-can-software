@@ -12,6 +12,18 @@
 #pragma once
 
 
+/* ========================================================================
+ * GLOBAL SETTINGS
+ * uncommend to activate serial debug */
+#define DEBUG
+
+/* CAN COMMUNICATION */
+#define CAN_SPEED 500
+
+/* time to detect a long pressed button */
+#define BUTTON_LONG_PUSH_TIME 1000
+
+
 /*
 	In the config.h all supported modules are listed with the module include
 	file and the available versions. To select a module for compilation the MODULE

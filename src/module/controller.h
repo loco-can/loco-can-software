@@ -17,9 +17,8 @@
 
 
 /* ******************************************
- * The board version is set in the config.h file
+ * The module version is set in the config.h file
  */
-
 
 /*
  * CONTROLLER ADAPTER with universal module V2.0
@@ -31,20 +30,25 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_PLATFORM_ATMEGA
+	#define CONTROLLER_ANALOG_RESOLUTION 1024
 
 	#define CAN_RX 10
 	#define CAN_TX 2
 	#define CAN_STATUS_LED 0
 
+
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-	#include "../function/controller/main.h"
+	// #include "../function/controller/main.h"
+	#include "../function/servo/main.h"
+	#include "../function/gauge/main.h"
+	#include "../function/switch/main.h"
 
 	// FUNCTION PARAMETERS
 	// switches
-	#define CONTROLLER_MAINS_PORT  
-	#define CONTROLLER_DIR_PORT 
+	#define CONTROLLER_MAINS_PORT A4
+	#define CONTROLLER_DIR_PORT A3
 	#define CONTROLLER_HORN_PORT 5
 	#define CONTROLLER_HORN2_PORT 9
 	#define CONTROLLER_LIGHT_PORT A5
@@ -81,6 +85,7 @@
 	// ======================================
 
 	#define MODULE_PLATFORM_ATMEGA
+	#define CONTROLLER_ANALOG_RESOLUTION 1024
 
 	#define CAN_RX 10
 	#define CAN_TX 2
@@ -90,11 +95,14 @@
 	// INCLUDED FUNCTIONS
 	// ======================================
 	#include "../function/controller/main.h"
+	#include "../function/servo/main.h"
+	#include "../function/gauge/main.h"
+	#include "../function/switch/main.h"
 
 	/* define corresponding parameters */ 
 	// switches
-	#define CONTROLLER_MAINS_PORT  
-	#define CONTROLLER_DIR_PORT 
+	#define CONTROLLER_MAINS_PORT A4
+	#define CONTROLLER_DIR_PORT A3
 	#define CONTROLLER_HORN_PORT 5
 	#define CONTROLLER_HORN2_PORT 9
 	#define CONTROLLER_LIGHT_PORT A5
@@ -128,7 +136,12 @@
 #elif MODULE_VERSION == V_3_0
 
 	#define MODULE_PLATFORM_ESP32
+	#define CONTROLLER_ANALOG_RESOLUTION 2048
+
 	#include "../function/controller/main.h"
+	#include "../function/servo/main.h"
+	#include "../function/gauge/main.h"
+	#include "../function/switch/main.h"
 
 	// CAN ports
 	#define CAN_RX 17

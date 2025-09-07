@@ -1,6 +1,3 @@
-#ifndef FUNCTION_CONTROLLER_H
-#define FUNCTION_CONTROLLER_H
-
 /*
  * Loco-CAN controller function
  *
@@ -59,6 +56,8 @@
 
 	(optional parameters are in [])
 
+	CONTROLLER_ANALOG_RESOLUTION => resolution for analog inputs (depends on platform)
+
 	CONTROLLER_MAINS_PORT => port for mains switch
 	CONTROLLER_DIR_PORT => port for direction switch
 	CONTROLLER_HORN_PORT => port for horn button
@@ -90,12 +89,43 @@
 				{list of supported OLED displays}
  */
 
+#pragma once
+
+#define FUNCTION_CONTROLLER_H
+
+/* GLOBAL COMPONENTS*/
+#include "../../../config.h"
+#include "../../can_protocol.h"
+
+
+/* CORE COMPONENTS */
+#include "../../core/can/can_com.h"
+#include "../../core/analogSwitch/analogSwitch.h"
+#include "../../core/button/intelliButton.h"
+#include "../../core/servo/intelliServo.h"
+
 
 class FUNCTION_CONTROLLER {
 
-public:
-	void begin(void);
+	public:
+		void begin(CAN_COM can);
+		void update(void);
+
+	private:
+		CAN_COM _can;
+		CAN_MESSAGE _message;
+
+		ANALOGSWITCH _mains_switch;
+		ANALOGSWITCH _dir_switch;
+		INTELLIBUTTON _horn_switch;
+		INTELLIBUTTON _horn2_switch;
+
+		ANALOGSWITCH _light_switch;
+		INTELLIBUTTON _light2_switch;
+		INTELLIBUTTON _instrument_switch;
+
+		INTELLISERVO _battery_voltage_gauge;
+		INTELLISERVO _motor_voltage_gauge;
+		INTELLISERVO _battery_current_gauge;
+		INTELLISERVO _motor_current_gauge;
 };
-
-
-#endif

@@ -13,11 +13,11 @@
 /*
  * usage:
  *
- * The a value is represented by an reference value and a precentage. The 16 bit
+ * The value is represented by an reference value and a precentage. The 16 bit
  * reference is set in the begin method. A precission is calculated to exploit the
  * full 16 bit range and is accessable by the precission() method. A reference of 12 (i.e. Volt)
- * is automatically set to  a precission of 3, which means, that a absolute value
- * is returned with three decimals. A 12 Volt value is returne as an integeor of
+ * is automatically set to a precission of 3, which means, that a absolute value
+ * is returned with three decimals. A 12 Volt value is returne as an integer of
  * 12000, 8.836 Volts are returne as 8836 (precission 3).
  *
  * The percentage value relates to the reference value. A absolute value is converted

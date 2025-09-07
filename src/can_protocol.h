@@ -5,6 +5,7 @@
 // =====================================
 
 #define CAN_BUS_SPEED 500E3
+#define CAN_ALIVE_TIMEOUT 500
 
 // MASK: bit=0 > bit of packetId is ignored
 // MASK: bit=1 > bit is compared

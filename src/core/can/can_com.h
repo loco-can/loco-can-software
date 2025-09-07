@@ -56,6 +56,8 @@ class CAN_COM {
     CAN_COM(void); // construct with default CS and INT port
     CAN_COM(uint8_t CS, uint8_t INT); // user CS and INT ports
 
+    void setPorts(uint8_t CS, uint8_t INT); // set user CS and INT ports
+
     bool begin(long speed, uint8_t led_port); // start communication with speed setting and status LED
     bool begin(long speed, uint8_t led_port1, uint8_t led_port2); // start communication with speed setting and r/w status LEDs
 

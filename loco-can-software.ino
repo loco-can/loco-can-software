@@ -28,15 +28,7 @@
  * LocoCANcore.h: The main class
  */
 #include "config.h"
-#include "src/core/can/can_com.h"
 #include "src/LocoCANcore.h"
-
-
-/*
- * create CAN communication
- */
-CAN_COM can_com(CAN_RX, CAN_TX);
-
 
 /*
  * create core
@@ -47,11 +39,21 @@ LocoCANcore core;
 // STARTUP
 void setup() {
 
-	Serial.begin(115200);
-	Serial.println("startup");
+	#ifdef DEBUG
+		Serial.begin(115200);
 
-	// start module
-	Serial.println("start core");
+		Serial.println("***********************");
+		Serial.println("* Welcome to Loco-Can *");
+		Serial.println("* The Bus  for Trains *");
+		Serial.println("***********************");
+		Serial.println();
+		Serial.print("MODULE: ");
+		Serial.print(MODULE);
+		Serial.print(", VERSION: ");
+		Serial.println(MODULE_VERSION);
+		Serial.println();
+	#endif
+
 	core.begin();
 }                   
 

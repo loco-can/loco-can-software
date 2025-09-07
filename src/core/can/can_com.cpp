@@ -37,10 +37,17 @@ CAN_COM::CAN_COM() {
  */
 CAN_COM::CAN_COM(uint8_t CS, uint8_t INT) {
 
+  setPorts(CS, INT);
+  create_uuid();
+}
+
+
+/*
+ * set CS and INT for can class
+ */
+void CAN_COM::setPorts(uint8_t CS, uint8_t INT) {
   _cs = CS;
   _int = INT;
-
-  create_uuid();
 }
 
 
@@ -67,6 +74,11 @@ bool CAN_COM::begin(long speed, uint8_t led_port1, uint8_t led_port2) {
 
 bool CAN_COM::_begin(long speed) {
 
+  #ifdef DEBUG
+    Serial.println("*******************");
+    Serial.println("start core/can_com");
+  #endif
+
   // status led[s] on
   _led_r.on();
 
@@ -76,17 +88,17 @@ bool CAN_COM::_begin(long speed) {
 
   // start the CAN bus
   #ifdef DEBUG
-    Serial.print("Start CAN at ");
+    Serial.print("> Start CAN at ");
     Serial.print(speed);
     Serial.println(" bps");
 
     #ifdef ARDUINO_ARCH_ESP32
-      Serial.print("SJA1000 RX ");
+      Serial.print("  > using SJA1000 RX ");
       Serial.print(_cs);
       Serial.print(" - TX ");
       Serial.println(_int);
     #else
-      Serial.print("MCP2551 CS ");
+      Serial.print("  > using MCP2551 CS ");
       Serial.print(_cs);
       Serial.print(" - INT ");
       Serial.println(_int);
@@ -96,7 +108,7 @@ bool CAN_COM::_begin(long speed) {
   while (!_can_handler.begin(speed, _cs, _int)) {
 
     #ifdef DEBUG
-      Serial.println("Starting CAN failed!");
+      Serial.println("*** Starting CAN failed!");
     #endif
 
     // flash status light[s]
@@ -116,7 +128,7 @@ bool CAN_COM::_begin(long speed) {
 
 
   #ifdef DEBUG
-    Serial.print("CAN status led port ");
+    Serial.print("> CAN status led port ");
 
     if (_led_w.available()) {
       Serial.print("r on port ");
@@ -130,7 +142,7 @@ bool CAN_COM::_begin(long speed) {
       Serial.println(_led_r.port());
     }
 
-    Serial.print("Device UUID: ");
+    Serial.print("> Device UUID: ");
     Serial.println(uuid(), HEX);
   #endif
 
@@ -148,7 +160,8 @@ bool CAN_COM::_begin(long speed) {
   }
 
   #ifdef DEBUG
-    Serial.println("CAN startup OK!");
+    Serial.println("CAN is up and running!");
+    Serial.println("**********************");
     Serial.println();
   #endif
 
@@ -185,6 +198,18 @@ bool CAN_COM::alive(void) {
 /*
  * send data package
  */
+
+
+// ToDo add bus communication inside a module between functions
+
+
+
+
+
+
+
+
+
 bool CAN_COM::send(uint8_t* data, uint8_t length, uint32_t id) {
 
   uint8_t i = 0;
