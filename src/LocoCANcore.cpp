@@ -11,12 +11,10 @@
 
 // #include "../config.h"
 #include "can_protocol.h"
-
 #include "LocoCANcore.h"
 
-// #include "core/can/can_com.h"
 
-// CAN_COM can_com(CAN_RX, CAN_TX);
+CAN_COM can;
 
 
 void LocoCANcore::begin(void) {
@@ -31,9 +29,9 @@ void LocoCANcore::begin(void) {
 	 * CAN_TX, CAN_TX and CAN_STATUS_LED are defined in the module settings h file
 	 * CAN_BUS_SPEED is set in the can_protocol.h
 	 */
-	_can.setPorts(CAN_RX, CAN_TX);
-	_can.set_alive(CAN_ALIVE_TIMEOUT);
-	_can.begin(CAN_BUS_SPEED, CAN_STATUS_LED);
+	can.setPorts(CAN_RX, CAN_TX);
+	can.set_alive(CAN_ALIVE_TIMEOUT);
+	can.begin(CAN_BUS_SPEED, CAN_STATUS_LED);
 
 
 	/* ********************************************************
@@ -47,37 +45,37 @@ void LocoCANcore::begin(void) {
 	// =========================
 	// start function CONTROLLER
 	#ifdef FUNCTION_CONTROLLER_H
-		_controller.begin(_can);
+		_controller.begin();
 	#endif
 
 	// =========================
 	// start function GAUGE
 	#ifdef FUNCTION_GAUGE_H
-		_gauge.begin(_can);
+		_gauge.begin();
 	#endif
 
 	// =========================
 	// start function MOTOR
 	#ifdef FUNCTION_MOTOR_H
-		_motor.begin(_can);
+		_motor.begin();
 	#endif
 
 	// =========================
 	// start function SWITCH
 	#ifdef FUNCTION_SWITCH_H
-		_switch.begin(_can);
+		_switch.begin();
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SERVO_H
-		_servo.begin(_can);
+		_servo.begin();
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SENSOR_H
-		_sensor.begin(_can);
+		_sensor.begin();
 	#endif
 
 
@@ -97,10 +95,39 @@ void LocoCANcore::update(void) {
 	/*
 	 * update registered functions
 	 */
-	// #ifdef FUNCTION_CONTROLLER
-	// 	_controller.update();
-	// #endif
+	#ifdef FUNCTION_CONTROLLER_H
+		_controller.update();
+	#endif
 
+	// =========================
+	// start function GAUGE
+	#ifdef FUNCTION_GAUGE_H
+		_gauge.update();
+	#endif
+
+	// =========================
+	// start function MOTOR
+	#ifdef FUNCTION_MOTOR_H
+		_motor.update();
+	#endif
+
+	// =========================
+	// start function SWITCH
+	#ifdef FUNCTION_SWITCH_H
+		_switch.update();
+	#endif
+
+	// =========================
+	// start function SERVO
+	#ifdef FUNCTION_SERVO_H
+		_servo.update();
+	#endif
+
+	// =========================
+	// start function SERVO
+	#ifdef FUNCTION_SENSOR_H
+		_sensor.update();
+	#endif
 
 
 }

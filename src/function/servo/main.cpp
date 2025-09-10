@@ -10,14 +10,13 @@
 #include "main.h"
 
 
-void FUNCTION_SERVO::begin(CAN_COM can) {
+void FUNCTION_SERVO::begin(void) {
 
 	#ifdef DEBUG
 		Serial.println("********************");
 		Serial.println("start function/servo");
 	#endif
 
-	_can = can;
 }
 
 void FUNCTION_SERVO::update(void) {

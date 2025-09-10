@@ -40,10 +40,9 @@
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-	#include "../function/controller/main.h"
-	#include "../function/servo/main.h"
-	#include "../function/gauge/main.h"
-	#include "../function/switch/main.h"
+	#include "../function/controller/main.h"	// pot input
+	#include "../function/switch/main.h"		// switch output
+	#include "../function/gauge/main.h"			// pwm and servo gauges 
 
 	// FUNCTION PARAMETERS
 	// switches
@@ -56,13 +55,13 @@
 	#define CONTROLLER_INSTRUMENT_LIGHT_PORT 4
 
 	#define CONTROLLER_BATTERY_VOLTAGE_PORT 6
-	// #define CONTROLLER_MOTOR_VOLTAGE_PORT 7
+	#define CONTROLLER_MOTOR_VOLTAGE_PORT 7
 	#define CONTROLLER_CURRENT_PORT 8
 
 	#define CONTROLLER_DRIVE_MODE SINGLE
 	#define CONTROLLER_DRIVE_PORT A0
 	#define CONTROLLER_BREAK_PORT A1
-	// #define CONTROLLER_POWER_PORT A2
+	#define CONTROLLER_POWER_PORT A2
 
 	// status display method
 	#define CONTROLER_STATUS_MODE LED
@@ -94,10 +93,9 @@
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-	#include "../function/controller/main.h"
-	#include "../function/servo/main.h"
-	#include "../function/gauge/main.h"
-	#include "../function/switch/main.h"
+	#include "../function/controller/main.h"	// pot input
+	#include "../function/switch/main.h"		// switch output
+	#include "../function/gauge/main.h"			// pwm and servo gauges 
 
 	/* define corresponding parameters */ 
 	// switches
@@ -138,10 +136,9 @@
 	#define MODULE_PLATFORM_ESP32
 	#define CONTROLLER_ANALOG_RESOLUTION 2048
 
-	#include "../function/controller/main.h"
-	#include "../function/servo/main.h"
-	#include "../function/gauge/main.h"
-	#include "../function/switch/main.h"
+	#include "../function/controller/main.h"	// pot input
+	#include "../function/switch/main.h"		// switch output
+	#include "../function/gauge/main.h"			// pwm and servo gauges 
 
 	// CAN ports
 	#define CAN_RX 17

@@ -10,14 +10,13 @@
 #include "main.h"
 
 
-void FUNCTION_SWITCH::begin(CAN_COM can) {
+void FUNCTION_SWITCH::begin(void) {
 
 	#ifdef DEBUG
 		Serial.println("*********************");
 		Serial.println("start function/switch");
 	#endif
 
-	_can = can;
 }
 
 void FUNCTION_SWITCH::update(void) {

@@ -31,11 +31,10 @@
 class FUNCTION_MOTOR {
 
 	public:
-		void begin(CAN_COM can);
+		void begin(void);
 		void update(void);
 
 	private:
-		CAN_COM _can;
 		CAN_MESSAGE _message;
 
 };

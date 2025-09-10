@@ -10,18 +10,20 @@
 #include "main.h"
 
 
-void FUNCTION_CONTROLLER::begin(CAN_COM can) {
+extern CAN_COM can;
+
+
+void FUNCTION_CONTROLLER::begin(void) {
 
 	#ifdef DEBUG
 		Serial.println("*************************");
 		Serial.println("start function/controller");
 	#endif
 
-	_can = can;
 
 	// register can filters
-	_can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT_CURRENT);	// light current
-	_can.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);			// drive commands from other controllers
+	can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT_CURRENT);	// light current
+	can.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);			// drive commands from other controllers
 
 	/*
 	 * set all ports
@@ -70,7 +72,7 @@ void FUNCTION_CONTROLLER::begin(CAN_COM can) {
     #ifdef CONTROLLER_INSTRUMENT_LIGHT_PORT
 		#ifdef DEBUG
 			Serial.print("> init instrument light switch on port ");
-			Serial.println(CONTROLLER_LIGHT2_PORT);
+			Serial.println(CONTROLLER_INSTRUMENT_LIGHT_PORT);
 		#endif
 		_instrument_switch.begin(CONTROLLER_INSTRUMENT_LIGHT_PORT);
 
@@ -78,50 +80,10 @@ void FUNCTION_CONTROLLER::begin(CAN_COM can) {
 			Serial.println("> register CAN_ID_LIGHT");
 		#endif
 
-        _can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT); // light for instruments
+        can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT); // light for instruments
     #endif
     // **********************************
 
-/*
-    // **********************************
-    // GAUGES
-
-	// BATTERY VOLTAGE GAUGE
-    #ifdef CONTROLLER_BATTERY_VOLTAGE_PORT
-		#ifdef DEBUG
-			Serial.print("> init battery voltage gauge on port ");
-			Serial.println(CONTROLLER_BATTERY_VOLTAGE_PORT);
-		#endif
-		_battery_voltage_gauge.begin(CONTROLLER_BATTERY_VOLTAGE_PORT);
-	#endif
-
-	// MOTOR VOLTAGE GAUGE
-    #ifdef CONTROLLER_MOTOR_VOLTAGE_PORT
-		#ifdef DEBUG
-			Serial.print("> init motor voltage gauge on port ");
-			Serial.println(CONTROLLER_MOTOR_VOLTAGE_PORT);
-		#endif
-		_motor_voltage_gauge.begin(CONTROLLER_MOTOR_VOLTAGE_PORT);
-	#endif
-
-	// BATTERY CURRENT GAUGE
-    #ifdef CONTROLLER_BATTERY_CURRENT_PORT
-		#ifdef DEBUG
-			Serial.print("> init battery current gauge on port ");
-			Serial.println(CONTROLLER_BATTERY_CURRENT_PORT);
-		#endif
-		_battery_current_gauge.begin(CONTROLLER_BATTERY_CURRENT_PORT);
-	#endif
-
-	// MOTOR CURRENT GAUGE
-    #ifdef CONTROLLER_MOTOR_CURRENT_PORT
-		#ifdef DEBUG
-			Serial.print("> init motor current gauge on port ");
-			Serial.println(CONTROLLER_MOTOR_CURRENT_PORT);
-		#endif
-		_motor_current_gauge.begin(CONTROLLER_MOTOR_CURRENT_PORT);
-	#endif
-*/
 }
 
 

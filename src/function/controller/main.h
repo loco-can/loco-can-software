@@ -102,17 +102,16 @@
 #include "../../core/can/can_com.h"
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
-#include "../../core/servo/intelliServo.h"
+// #include "../../core/servo/intelliServo.h"
 
 
 class FUNCTION_CONTROLLER {
 
 	public:
-		void begin(CAN_COM can);
+		void begin(void);
 		void update(void);
 
 	private:
-		CAN_COM _can;
 		CAN_MESSAGE _message;
 
 		ANALOGSWITCH _mains_switch;
@@ -123,9 +122,4 @@ class FUNCTION_CONTROLLER {
 		ANALOGSWITCH _light_switch;
 		INTELLIBUTTON _light2_switch;
 		INTELLIBUTTON _instrument_switch;
-
-		INTELLISERVO _battery_voltage_gauge;
-		INTELLISERVO _motor_voltage_gauge;
-		INTELLISERVO _battery_current_gauge;
-		INTELLISERVO _motor_current_gauge;
 };

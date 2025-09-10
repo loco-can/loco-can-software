@@ -32,11 +32,14 @@
 class FUNCTION_GAUGE {
 
 	public:
-		void begin(CAN_COM can);
+		void begin(void);
 		void update(void);
 
 	private:
-		CAN_COM _can;
 		CAN_MESSAGE _message;
 
+		INTELLISERVO _battery_voltage_gauge;
+		INTELLISERVO _motor_voltage_gauge;
+		INTELLISERVO _battery_current_gauge;
+		INTELLISERVO _motor_current_gauge;
 };

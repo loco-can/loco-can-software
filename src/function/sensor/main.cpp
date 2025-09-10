@@ -10,14 +10,13 @@
 #include "main.h"
 
 
-void FUNCTION_SENSOR::begin(CAN_COM can) {
+void FUNCTION_SENSOR::begin(void) {
 
 	#ifdef DEBUG
 		Serial.println("*********************");
 		Serial.println("start function/sensor");
 	#endif
 
-	_can = can;
 }
 
 void FUNCTION_SENSOR::update(void) {

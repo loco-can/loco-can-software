@@ -10,14 +10,13 @@
 #include "main.h"
 
 
-void FUNCTION_MOTOR::begin(CAN_COM can) {
+void FUNCTION_MOTOR::begin(void) {
 
 	#ifdef DEBUG
 		Serial.println("********************");
 		Serial.println("start function/motor");
 	#endif
 
-	_can = can;
 }
 
 void FUNCTION_MOTOR::update(void) {
