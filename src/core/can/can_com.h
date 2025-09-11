@@ -78,7 +78,7 @@ class CAN_COM {
 
     CAN_HANDLER _can_handler;
 
-    CAN_MESSAGE buffer[16];
+    CAN_MESSAGE _buffer[16];
 
     void create_uuid(void);
     bool _begin(long speed);
