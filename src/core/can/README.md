@@ -1,4 +1,4 @@
-## CAN bus communication
+## Internal CAN bus communication
 
 CAN message are received from the can interface. Each function in a module can create messages, that must be distributed to all internal function and sent to the external bus in the end. 
 
