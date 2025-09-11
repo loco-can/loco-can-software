@@ -9,6 +9,6 @@ in the LocoCANcore.h and started in the LocoCANcore.cpp.
 
 All function must have two public methods:
 
-	void begin(CAN_COM can);
-	void update(void);
+	void begin(void);  // initialisation
+	void update(void); // update the function in the main loop
 
