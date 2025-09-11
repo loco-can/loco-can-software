@@ -63,6 +63,8 @@ class CAN_COM {
 
     bool alive(void);
     void set_alive(uint16_t alive_timeout); // set alive timeout
+    
+    bool add(CAN_MESSAGE message, bool extern); // add a message to the fifo buffer, extern=true, if message comes from can bus
 
     bool send(byte* data, byte length, uint32_t id); // send data
     
