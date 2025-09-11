@@ -202,7 +202,10 @@ bool CAN_COM::alive(void) {
 
 // ToDo add bus communication inside a module between functions
 
+bool CAN_COM add(CAN_MESSAGE message, bool extern) {
 
+    
+}
 
 
 
