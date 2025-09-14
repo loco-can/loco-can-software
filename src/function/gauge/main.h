@@ -32,10 +32,11 @@
 class FUNCTION_GAUGE {
 
 	public:
-		void begin(void);
-		void update(void);
+		void begin(uint8_t func_id);
+		void update(CAN_MESSAGE message);
 
 	private:
+		uint8_t _func_id;
 		CAN_MESSAGE _message;
 
 		INTELLISERVO _battery_voltage_gauge;

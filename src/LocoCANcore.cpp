@@ -31,12 +31,14 @@ void LocoCANcore::begin(void) {
 	 */
 	can.setPorts(CAN_RX, CAN_TX);
 	can.set_alive(CAN_ALIVE_TIMEOUT);
-	can.begin(CAN_BUS_SPEED, CAN_STATUS_LED);
+	can.begin(CAN_BUS_SPEED, CAN_STATUS_LED); // start with one CAN LED
 
 
 	/* ********************************************************
 	 * start all registered functions
 	 ******************************************************* */
+	uint8_t func = 1;
+
 	#ifdef DEBUG
 		Serial.println("*******************");
 		Serial.println("starting functions");
@@ -45,40 +47,38 @@ void LocoCANcore::begin(void) {
 	// =========================
 	// start function CONTROLLER
 	#ifdef FUNCTION_CONTROLLER_H
-		_controller.begin();
+		_controller.begin(func++);
 	#endif
 
 	// =========================
 	// start function GAUGE
 	#ifdef FUNCTION_GAUGE_H
-		_gauge.begin();
+		_gauge.begin(func++);
 	#endif
 
 	// =========================
 	// start function MOTOR
 	#ifdef FUNCTION_MOTOR_H
-		_motor.begin();
+		_motor.begin(func++);
 	#endif
 
 	// =========================
 	// start function SWITCH
 	#ifdef FUNCTION_SWITCH_H
-		_switch.begin();
+		_switch.begin(func++);
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SERVO_H
-		_servo.begin();
+		_servo.begin(func++);
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SENSOR_H
-		_sensor.begin();
+		_sensor.begin(func++);
 	#endif
-
-
 
 	#ifdef DEBUG
 		Serial.println();
@@ -92,42 +92,50 @@ void LocoCANcore::begin(void) {
 
 void LocoCANcore::update(void) {
 
+	CAN_MESSAGE message;
+
+	message.uuid = 0;
+	message.func = 0xFF;
+
+	can.read(message);
+
 	/*
 	 * update registered functions
 	 */
 	#ifdef FUNCTION_CONTROLLER_H
-		_controller.update();
+		_controller.update(message);
 	#endif
 
 	// =========================
 	// start function GAUGE
 	#ifdef FUNCTION_GAUGE_H
-		_gauge.update();
+		_gauge.update(message);
 	#endif
 
 	// =========================
 	// start function MOTOR
 	#ifdef FUNCTION_MOTOR_H
-		_motor.update();
+		_motor.update(message);
 	#endif
 
 	// =========================
 	// start function SWITCH
 	#ifdef FUNCTION_SWITCH_H
-		_switch.update();
+		_switch.update(message);
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SERVO_H
-		_servo.update();
+		_servo.update(message);
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SENSOR_H
-		_sensor.update();
+		_sensor.update(message);
 	#endif
 
+	can.send();
 
 }

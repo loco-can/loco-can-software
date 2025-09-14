@@ -55,7 +55,7 @@ void setup() {
 	#endif
 
 	core.begin();
-}                   
+}
 
 
 // MAIN LOOP

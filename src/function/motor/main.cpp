@@ -10,7 +10,9 @@
 #include "main.h"
 
 
-void FUNCTION_MOTOR::begin(void) {
+void FUNCTION_MOTOR::begin(uint8_t func_id) {
+
+	_func_id = func_id;
 
 	#ifdef DEBUG
 		Serial.println("********************");
@@ -19,6 +21,7 @@ void FUNCTION_MOTOR::begin(void) {
 
 }
 
-void FUNCTION_MOTOR::update(void) {
+void FUNCTION_MOTOR::update(CAN_MESSAGE message) {
 
+	_message = message;
 }

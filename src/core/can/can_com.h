@@ -1,5 +1,5 @@
 /*
- * LOCO-CAN can class header file
+ * LOCO-CAN can class _header file
  * 
  * @author: Thomas H Winkler
  * @copyright: 2020-2025
@@ -44,7 +44,6 @@
  */
 
 
-#define CAN_MAX_FILTER 8
 #define CAN_ALIVE_TIMEOUT 500
 
 // #define CAN_COM_CS_DEFAULT 10
@@ -64,24 +63,40 @@ class CAN_COM {
     bool alive(void);
     void set_alive(uint16_t alive_timeout); // set alive timeout
     
-    bool add(CAN_MESSAGE message, bool extern); // add a message to the fifo buffer, extern=true, if message comes from can bus
+    void buffer_reset(void); // reset fifo buffer
+    void print_buffer(void); // print buffer to serial
+    void print_message(CAN_MESSAGE message); // print message to serial
 
-    bool send(byte* data, byte length, uint32_t id); // send data
-    
+    bool add(CAN_MESSAGE message); // add a message to the fifo buffer
+
+    uint16_t read(CAN_MESSAGE message); // get message from buffer
+    bool send(void); // send message from biffer
+
+    bool fetch(CAN_MESSAGE &message); // fetch message from buffer; false if empty
+    uint8_t buffer_size(void); // get size of buffer
+
     void clear_filter();
     bool register_filter(uint16_t mask, uint16_t filter); // add mask and filter
-    uint16_t read(CAN_MESSAGE* message); // receive data > true if no filter or filter match
 
     long uuid(void);
 
   private:
 
-    CAN_HANDLER _can_handler;
+    CAN_HANDLER _can_handler; // handler depending on platform
 
-    CAN_MESSAGE _buffer[16];
+    CAN_MESSAGE _buffer[CAN_BUFFER_SIZE]; // fifo buffer of can messages
+    uint8_t _buffer_count; // count of messages in buffer
+    uint8_t _head;
+    uint8_t _tail;
 
     void create_uuid(void);
     bool _begin(long speed);
+    bool _send(CAN_MESSAGE message); // send data
+    uint16_t _read(CAN_MESSAGE message); // receive data > true if no filter or filter match
+
+    bool isEmpty(void);
+    bool isFull(void);
+
     long _uuid;
 
     uint8_t _cs;

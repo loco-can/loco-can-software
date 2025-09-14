@@ -13,7 +13,14 @@
 extern CAN_COM can;
 
 
-void FUNCTION_CONTROLLER::begin(void) {
+void FUNCTION_CONTROLLER::begin(uint8_t func_id) {
+
+	// save function id
+	_func_id = func_id;
+
+	// start drive package timeout
+	_drive_time.begin(CAN_ID_DRIVE_TIME);
+
 
 	#ifdef DEBUG
 		Serial.println("*************************");
@@ -31,8 +38,8 @@ void FUNCTION_CONTROLLER::begin(void) {
 
     // **********************************
 	// SWITCHES
-	_mains_switch.begin(CONTROLLER_MAINS_PORT, CONTROLLER_ANALOG_RESOLUTION);
-	_dir_switch.begin(CONTROLLER_DIR_PORT, CONTROLLER_ANALOG_RESOLUTION);
+	_mains_switch.begin(CONTROLLER_MAINS_PORT);
+	_dir_switch.begin(CONTROLLER_DIR_PORT);
 
 	// HORN SWITCH
 	#ifdef DEBUG
@@ -56,7 +63,7 @@ void FUNCTION_CONTROLLER::begin(void) {
 			Serial.print("> init analog light switch on port ");
 			Serial.println(CONTROLLER_LIGHT_PORT);
 		#endif
-		_light_switch.begin(CONTROLLER_LIGHT_PORT, CONTROLLER_ANALOG_RESOLUTION);
+		_light_switch.begin(CONTROLLER_LIGHT_PORT);
 	#endif
 
 	// SECOND LIGHT SWITCH
@@ -65,7 +72,7 @@ void FUNCTION_CONTROLLER::begin(void) {
 			Serial.print("> init second analog light switch on port ");
 			Serial.println(CONTROLLER_LIGHT2_PORT);
 		#endif
-		_light2_switch.begin(CONTROLLER_LIGHT2_PORT, CONTROLLER_ANALOG_RESOLUTION);
+		_light2_switch.begin(CONTROLLER_LIGHT2_PORT);
 	#endif
 
 	// INSTRUMENT LIGHT SWITCH
@@ -87,6 +94,45 @@ void FUNCTION_CONTROLLER::begin(void) {
 }
 
 
-void FUNCTION_CONTROLLER::update(void) {
+void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 
+	// ==================
+	// check for messages
+	// is not mine
+	if (message.uuid != 0 && message.func != _func_id) {
+
+		#ifdef DEVEL
+			Serial.print("got message ");
+			can.print_message(message);
+		#endif
+
+
+		// ===========================
+		// select action by message id
+		switch(message.id) {
+
+			case CAN_ID_LIGHT:
+				break;
+
+			default:
+				break;
+		}
+	}
+
+
+	// ==================
+	// send drive package
+	if (_drive_time.check()) {
+
+		_drive_time.retrigger();
+
+		_message.id = CAN_ID_DRIVE;
+		_message.size = 2;
+		_message.data[0] = 0b10010010;
+		_message.data[1] = 0x23;
+		_message.func = _func_id;
+
+		// can.print_message(_message);
+		can.add(_message);
+	}
 }

@@ -48,7 +48,7 @@
 
 	bool CAN_HANDLER::send(CAN_MESSAGE message) {
 
-		int i;
+		uint8_t i = 0;
 
 		// ATMEGA SEND
 		CAN.beginExtendedPacket((message.id << 18) | message.uuid);

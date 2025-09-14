@@ -17,6 +17,10 @@
  * uncommend to activate serial debug */
 #define DEBUG
 
+/* uncommend to get additional information on serial */
+// #define DEVEL
+
+
 /* CAN COMMUNICATION */
 #define CAN_SPEED 500
 
@@ -145,7 +149,7 @@ Versions:
 //
 /* ===================================================================== */
 #define MODULE CONTROLLER_MODULE
-#define MODULE_VERSION V_2_0
+#define MODULE_VERSION V_2_1
 
 
 #include MODULE

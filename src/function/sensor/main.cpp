@@ -10,7 +10,9 @@
 #include "main.h"
 
 
-void FUNCTION_SENSOR::begin(void) {
+void FUNCTION_SENSOR::begin(uint8_t func_id) {
+
+	_func_id = func_id;
 
 	#ifdef DEBUG
 		Serial.println("*********************");
@@ -19,6 +21,7 @@ void FUNCTION_SENSOR::begin(void) {
 
 }
 
-void FUNCTION_SENSOR::update(void) {
+void FUNCTION_SENSOR::update(CAN_MESSAGE message) {
 
+	_message = message;
 }

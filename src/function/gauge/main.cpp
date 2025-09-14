@@ -10,7 +10,9 @@
 #include "main.h"
 
 
-void FUNCTION_GAUGE::begin(void) {
+void FUNCTION_GAUGE::begin(uint8_t func_id) {
+
+	_func_id = func_id;
 
 	#ifdef DEBUG
 		Serial.println("********************");
@@ -59,6 +61,7 @@ void FUNCTION_GAUGE::begin(void) {
 
 }
 
-void FUNCTION_GAUGE::update(void) {
+void FUNCTION_GAUGE::update(CAN_MESSAGE message) {
 
+	_message = message;
 }

@@ -53,6 +53,7 @@
 // when starting to drive. A change in the latern signal list while
 // driving leads to a emergency stop (switch off the heartbeat signal)
 #define CAN_ID_DRIVE_HEARTBEAT 0x010
+#define CAN_ID_DRIVE_TIME 100 // ms between drive packages
 #define CAN_ID_TRAINEND_HEARTBEAT 0x020 // sent from train end laterns
 
 

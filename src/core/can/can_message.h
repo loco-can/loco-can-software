@@ -9,4 +9,5 @@ struct CAN_MESSAGE {
     uint16_t uuid;
     uint8_t data[8];
     uint8_t size;
+    uint8_t func;
 };

@@ -102,17 +102,21 @@
 #include "../../core/can/can_com.h"
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
-// #include "../../core/servo/intelliServo.h"
+#include "../../core/servo/intelliServo.h"
+#include "../../core/timeout/intellitimeout.h"
 
 
 class FUNCTION_CONTROLLER {
 
 	public:
-		void begin(void);
-		void update(void);
+		void begin(uint8_t func_id);
+		void update(CAN_MESSAGE message);
 
 	private:
+		uint8_t _func_id;
 		CAN_MESSAGE _message;
+
+		INTELLITIMEOUT _drive_time;
 
 		ANALOGSWITCH _mains_switch;
 		ANALOGSWITCH _dir_switch;

@@ -12,7 +12,8 @@
  */
 
 
-#include "AnalogSwitch.h"
+#include "../../../config.h"
+#include "analogSwitch.h"
 
 
 ANALOGSWITCH::ANALOGSWITCH(void) {
@@ -21,9 +22,8 @@ ANALOGSWITCH::ANALOGSWITCH(void) {
 
 
 // start at port number
-void ANALOGSWITCH::begin(uint8_t port, uint16_t resolution) {
+void ANALOGSWITCH::begin(uint8_t port) {
 	_port = port;
-	_resolution = resolution;
 
 	pinMode(_port, INPUT);
 }
@@ -135,7 +135,7 @@ void ANALOGSWITCH::update(void) {
 			_max[i] = ((_positions[i+1] - _positions[i]) / 2) + _positions[i] - 1;
 		}
 		else {
-			_max[i] = _resolution;
+			_max[i] = PLATFORM_ANALOG_RESOLUTION;
 		}
 
 		i++;
