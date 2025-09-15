@@ -2,7 +2,7 @@
  * Analog Switch Library
  * 
  * @author: Thomas H Winkler
- * @copyright: 2020
+ * @copyright: 2020-2025
  * @lizence: GG0
  */
 
@@ -41,11 +41,28 @@ uint8_t ANALOGSWITCH::get(void) {
 	// iterate positions
 	while (i < _pos_count) {
 
-		// check position
-		// return current counter+1 (valid positions start at 1)
-		// return 0: no position found
-		if (_min[i] <= analogval && analogval <= _max[i]) {
-			return i + 1;
+		// first entry
+		if (i == 0) {
+
+			if (analogval < ((_positions[i] + _positions[i + 1]) / 2)) {
+				return i;
+			}
+		}
+
+		// last entry
+		else if (i == _pos_count) {
+
+			if (analogval >= ((_positions[i - 1] + _positions[i]) / 2) && analogval < ((_positions[i] + _positions[i + 1]) / 2)) {
+				return i;
+			}
+		}
+
+		// entry between
+		else {
+
+			if (analogval >= ((_positions[i - 1] + _positions[i]) / 2) && analogval <= PLATFORM_ANALOG_RESOLUTION) {
+				return i;
+			}
 		}
 
 		i++;
@@ -65,8 +82,7 @@ uint8_t ANALOGSWITCH::learn() {
 		_pos_count++;
 	}
 
-	sort();
-	update();
+	_sort();
 
 	return _pos_count;
 }
@@ -80,8 +96,7 @@ uint8_t ANALOGSWITCH::learn(uint16_t value) {
 		_pos_count++;
 	}
 
-	sort();
-	update();
+	_sort();
 
 	return _pos_count;
 }
@@ -103,76 +118,27 @@ uint8_t ANALOGSWITCH::remove(uint8_t idx) {
 		_pos_count--;
 	}
 
-	sort();
-	update();
+	_sort();
 
 	return _pos_count;
 }
 
 
-// update min and max values
-void ANALOGSWITCH::update(void) {
+// sort positions ascending
+void ANALOGSWITCH::_sort(void) {
 
-	uint8_t i = 0;
+	qsort(_positions, _pos_count, sizeof(_positions[0]), _compare);
 
-	// calculate switch position
-	// iterate positions
-	while (i < _pos_count) {
-
-		// get lower limit
-		// not at the beginn
-		if (i > 0) {
-			_min[i] = ((_positions[i] - _positions[i-1]) / 2) + _positions[i-1];
-		}
-		else {
-			_min[i] = 0;
-		}
-
-
-		// get upper limit
-		// not at the end
-		if (i < (_pos_count - 1)) {
-			_max[i] = ((_positions[i+1] - _positions[i]) / 2) + _positions[i] - 1;
-		}
-		else {
-			_max[i] = PLATFORM_ANALOG_RESOLUTION;
-		}
-
-		i++;
-	}
 }
 
-
-// sort positions ascending
-void ANALOGSWITCH::sort(void) {
-
-	uint16_t i;
-	uint16_t o;
-	uint16_t temp;
-
-	// only sort if there is something to sort
-	if (_pos_count > 0) {
-
-	    for(i = 0; (i + 1) < _pos_count; i++) {
-
-	        for(o = 0; o < (_pos_count - (i + 1)); o++) {
-
-				if(_positions[o] > _positions[o+1]) {
-
-					temp = _positions[o];
-					_positions[o] = _positions[o+1];
-					_positions[o+1] = temp;
-				}
-	        }
-	    }
-	}
-
-
+int ANALOGSWITCH::_compare(const void *a, const void *b) {
+    return (*(int *)b - *(int *)a);
 }
 
 
 // get analog value
 uint16_t ANALOGSWITCH::get_analog(void) {
+
 	if (_port) {
 		return analogRead(_port);
 	}

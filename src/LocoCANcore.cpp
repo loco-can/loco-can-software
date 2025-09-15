@@ -9,12 +9,14 @@
  *
  */
 
+
 // #include "../config.h"
 #include "can_protocol.h"
 #include "LocoCANcore.h"
 
 
 CAN_COM can;
+CAN_MESSAGE can_message;
 
 
 void LocoCANcore::begin(void) {
@@ -92,48 +94,46 @@ void LocoCANcore::begin(void) {
 
 void LocoCANcore::update(void) {
 
-	CAN_MESSAGE message;
+	can_message.uuid = 0;
+	can_message.func = 0xFF;
 
-	message.uuid = 0;
-	message.func = 0xFF;
-
-	can.read(message);
+	can.read(can_message);
 
 	/*
 	 * update registered functions
 	 */
 	#ifdef FUNCTION_CONTROLLER_H
-		_controller.update(message);
+		_controller.update(can_message);
 	#endif
 
 	// =========================
 	// start function GAUGE
 	#ifdef FUNCTION_GAUGE_H
-		_gauge.update(message);
+		_gauge.update(can_message);
 	#endif
 
 	// =========================
 	// start function MOTOR
 	#ifdef FUNCTION_MOTOR_H
-		_motor.update(message);
+		_motor.update(can_message);
 	#endif
 
 	// =========================
 	// start function SWITCH
 	#ifdef FUNCTION_SWITCH_H
-		_switch.update(message);
+		_switch.update(can_message);
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SERVO_H
-		_servo.update(message);
+		_servo.update(can_message);
 	#endif
 
 	// =========================
 	// start function SERVO
 	#ifdef FUNCTION_SENSOR_H
-		_sensor.update(message);
+		_sensor.update(can_message);
 	#endif
 
 	can.send();

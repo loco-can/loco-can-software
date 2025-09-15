@@ -18,7 +18,7 @@
 #define DEBUG
 
 /* uncommend to get additional information on serial */
-// #define DEVEL
+#define DEVEL
 
 
 /* CAN COMMUNICATION */

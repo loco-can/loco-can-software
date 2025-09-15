@@ -23,5 +23,5 @@ void FUNCTION_MOTOR::begin(uint8_t func_id) {
 
 void FUNCTION_MOTOR::update(CAN_MESSAGE message) {
 
-	_message = message;
+	can_message = message;
 }

@@ -63,5 +63,5 @@ void FUNCTION_GAUGE::begin(uint8_t func_id) {
 
 void FUNCTION_GAUGE::update(CAN_MESSAGE message) {
 
-	_message = message;
+	can_message = message;
 }

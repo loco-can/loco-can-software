@@ -49,6 +49,10 @@
 // #define CAN_COM_CS_DEFAULT 10
 // #define CAN_COM_INT_DEFAULT 2
 
+
+extern CAN_MESSAGE can_message;
+
+
 class CAN_COM {
 
   public:
@@ -82,12 +86,6 @@ class CAN_COM {
 
   private:
 
-    CAN_HANDLER _can_handler; // handler depending on platform
-
-    CAN_MESSAGE _buffer[CAN_BUFFER_SIZE]; // fifo buffer of can messages
-    uint8_t _buffer_count; // count of messages in buffer
-    uint8_t _head;
-    uint8_t _tail;
 
     void create_uuid(void);
     bool _begin(long speed);
@@ -96,6 +94,13 @@ class CAN_COM {
 
     bool isEmpty(void);
     bool isFull(void);
+
+    CAN_HANDLER _can_handler; // handler depending on platform
+
+    CAN_MESSAGE _buffer[CAN_BUFFER_SIZE]; // fifo buffer of can messages
+    uint8_t _buffer_count; // count of messages in buffer
+    uint8_t _head;
+    uint8_t _tail;
 
     long _uuid;
 

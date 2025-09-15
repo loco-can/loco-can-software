@@ -36,6 +36,5 @@ class FUNCTION_SWITCH {
 
 	private:
 		uint8_t _func_id;
-		CAN_MESSAGE _message;
 
 };

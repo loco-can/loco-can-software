@@ -64,6 +64,15 @@ class INTELLILED {
     void update(void);
 
   private:
+    void _begin(uint16_t, uint16_t);
+    void _set_led(uint16_t);
+    void _clear_led(void);
+    void _on(void);
+    void _off(void);
+    void _flash_on(void);
+    void _flash_off(void);
+    void _reset(void);
+
     bool _is_on;
     uint16_t _force_blink;
     bool _flash_status;
@@ -79,13 +88,4 @@ class INTELLILED {
     
     double _timeout;
     uint16_t _blink_time;
-
-    void _begin(uint16_t, uint16_t);
-    void _set_led(uint16_t);
-    void _clear_led(void);
-    void _on(void);
-    void _off(void);
-    void _flash_on(void);
-    void _flash_off(void);
-    void _reset(void);
 };

@@ -19,7 +19,6 @@
 #include "can_com.h"
 
 
-
 /* ************************************************
 * CONSTRUCTOR
 ************************************************ */
@@ -345,20 +344,18 @@ uint8_t CAN_COM::buffer_size(void) {
  */
 bool CAN_COM::send(void) {
 
-	CAN_MESSAGE message;
-
 	// message in buffer
-	if (fetch(message)) {
+	if (fetch(can_message)) {
 
 		// is message to send
-		if (message.func != 0) {
+		if (can_message.func != 0) {
 
 			#ifdef DEVEL
 				Serial.print("send message: ");
-				print_message(message);
+				print_message(can_message);
 			#endif
 
-			return _send(message);
+			return _send(can_message);
 		}
 	}
 

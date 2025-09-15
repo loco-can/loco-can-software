@@ -28,6 +28,7 @@
 #include "../../core/can/can_com.h"
 #include "../../core/servo/intelliServo.h"
 
+extern CAN_MESSAGE can_message;
 
 class FUNCTION_GAUGE {
 
@@ -37,7 +38,6 @@ class FUNCTION_GAUGE {
 
 	private:
 		uint8_t _func_id;
-		CAN_MESSAGE _message;
 
 		INTELLISERVO _battery_voltage_gauge;
 		INTELLISERVO _motor_voltage_gauge;

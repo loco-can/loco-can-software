@@ -23,5 +23,5 @@ void FUNCTION_SENSOR::begin(uint8_t func_id) {
 
 void FUNCTION_SENSOR::update(CAN_MESSAGE message) {
 
-	_message = message;
+	can_message = message;
 }

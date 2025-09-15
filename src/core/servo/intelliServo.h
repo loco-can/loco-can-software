@@ -23,6 +23,7 @@ class INTELLISERVO {
 
 	private:
 		Servo _servo;
+
 		uint16_t _min;
 		uint16_t _max;
 		uint16_t _val_min;
