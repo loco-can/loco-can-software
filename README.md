@@ -4,7 +4,9 @@
 @copyright: 2025
 @lizence: GG0
 
-There is only of software package for all modules of the Loco-CAN system.
+The Loco-CAN system is a can bus 
+
+There is only of software package for all types of Loco-CAN hardware modules.
 Before compiling the targe module must be set in the config.h file.
 
 ## File Structure

@@ -31,7 +31,6 @@
 	// ======================================
 	#define MODULE_PLATFORM_ATMEGA
 	#define PLATFORM_ANALOG_RESOLUTION 1024
-	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 10
 	#define CAN_TX 2
@@ -39,11 +38,9 @@
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
-
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-	#include "../function/controller/main.h"	// pot input
 
 	// FUNCTION PARAMETERS
 	#define CONTROLLER_MAINS_PORT A4
@@ -53,6 +50,7 @@
 	#define CONTROLLER_LIGHT_PORT A5
 	#define CONTROLLER_LIGHT2_PORT A2
 
+	#define ANALOGSWITCH_MAX_POS 8
 
 	// status display method
 	#define CONTROLER_STATUS_MODE LED
@@ -77,6 +75,7 @@
 	#define CONTROLLER_BREAK_PORT A1
 	#define CONTROLLER_POWER_PORT A2
 
+	#include "../function/controller/main.h"	// pot input
 
 
 /*
@@ -90,7 +89,6 @@
 
 	#define MODULE_PLATFORM_ATMEGA
 	#define PLATFORM_ANALOG_RESOLUTION 1024
-	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 10
 	#define CAN_TX 2
@@ -102,7 +100,6 @@
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-	#include "../function/controller/main.h"	// pot input
 
 	/* define corresponding parameters */ 
 	// switches
@@ -113,6 +110,7 @@
 	#define CONTROLLER_LIGHT_PORT A5
 	#define CONTROLLER_LIGHT2_PORT A2
 
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CONTROLLER_DRIVE_MODE SINGLE
 	#define CONTROLLER_DRIVE_PORT A0
@@ -137,6 +135,7 @@
 	// #define CONTROLLER_MOTOR_VOLTAGE_PORT 7
 	#define CONTROLLER_CURRENT_PORT 8
 
+	#include "../function/controller/main.h"	// pot input
 
 
 /*
@@ -147,9 +146,7 @@
 
 	#define MODULE_PLATFORM_ESP32
 	#define PLATFORM_ANALOG_RESOLUTION 2048
-	#define ANALOGSWITCH_MAX_POS 8
 
-	#include "../function/controller/main.h"	// pot input
 
 	// CAN ports
 	#define CAN_RX 17
@@ -163,6 +160,9 @@
 	// INCLUDED FUNCTIONS
 	// ======================================
 
+	#define ANALOGSWITCH_MAX_POS 8
 	// CAN LED
+
+	#include "../function/controller/main.h"	// pot input
 
 #endif

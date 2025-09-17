@@ -102,36 +102,39 @@ void LocoCANcore::update(void) {
 	/*
 	 * update registered functions
 	 */
+
+	// ==========================
+	// update function CONTROLLER
 	#ifdef FUNCTION_CONTROLLER_H
 		_controller.update(can_message);
 	#endif
 
 	// =========================
-	// start function GAUGE
+	// update function GAUGE
 	#ifdef FUNCTION_GAUGE_H
 		_gauge.update(can_message);
 	#endif
 
 	// =========================
-	// start function MOTOR
+	// update function MOTOR
 	#ifdef FUNCTION_MOTOR_H
 		_motor.update(can_message);
 	#endif
 
 	// =========================
-	// start function SWITCH
+	// update function SWITCH
 	#ifdef FUNCTION_SWITCH_H
 		_switch.update(can_message);
 	#endif
 
 	// =========================
-	// start function SERVO
+	// update function SERVO
 	#ifdef FUNCTION_SERVO_H
 		_servo.update(can_message);
 	#endif
 
 	// =========================
-	// start function SERVO
+	// update function SERVO
 	#ifdef FUNCTION_SENSOR_H
 		_sensor.update(can_message);
 	#endif
