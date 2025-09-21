@@ -2,12 +2,11 @@
  * LOCO-CAN module settings file
  * 
  * @author: Thomas H Winkler
- * @copyright: 2020
+ * @copyright: 2020-2025
  * @lizence: GG0
  */
 
 #include "settings.h"
-#include "can_com.h"
 
 
 SETTINGS::SETTINGS(void) {}
@@ -15,9 +14,7 @@ SETTINGS::SETTINGS(void) {}
 
 // start setting
 // init uuid and default name, if not valid in EEPROM
-void SETTINGS::begin(CAN_COM* _can_com, uint16_t version, uint8_t type, uint8_t count, uint8_t name_size, uint16_t request, uint16_t reply, uint16_t setup) {
-
-	_can_com = _can_com;
+void SETTINGS::begin(uint16_t version, uint8_t type, uint8_t count, uint8_t name_size, uint16_t request, uint16_t reply, uint16_t setup) {
 
 	_max_count = count;
 	_declaration = new SETTINGS_TYPE[count];
@@ -260,7 +257,7 @@ void SETTINGS::sendGlobalRequest(void) {
 
 	_buffer[0] = 0xFF;
 
-	_can_com->send(_buffer, 1, _request_id);
+	can.send(_buffer, 1, _request_id);
 
 }
 
@@ -270,7 +267,7 @@ void SETTINGS::sendRequest(uint16_t uuid) {
 	_buffer[0] = MSB(uuid);
 	_buffer[1] = LSB(uuid);
 
-	_can_com->send(_buffer, 2, _request_id);
+	can.send(_buffer, 2, _request_id);
 
 }
 
@@ -282,7 +279,7 @@ void SETTINGS::sendRequest(uint16_t uuid, uint8_t index) {
 
 	_buffer[2] = index;
 
-	_can_com->send(_buffer, 3, _request_id);
+	can.send(_buffer, 3, _request_id);
 
 }
 
@@ -297,7 +294,7 @@ void SETTINGS::sendRequest(uint16_t uuid, uint8_t index, uint8_t cnt) {
 	_buffer[2] = index;
 	_buffer[3] = cnt;
 
-	_can_com->send(_buffer, 4, _request_id);
+	can.send(_buffer, 4, _request_id);
 
 }
 
@@ -345,7 +342,7 @@ void SETTINGS::sendValueReply(uint8_t index, uint8_t cnt) {
 		_i++;
 	}
 
-	_can_com->send(_buffer, _i, (_reply_id | (index + 1)) & 0x7F);
+	can.send(_buffer, _i, (_reply_id | (index + 1)) & 0x7F);
 
 }
 
@@ -378,7 +375,7 @@ void SETTINGS::setupValue(uint16_t uuid, uint8_t* buffer, uint8_t index, uint8_t
 		}
 
 		// send
-		_can_com->send(_buffer, _i + 2, _reply_id | (index + 1));
+		can.send(_buffer, _i + 2, _reply_id | (index + 1));
 	}
 }
 
@@ -449,7 +446,7 @@ void SETTINGS::_sendName(uint16_t uuid, String name, uint8_t max_pack_cnt, uint1
 			_buffer[_i++] = name[pos++];
 		}
 
-		_can_com->send(_buffer, _i, can_id);
+		can.send(_buffer, _i, can_id);
 	}
 }
 
