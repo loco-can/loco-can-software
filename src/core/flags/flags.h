@@ -6,10 +6,7 @@
  * @lizence: GG0
  */
 
-
-
 #pragma once
-
 
 #include <Arduino.h>
 
