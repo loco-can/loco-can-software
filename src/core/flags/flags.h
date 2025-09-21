@@ -20,8 +20,8 @@ class FLAGS {
 		void set(uint8_t data); // set complete byte
 		uint8_t get(void); // get status byte
 
-		void set_flag(uint8_t bit, bool value); // set bit of _flags to value
-		bool get_flag(uint8_t bit);
+		void set(uint8_t bit, bool value); // set bit of _flags to value
+		bool get(uint8_t bit);
 
 	private:
 		uint8_t _flags; // stati
