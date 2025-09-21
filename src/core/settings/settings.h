@@ -2,7 +2,7 @@
  * LOCO-CAN module settings file
  * 
  * @author: Thomas H Winkler
- * @copyright: 2020
+ * @copyright: 2020-2025
  * @lizence: GG0
  */
 
@@ -25,8 +25,7 @@ the value in the 4 byte buffer.
 */
 
 
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#pragma once
 
 #include "eeprom_setup.h"
 #include "can_com.h"
@@ -51,6 +50,8 @@ struct VALUE {
 	uint8_t* data = NULL;
 };
 
+extern CAN_COM can;
+
 
 // =====================================
 //
@@ -63,7 +64,8 @@ class SETTINGS {
 	public:
 		SETTINGS(void);
 
-		void begin(CAN_COM*, uint16_t version, uint8_t type, uint8_t count, uint8_t name_size, uint16_t request_id, uint16_t reply_id, uint16_t setup_id);
+		void begin(uint16_t version, uint8_t type, uint8_t count, uint8_t name_size, uint16_t request_id, uint16_t reply_id, uint16_t setup_id);
+
 		bool register_setting(uint16_t); // register settings type and size in bytes: 0xttss
 
 		void load(void);
@@ -138,6 +140,3 @@ class SETTINGS {
 		void _sendName(uint16_t uuid, String name, uint8_t max_pack_cnt, uint16_t can_id);
 		uint8_t _createCnt(uint8_t cnt, uint8_t max_cnt);
 };
-
-
-#endif
