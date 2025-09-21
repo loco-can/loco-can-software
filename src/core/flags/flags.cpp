@@ -21,7 +21,7 @@ void FLAGS::begin(void) {
 
 
 // ======================================
-// get stati
+// set and get all 8 flags
 
 // set all flags
 void FLAGS::set(uint8_t data) {
@@ -36,12 +36,11 @@ uint8_t FLAGS::get(void) {
 
 
 // ======================================
-// set stati
-// switch POWER on/off
+// set and get single flag
 
 
 // set bit
-void FLAGS::set_flag(uint8_t bit, bool value) {
+void FLAGS::set(uint8_t bit, bool value) {
 
 	// restrict to 8 bits
 	if (value < 8) {
@@ -49,6 +48,6 @@ void FLAGS::set_flag(uint8_t bit, bool value) {
 	}
 }
 
-bool FLAGS::get_flag(uint8_t bit) {
+bool FLAGS::get(uint8_t bit) {
 	return (_flags >> bit) & 1;
 }
