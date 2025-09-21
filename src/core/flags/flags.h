@@ -2,7 +2,7 @@
  * LOCO-CAN LOCO status class header
  * 
  * @author: Thomas H Winkler
- * @copyright: 2020
+ * @copyright: 2020-2025
  * @lizence: GG0
  */
 
