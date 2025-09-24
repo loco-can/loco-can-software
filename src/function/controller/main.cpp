@@ -117,6 +117,9 @@ void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 
 			// vehicle status
 			case CAN_ID_VEHICLE_STATUS:
+
+				// set current motor status
+				_motor_status.set(message.data[0]);
 				break;
 
 			// light message to switch instrument light
@@ -144,4 +147,10 @@ void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 		// can.print_message(_message);
 		can.add(_message);
 	}
+}
+
+
+void FUNCTION_CONTROLLER::update_status(CAN_MESSAGE message) {
+
+
 }

@@ -123,7 +123,7 @@ not paired: listen to not paired controller or
 |7    |uuid-7 |uuid-6 |uuid-5 |uuid-4 |uuid-3 |uuid-2 |uuid-1 |uuid-0 |
 
 
-`´`mermaid
+```mermaid
 flowchart TD
     C1[controller-1\nUUID=1] --> C1_pair_1["paired\n2"]
     C1_pair_1 --> C1_pair_2["paired\n*"]
@@ -194,7 +194,7 @@ flowchart TD
     CONTROLLER1([controller\nuuid=1234]) --> MSG_CM3["drive message\nmains=0\ndrive=0\npaired=1\n"]
     MSG_CM3 --> MOTOR1
 ```
-    
+
 ```mermaid
 flowchart TD
     BEGIN([loop]) --> MSG{"state message\navailable"}

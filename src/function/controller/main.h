@@ -118,6 +118,7 @@ class FUNCTION_CONTROLLER {
 		void update(CAN_MESSAGE message);
 
 	private:
+		void update_status(CAN_MESSAGE message);
 		// HANDSHAKE _handshake;
 
 		uint8_t _func_id;
