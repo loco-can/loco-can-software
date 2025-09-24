@@ -13,10 +13,19 @@
 
 #pragma once
 
-
 #include <Arduino.h>
+
+struct CAN_MESSAGE {
+    uint32_t id;
+    uint16_t uuid;
+    uint8_t data[8];
+    uint8_t size;
+    uint8_t func;
+};
+
 #include "../../../config.h"
-#include "can_message.h"
+
+extern CAN_MESSAGE can_message;
 
 
 // select platform
@@ -50,7 +59,7 @@
 // #define CAN_COM_INT_DEFAULT 2
 
 
-extern CAN_MESSAGE can_message;
+// CAN_MESSAGE can_message;
 
 
 class CAN_COM {
@@ -71,6 +80,7 @@ class CAN_COM {
     void print_buffer(void); // print buffer to serial
     void print_message(CAN_MESSAGE message); // print message to serial
 
+    bool add(uint8_t* data, uint8_t count, uint16_t can_id);
     bool add(CAN_MESSAGE message); // add a message to the fifo buffer
 
     uint16_t read(CAN_MESSAGE message); // get message from buffer
@@ -95,9 +105,11 @@ class CAN_COM {
     bool isEmpty(void);
     bool isFull(void);
 
-    CAN_HANDLER _can_handler; // handler depending on platform
+    CAN_MESSAGE data2message(uint32_t id, uint16_t uuid, uint8_t* data, uint8_t size);
 
+    CAN_HANDLER _can_handler; // handler depending on platform
     CAN_MESSAGE _buffer[CAN_BUFFER_SIZE]; // fifo buffer of can messages
+
     uint8_t _buffer_count; // count of messages in buffer
     uint8_t _head;
     uint8_t _tail;

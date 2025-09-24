@@ -9,7 +9,7 @@
 
 #include "../../../config.h"
 
-#include "can_message.h"
+#include "can_com.h"
 #include "arduino_can/CAN.h"
 
 

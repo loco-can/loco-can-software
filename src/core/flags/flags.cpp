@@ -10,14 +10,9 @@
 #include "flags.h"
 
 
-FLAGS::FLAGS(void) {
-}
-
-
 void FLAGS::begin(void) {
 	_flags = 0;
 }
-
 
 
 // ======================================
@@ -43,7 +38,7 @@ uint8_t FLAGS::get(void) {
 void FLAGS::set(uint8_t bit, bool value) {
 
 	// restrict to 8 bits
-	if (value < 8) {
+	if (bit < 8) {
 		_flags ^= (-value ^ _flags) & (1UL << bit);
 	}
 }

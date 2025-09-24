@@ -14,7 +14,6 @@
 class FLAGS {
 
 	public:
-		FLAGS(void);
 		void begin(void);
 
 		void set(uint8_t data); // set complete byte

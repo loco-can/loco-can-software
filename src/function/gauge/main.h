@@ -28,6 +28,7 @@
 #include "../../core/can/can_com.h"
 #include "../../core/servo/intelliServo.h"
 
+extern CAN_COM can;
 extern CAN_MESSAGE can_message;
 
 class FUNCTION_GAUGE {

@@ -27,8 +27,8 @@ the value in the 4 byte buffer.
 
 #pragma once
 
+#include "../../../config.h"
 #include "eeprom_setup.h"
-#include "can_com.h"
 
 
 // convert bytes to a 16/32 bit integer

@@ -22,7 +22,6 @@ class LocoCANcore {
 		void update(void);
 
 	private:
-		CAN_COM _can;
 
 		/*
 		 * define all functions that are included in the module/{module_name}.h file

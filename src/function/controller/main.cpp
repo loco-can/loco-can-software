@@ -111,6 +111,15 @@ void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 		// select action by message id
 		switch(message.id) {
 
+			// drive message from other controllers
+			case CAN_ID_DRIVE:
+				break;
+
+			// vehicle status
+			case CAN_ID_VEHICLE_STATUS:
+				break;
+
+			// light message to switch instrument light
 			case CAN_ID_LIGHT:
 				break;
 

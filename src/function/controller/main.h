@@ -95,15 +95,20 @@
 
 /* GLOBAL COMPONENTS*/
 #include "../../../config.h"
+#include "../../core/can/can_com.h"
 #include "../../can_protocol.h"
 
 
 /* CORE COMPONENTS */
-#include "../../core/can/can_com.h"
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
 #include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
+#include "../../core/flags/flags.h"
+
+
+/* local classes */
+#include "handshake.h"
 
 
 class FUNCTION_CONTROLLER {
@@ -113,8 +118,13 @@ class FUNCTION_CONTROLLER {
 		void update(CAN_MESSAGE message);
 
 	private:
+		// HANDSHAKE _handshake;
+
 		uint8_t _func_id;
 		CAN_MESSAGE _message;
+
+		FLAGS _controller_status;
+		FLAGS _motor_status;
 
 		INTELLITIMEOUT _drive_time;
 

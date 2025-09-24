@@ -19,6 +19,9 @@
 
 #define FUNCTION_SWITCH_H
 
+extern CAN_COM can;
+extern CAN_MESSAGE can_message;
+
 /* GLOBAL COMPONENTS*/
 #include "../../../config.h"
 #include "../../can_protocol.h"

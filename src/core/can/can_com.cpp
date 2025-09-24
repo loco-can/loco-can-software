@@ -17,6 +17,9 @@
 #include "../timeout/intelliTimeout.h"
 
 #include "can_com.h"
+#include "../../can_protocol.h"
+
+// CAN_MESSAGE can_message;
 
 
 /* ************************************************
@@ -286,6 +289,11 @@ void CAN_COM::print_message(CAN_MESSAGE message) {
  * add a message to the output buffer
  * returns false if buffer is full
  */
+bool CAN_COM::add(uint8_t* data, uint8_t size, uint16_t can_id) {
+
+	return add(data2message(can_id, 0, data, size));
+}
+
 bool CAN_COM::add(CAN_MESSAGE message) {
 
 	// buffer is full
@@ -537,4 +545,20 @@ bool CAN_COM::register_filter(uint16_t mask, uint16_t filter) {
 	}
 
 	return _filter_count;
+}
+
+
+// return can_message struct from data
+CAN_MESSAGE CAN_COM::data2message(uint32_t id, uint16_t uuid, uint8_t* data, uint8_t size) {
+
+    can_message.id = id;
+    can_message.uuid = uuid;
+
+    for (uint8_t i = 0; i < size; i++) {
+        can_message.data[i] = data[i];
+    }
+
+    can_message.size = size;
+
+    return can_message;
 }

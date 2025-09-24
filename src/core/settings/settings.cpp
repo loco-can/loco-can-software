@@ -8,6 +8,8 @@
 
 #include "settings.h"
 
+extern CAN_COM can;
+
 
 SETTINGS::SETTINGS(void) {}
 
@@ -19,7 +21,7 @@ void SETTINGS::begin(uint16_t version, uint8_t type, uint8_t count, uint8_t name
 	_max_count = count;
 	_declaration = new SETTINGS_TYPE[count];
 
-	_max_name_size;
+	_max_name_size = name_size;
 	_name = new char[_max_name_size];
 
 	// count of settings and bytes
@@ -257,7 +259,7 @@ void SETTINGS::sendGlobalRequest(void) {
 
 	_buffer[0] = 0xFF;
 
-	can.send(_buffer, 1, _request_id);
+	can.add(_buffer, 1, _request_id);
 
 }
 
@@ -267,7 +269,7 @@ void SETTINGS::sendRequest(uint16_t uuid) {
 	_buffer[0] = MSB(uuid);
 	_buffer[1] = LSB(uuid);
 
-	can.send(_buffer, 2, _request_id);
+	can.add(_buffer, 2, _request_id);
 
 }
 
@@ -279,7 +281,7 @@ void SETTINGS::sendRequest(uint16_t uuid, uint8_t index) {
 
 	_buffer[2] = index;
 
-	can.send(_buffer, 3, _request_id);
+	can.add(_buffer, 3, _request_id);
 
 }
 
@@ -294,7 +296,7 @@ void SETTINGS::sendRequest(uint16_t uuid, uint8_t index, uint8_t cnt) {
 	_buffer[2] = index;
 	_buffer[3] = cnt;
 
-	can.send(_buffer, 4, _request_id);
+	can.add(_buffer, 4, _request_id);
 
 }
 
@@ -342,7 +344,7 @@ void SETTINGS::sendValueReply(uint8_t index, uint8_t cnt) {
 		_i++;
 	}
 
-	can.send(_buffer, _i, (_reply_id | (index + 1)) & 0x7F);
+	can.add(_buffer, _i, (_reply_id | (index + 1)) & 0x7F);
 
 }
 
@@ -362,20 +364,20 @@ void SETTINGS::setupValue(uint16_t uuid, uint8_t* buffer, uint8_t index, uint8_t
 	if (index < 0xFF) {
 
 		// add UUID to buffer
-		_buffer[0] = MSB(uuid);
-		_buffer[1] = LSB(uuid);
+		buffer[0] = MSB(uuid);
+		buffer[1] = LSB(uuid);
 
 
 		// add data to buffer
 		_i = 0;
 
 		while (_i < size && _i < _value_max_size && (index + _i) < _setting_count) {
-			_buffer[_i + 2] = _setup.getByte(index + _i);
+			buffer[_i + 2] = _setup.getByte(index + _i);
 			_i++;
 		}
 
 		// send
-		can.send(_buffer, _i + 2, _reply_id | (index + 1));
+		can.add(buffer, _i + 2, _reply_id | (index + 1));
 	}
 }
 
@@ -406,7 +408,7 @@ void SETTINGS::_sendVersion(uint8_t max_pack_cnt) {
 	_buffer[3] = LSB(_version);
 	_buffer[4] = _type;
 
-	_can_com->send(_buffer, 5, _reply_id);
+	can.add(_buffer, 5, _reply_id);
 
 }
 
@@ -446,7 +448,7 @@ void SETTINGS::_sendName(uint16_t uuid, String name, uint8_t max_pack_cnt, uint1
 			_buffer[_i++] = name[pos++];
 		}
 
-		can.send(_buffer, _i, can_id);
+		can.add(_buffer, _i, can_id);
 	}
 }
 
