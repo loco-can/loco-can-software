@@ -49,6 +49,26 @@
 	The setup ist ended by switching off mains. All settings are saved automatically.
  */
 
+/* DRIVE MESSAGE
+
+	Byte  |    7    |    6    |    5    |    4    |    3    |    2    |    1    |    0    |
+	---------------------------------------------------------------------------------------
+	  0   | error	| ready	  | stop 	| paired  | reverse	| dir 	  | drive 	| mains   |
+	  1   | uuid-15 | uuid-14 | uuid-13 | uuid-12 |         |         | drive-9 | drive-8 |
+	  2   | drive-7 | drive-6 | drive-5 | drive-4 | drive-3 | drive-2 | drive-1 | drive-0 |
+	  3   | uuid-11 | uuid-10 |  uuid-9 | uuid-8  |         |         | power-9 | power-8 |
+	  4   | power-7 | power-6 | power-5 | power-4 | power-3 | power-2 | power-1 | power-0 |
+	  5   |			|         |         |         | 	    |         | break-9 | break-8 |
+	  6   | break-7 | break-6 | break-5 | break-4 | break-3 | break-2 | break-1 | break-0 |
+	  7   | uuid-7  | uuid-6  | uuid-5  | uuid-4  | uuid-3  | uuid-2  | uuid-1  | uuid-0  |
+ */
+
+/* MOTOR STATUS MESSAGE
+	Byte  |    7    |    6    |    5    |    4    |    3    |    2    |    1    |    0    |
+	---------------------------------------------------------------------------------------
+	  0   | error	| ready	  | stop 	| paired  | reverse	| dir 	  | drive 	| mains   |
+ */
+
 /* PARAMETERS
 	The mandatory parameters sets the basic settings and the hardware mapping.
 	Additional parameters can select additional functions like supported gauges
