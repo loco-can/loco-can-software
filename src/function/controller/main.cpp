@@ -42,11 +42,13 @@ void FUNCTION_CONTROLLER::begin(uint8_t func_id) {
 	_dir_switch.begin(CONTROLLER_DIR_PORT);
 
 	// HORN SWITCH
-	#ifdef DEBUG
-		Serial.print("> init horn button on port ");
-		Serial.println(CONTROLLER_HORN_PORT);
+	#ifdef CONTROLLER_HORN_PORT
+		#ifdef DEBUG
+			Serial.print("> init horn button on port ");
+			Serial.println(CONTROLLER_HORN_PORT);
+		#endif
+		_horn_switch.begin(CONTROLLER_HORN_PORT, BUTTON_LONG_PUSH_TIME);
 	#endif
-	_horn_switch.begin(CONTROLLER_HORN_PORT, BUTTON_LONG_PUSH_TIME);
 
 	// SECOND HORN SWITCH
 	#ifdef CONTROLLER_HORN2_PORTl

@@ -80,8 +80,8 @@
 
 	CONTROLLER_MAINS_PORT => port for mains switch
 	CONTROLLER_DIR_PORT => port for direction switch
-	CONTROLLER_HORN_PORT => port for horn button
-	CONTROLLER_HORN2_PORT => port for second horn button
+	[ CONTROLLER_HORN_PORT => port for horn button ]
+	[ CONTROLLER_HORN2_PORT => port for second horn button ]
 	[ CONTROLLER_LIGHT_PORT => port for light switch ]
 	[ CONTROLLER_LIGHT2_PORT => port for second light switch ]
 	[ CONTROLLER_INSTRUMENT_LIGHT_PORT => port for instrument light switch ]
@@ -95,6 +95,7 @@
 		SINGLE => drive and break with a single controller
 		DUAL => two controllers for drive and break
 		POWER => two controllers for speed and power
+
 	CONTROLLER_DRIVE_PORT => port for drive [drive/break] pot
 	[ CONTROLLER_BREAK_PORT => port for break pot ]
 	[ CONTROLLER_POWER_PORT => port for power pot ]
