@@ -1,5 +1,5 @@
 /*
- * Loco-CAN motor function
+ * Loco-CAN electric loco function
  *
  * @author: Thomas H Winkler
  * @copyright: 2018-2025
@@ -10,7 +10,7 @@
 #include "main.h"
 
 
-void FUNCTION_MOTOR::begin(uint8_t func_id) {
+void FUNCTION_ELECTRIC::begin(uint8_t func_id) {
 
 	_func_id = func_id;
 
@@ -21,7 +21,7 @@ void FUNCTION_MOTOR::begin(uint8_t func_id) {
 
 }
 
-void FUNCTION_MOTOR::update(CAN_MESSAGE message) {
+void FUNCTION_ELECTRIC::update(CAN_MESSAGE message) {
 
 	can_message = message;
 }

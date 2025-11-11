@@ -36,7 +36,7 @@ void FUNCTION_CONTROLLER::begin(uint8_t func_id) {
 	 * set all ports
 	 */
 
-    // **********************************
+	// **********************************
 	// SWITCHES
 	_mains_switch.begin(CONTROLLER_MAINS_PORT);
 	_dir_switch.begin(CONTROLLER_DIR_PORT);
@@ -78,7 +78,7 @@ void FUNCTION_CONTROLLER::begin(uint8_t func_id) {
 	#endif
 
 	// INSTRUMENT LIGHT SWITCH
-    #ifdef CONTROLLER_INSTRUMENT_LIGHT_PORT
+	#ifdef CONTROLLER_INSTRUMENT_LIGHT_PORT
 		#ifdef DEBUG
 			Serial.print("> init instrument light switch on port ");
 			Serial.println(CONTROLLER_INSTRUMENT_LIGHT_PORT);
@@ -89,10 +89,11 @@ void FUNCTION_CONTROLLER::begin(uint8_t func_id) {
 			Serial.println("> register CAN_ID_LIGHT");
 		#endif
 
-        can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT); // light for instruments
-    #endif
-    // **********************************
+		can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT); // light for instruments
+	#endif
+	// **********************************
 
+	// init stati
 }
 
 
@@ -108,20 +109,34 @@ void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 			can.print_message(message);
 		#endif
 
+		// ===========================
+		// get switches
+
+
+		// ===========================
+		// get analog values
+
+
+		// ===========================
+		// update status
+		// _handshake.update_master(_status);
+		// _handshake.update_slave(message);
+
 
 		// ===========================
 		// select action by message id
 		switch(message.id) {
 
 			// drive message from other controllers
+			// set controller to blocked
 			case CAN_ID_DRIVE:
 				break;
 
 			// vehicle status
+			// handshake if controller is active
 			case CAN_ID_VEHICLE_STATUS:
 
-				// set current motor status
-				_motor_status.set(message.data[0]);
+				// set current vehicle status
 				break;
 
 			// light message to switch instrument light
@@ -132,6 +147,11 @@ void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 				break;
 		}
 	}
+
+
+	// ==================
+	// check state
+
 
 
 	// ==================
@@ -149,10 +169,4 @@ void FUNCTION_CONTROLLER::update(CAN_MESSAGE message) {
 		// can.print_message(_message);
 		can.add(_message);
 	}
-}
-
-
-void FUNCTION_CONTROLLER::update_status(CAN_MESSAGE message) {
-
-
 }

@@ -1,5 +1,5 @@
 /*
- * Loco-CAN motor function
+ * Loco-CAN electric loco function
  *
  * @author: Thomas H Winkler
  * @copyright: 2018-2025
@@ -17,7 +17,7 @@
 
 #pragma once
 
-#define FUNCTION_MOTOR_H
+#define FUNCTION_ELECTRIC_H
 
 extern CAN_COM can;
 extern CAN_MESSAGE can_message;
@@ -31,7 +31,7 @@ extern CAN_MESSAGE can_message;
 #include "../../core/can/can_com.h"
 
 
-class FUNCTION_MOTOR {
+class FUNCTION_ELECTRIC {
 
 	public:
 		void begin(uint8_t func_id);

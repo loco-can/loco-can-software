@@ -59,12 +59,6 @@ void LocoCANcore::begin(void) {
 	#endif
 
 	// =========================
-	// start function MOTOR
-	#ifdef FUNCTION_MOTOR_H
-		_motor.begin(func++);
-	#endif
-
-	// =========================
 	// start function SWITCH
 	#ifdef FUNCTION_SWITCH_H
 		_switch.begin(func++);
@@ -80,6 +74,18 @@ void LocoCANcore::begin(void) {
 	// start function SERVO
 	#ifdef FUNCTION_SENSOR_H
 		_sensor.begin(func++);
+	#endif
+
+	// =========================
+	// start function ELECTRIC
+	#ifdef FUNCTION_ELECTRIC_H
+		_electric.begin(func++);
+	#endif
+
+	// =========================
+	// start function COMBUSTION
+	#ifdef FUNCTION_COMBUSTION_H
+		_combustion.begin(func++);
 	#endif
 
 	#ifdef DEBUG

@@ -26,27 +26,39 @@ class LocoCANcore {
 		/*
 		 * define all functions that are included in the module/{module_name}.h file
 		 */
+
+		// train controller
 		#ifdef FUNCTION_CONTROLLER_H
 			FUNCTION_CONTROLLER _controller;
 		#endif
 
+		// gauge to display measured values
 		#ifdef FUNCTION_GAUGE_H
 			FUNCTION_GAUGE _gauge;
 		#endif
 
-		#ifdef FUNCTION_MOTOR_H
-			FUNCTION_MOTOR _motor;
-		#endif
-
+		// remote controlled switches
 		#ifdef FUNCTION_SWITCH_H
 			FUNCTION_SWITCH _switch;
 		#endif
 
+		// servo motor driver
 		#ifdef FUNCTION_SERVO_H
 			FUNCTION_SERVO _servo;
 		#endif
 
+		// sensor functions
 		#ifdef FUNCTION_SENSOR_H
 			FUNCTION_SENSOR _sensor;
+		#endif
+
+		// electric driven locomotive
+		#ifdef FUNCTION_ELECTRIC_H
+			FUNCTION_ELECTRIC _electric;
+		#endif
+
+		// combustion motor driven locomotive
+		#ifdef FUNCTION_COMBUSTION_H
+			FUNCTION_COMBUSTION _combustion;
 		#endif
 };
