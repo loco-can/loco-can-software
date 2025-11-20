@@ -69,6 +69,41 @@
 	  0   | error	| ready	  | stop 	| paired  | reverse	| dir 	  | drive 	| mains   |
  */
 
+/* CONTROLLER STATI
+
+	activatable		controller can be activated
+	active 			controller is active
+	nulled			controller is nulled
+
+status
+	off
+	locked
+	standby
+	not nulled
+	ready
+	moving
+	setup
+
+status active
+
+switches
+	mains
+	dir
+
+buttons
+	horn
+	horn2
+ */
+
+#define CONTROLLER_STATUS_OFF 0
+#define CONTROLLER_STATUS_LOCKED 1
+#define CONTROLLER_STATUS_STANDBY 2
+#define CONTROLLER_STATUS_NULLED 3
+#define CONTROLLER_STATUS_READY 4
+#define CONTROLLER_STATUS_MOVING 5
+#define CONTROLLER_STATUS_SETUP 6
+
+
 /* PARAMETERS
 	The mandatory parameters sets the basic settings and the hardware mapping.
 	Additional parameters can select additional functions like supported gauges
