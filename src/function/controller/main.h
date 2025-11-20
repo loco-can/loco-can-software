@@ -49,6 +49,22 @@
 	The setup ist ended by switching off mains. All settings are saved automatically.
  */
 
+/* STATUS BITS
+	mains 		mains switch status
+	drive 		the drive mechanism is activated
+	dir 		direction (0=forward, 1=reverse)
+	reverse 	the direction logic is reversed
+	paired 		the controller and vehicle are paired
+	stop 		the train is not moving
+	ready 		the system is ready to start
+	error 		an error occured, the train is stopped
+
+	The status of the drive message and the returned vehicle status from the paired
+	vehicle are compaired and has to be equal for correct function. If more than one
+	vehicle is connected, the mains, drive, ready and error values has to match.
+*/
+
+
 /* DRIVE MESSAGE
 
 	Byte  |    7    |    6    |    5    |    4    |    3    |    2    |    1    |    0    |
@@ -63,7 +79,8 @@
 	  7   | uuid-7  | uuid-6  | uuid-5  | uuid-4  | uuid-3  | uuid-2  | uuid-1  | uuid-0  |
  */
 
-/* MOTOR STATUS MESSAGE
+/* VEHICLE STATUS MESSAGE
+
 	Byte  |    7    |    6    |    5    |    4    |    3    |    2    |    1    |    0    |
 	---------------------------------------------------------------------------------------
 	  0   | error	| ready	  | stop 	| paired  | reverse	| dir 	  | drive 	| mains   |
@@ -115,8 +132,8 @@ buttons
 
 	CONTROLLER_MAINS_PORT => port for mains switch
 	CONTROLLER_DIR_PORT => port for direction switch
-	CONTROLLER_HORN_PORT => port for horn button
-	CONTROLLER_HORN2_PORT => port for second horn button
+	[ CONTROLLER_HORN_PORT => port for horn button ]
+	[ CONTROLLER_HORN2_PORT => port for second horn button ]
 	[ CONTROLLER_LIGHT_PORT => port for light switch ]
 	[ CONTROLLER_LIGHT2_PORT => port for second light switch ]
 	[ CONTROLLER_INSTRUMENT_LIGHT_PORT => port for instrument light switch ]
@@ -130,6 +147,7 @@ buttons
 		SINGLE => drive and break with a single controller
 		DUAL => two controllers for drive and break
 		POWER => two controllers for speed and power
+
 	CONTROLLER_DRIVE_PORT => port for drive [drive/break] pot
 	[ CONTROLLER_BREAK_PORT => port for break pot ]
 	[ CONTROLLER_POWER_PORT => port for power pot ]
@@ -160,10 +178,23 @@ buttons
 #include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
 #include "../../core/flags/flags.h"
+#include "../../core/handshake/handshake.h"
 
 
 /* local classes */
-#include "handshake.h"
+
+
+/*
+	Flags that influence the behavior of the controller-vehicle communication:
+
+		0 	blocked		another controller is active, this is blocked
+		1 	connected	the controller is connected to the vehicle
+		2 	paired		the controller is paired with the vehicle
+ */
+
+#define CONTROLLER_BLOCKED		0
+#define CONTROLLER_CONNECTED	1
+#define CONTROLLER_PAIRED		2
 
 
 class FUNCTION_CONTROLLER {
@@ -173,14 +204,17 @@ class FUNCTION_CONTROLLER {
 		void update(CAN_MESSAGE message);
 
 	private:
-		void update_status(CAN_MESSAGE message);
 		// HANDSHAKE _handshake;
 
 		uint8_t _func_id;
 		CAN_MESSAGE _message;
 
-		FLAGS _controller_status;
-		FLAGS _motor_status;
+		// the controller status
+		uint8_t _status;
+
+		// additional flags
+		FLAGS _controller_flags;
+
 
 		INTELLITIMEOUT _drive_time;
 

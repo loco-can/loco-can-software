@@ -149,7 +149,7 @@ Versions:
 //
 /* ===================================================================== */
 #define MODULE CONTROLLER_MODULE
-#define MODULE_VERSION V_2_1
+#define MODULE_VERSION V_1_0
 
 
 #include MODULE
