@@ -24,28 +24,61 @@
 	Both the status of controllers and vehicles are represented by a value
 	between 0 and 7.
 
-	Controller status
- 	-----------------
-		0 	off			the controller mains switch is off
-		1 	on 			the controller mains switch is on
-		2 	standby		no direction is selected and the drive is off
-		3 	ready		direction selected, ready to start
-		4	moving		the train is moving
-		5	 ---		not used
+	Controller message byte
+ 	-----------------------
+		0 	off			all off
+		1 	power		pantograph up, combustion start
+		2 	on 			the controller mains switch is on
+		3 	standby		no direction is selected and the drive is off
+		4 	ready		direction selected, ready to start
+		5	moving		the train is moving
 		6	setup		the controller is in setup mode
 		7	error		an error occured in the controller or vehicle
 
 
-	Vehicle status
-	--------------
-		0 	off			the vehicles main switech is of
-		1 	on 			the vehicle is switched on
-		2	 ---		not used
-		3 	ready 		the vehicle is ready to start
-		3 	moving		the vehicle is moving
-		5	 ---		not used
+	Vehicle message byte
+	--------------------
+		0 	off			the vehicles is in off mode
+		1 	power		the pantograph is up, the compustion motor is running
+		2 	on 			the vehicle is switched on
+		3	 ---		not used
+		4 	ready 		the vehicle is ready to start
+		5 	moving		the vehicle is moving
 		6	setup		the vehicle is in setup mode
 		7	error		an error occured in the vehicle
+
+
+	VEHICLE STATUS AND CHANGE MESSAGES
+	----------------------------------
+
+	| status 	| message 	| power 	| drive 	| dir 		| train 	|
+	|=======================================================================|
+	| OFF 		| offtime	| 		 	| 	 		|   		| 	 		|
+	|			| timeout 	| down/off	| off		| x			| off		|
+	|-----------------------------------------------------------------------|
+	| POWER		| power		| up/on 	| off 		| x 		| off 		|
+	|-----------------------------------------------------------------------|
+	| STANDBY 	| power		|  			| off 		| x 		| 	 		|
+	|			| mains 	| up/on		|			|			| on		|
+	|-----------------------------------------------------------------------|
+	| READY 	| power		| 		 	|  			| 			| 	 		|
+	|			| mains 	|			|			|			|			|
+	|			| dir 	 	| up/on		| on		| selected	| on		|
+	-------------------------------------------------------------------------
+
+	The power settings depend on the type of propulsion of the locomotive:
+		electic		POWER: pantograph down/up 	DRIVE: drive off/on
+		combustion: POWER: motor off/on 		DRIVE: clutch off/on
+
+	VEHICLE SPECIAL STATUS
+	----------------------
+
+	break 		false:	loco is in driving mode
+				true:	loco is in breaking mode
+	moving 		vehicle is in motion (independent of its status)
+	locked 		vehicle is locked: POWER=down/off, drive=off (no reaction on messges)
+	error 		an error occured in the vehicle, an error message is sent
+
  */
 
 #define HANDSHAKE_STATUS_OFF		0

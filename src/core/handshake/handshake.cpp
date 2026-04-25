@@ -22,9 +22,9 @@ void HANDSHAKE::update_master(FLAGS status) {
 
 void HANDSHAKE::update_master(uint8_t status) {
 
-// TODO add calculation of status
 
-/*
+
+/* STATUS CALCULATION
 	? can be activated
 		Y:	? master.main_switch is on
 			Y:	? is active
@@ -53,6 +53,12 @@ void HANDSHAKE::update_master(uint8_t status) {
 	|| set status LED ||
  */
 
+
+/* VEHICLE STATUS CHANGE
+
+	OFF -> msg.power -> POWER
+	POWER -> msg.off v msg.timeout() -> OFF
+	POWER -> msg.on 
 	
 
 
