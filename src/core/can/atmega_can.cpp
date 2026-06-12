@@ -9,7 +9,7 @@
 #include "../../../config.h"
 
 // use can.h if is ATMEGA or ESP32 
-#ifdef MODULE_PLATFORM_ATMEGA
+#ifdef MODULE_ARCH_AVR
 
 	#include "atmega_can.h"
 	#include "arduino_can/can.h"

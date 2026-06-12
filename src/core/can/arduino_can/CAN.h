@@ -7,7 +7,7 @@
 #include "../../../../config.h"
 
 
-#ifdef MODULE_PLATFORM_ESP32
+#ifdef MODULE_ARCH_ESP32
 	#include "ESP32SJA1000.h"
 #else
 	#include "MCP2515.h"

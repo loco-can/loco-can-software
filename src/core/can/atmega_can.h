@@ -25,3 +25,6 @@ class CAN_HANDLER {
 		bool send(CAN_MESSAGE message);
 		uint8_t read(void);
 };
+
+
+// ATMEGA_CAN_HANDLER CAN_HANDLER

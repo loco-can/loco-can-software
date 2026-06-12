@@ -50,7 +50,7 @@ void PWM_RAMP::begin(uint8_t port, uint16_t update_rate, bool frequency) {
 			Serial.print("31 kHz");
 		#endif
 
-#ifdef MODULE_PLATFORM_ATMEGA
+#ifdef MODULE_ARCH_AVR
 
 		TCCR1B = TCCR1B & (0b11111000 | 1);
 

@@ -1,34 +1,36 @@
 // Copyright © Luiz Henrique Cassettari. All rights reserved.
 // Licensed under the MIT license.
 
+
 #ifndef _ARDUINO_UNIQUE_ID_H_
 #define _ARDUINO_UNIQUE_ID_H_
 
 #include <Arduino.h>
+#include "../../../config.h"
 
-#if defined(ARDUINO_ARCH_AVR)
-#include <avr/boot.h>
-#ifndef SIGRD
-#define SIGRD 5
+
+#if defined(MODULE_ARCH_AVR)
+
+	// Changes for the Loco-CAN project to use is locally.
+	#include "../avr/boot.h"
+	#ifndef SIGRD
+	#define SIGRD 5
 #endif
-#elif defined(ARDUINO_ARCH_ESP8266)
-#elif defined(ARDUINO_ARCH_ESP32)
-#elif defined(ARDUINO_ARCH_SAM)
-#elif defined(ARDUINO_ARCH_SAMD)
-#elif defined(ARDUINO_ARCH_STM32)
-#elif defined(TEENSYDUINO)
 
+#elif defined(ARDUINO_ARCH_ESP8266)
+#elif defined(MODULE_ARCH_ESP32)
 #elif defined(ARDUINO_ARCH_RP2040)
   extern "C" {
-  #include "hardware/flash.h"
-  #include "pico/bootrom.h"
+	  #include "hardware/flash.h"
+	  #include "pico/bootrom.h"
   }
 #elif defined(ARDUINO_ARCH_MEGAAVR)
+
 #else
-#error "ArduinoUniqueID only works on AVR, SAM, SAMD, STM32, Teensy, RP2040, megaAVR and ESP Architecture"
+	#error "ArduinoUniqueID only works on AVR, SAM, SAMD, STM32, Teensy, RP2040, megaAVR and ESP Architecture"
 #endif
 
-#if defined(ARDUINO_ARCH_AVR)
+#if defined(MODULE_ARCH_AVR)
 
 #if defined(__AVR_ATmega328PB__)
 #define UniqueIDsize 10
@@ -41,7 +43,7 @@
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define UniqueIDsize 4
 #define UniqueIDbuffer 8
-#elif defined(ARDUINO_ARCH_ESP32)
+#elif defined(MODULE_ARCH_ESP32)
 #define UniqueIDsize 6
 #define UniqueIDbuffer 8
 #elif defined(ARDUINO_ARCH_SAM)

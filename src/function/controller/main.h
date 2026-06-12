@@ -178,7 +178,7 @@ buttons
 #include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
 #include "../../core/flags/flags.h"
-#include "../../core/handshake/handshake.h"
+// #include "../../core/handshake/handshake.h"
 
 
 /* local classes */

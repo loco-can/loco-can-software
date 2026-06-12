@@ -1,4 +1,4 @@
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(MODULE_ARCH_ESP32)
 
 #include <Arduino.h>
 #include "../Servo.h"

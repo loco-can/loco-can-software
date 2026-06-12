@@ -148,8 +148,7 @@ Versions:
 // select module and version
 //
 /* ===================================================================== */
-#define MODULE CONTROLLER_MODULE
-#define MODULE_VERSION V_1_0
+#include "hardware.h"
 
 
 #include MODULE

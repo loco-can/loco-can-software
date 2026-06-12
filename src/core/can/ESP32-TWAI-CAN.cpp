@@ -1,6 +1,6 @@
 #include "../../../config.h"
 
-#ifdef MODULE_PLATFORM_ESP32
+#ifdef MODULE_ARCH_ESP32
 
 #include "ESP32-TWAI-CAN.hpp"
 

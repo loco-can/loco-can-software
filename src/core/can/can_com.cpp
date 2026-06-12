@@ -99,7 +99,7 @@ bool CAN_COM::_begin(long speed) {
 	Serial.print(speed);
 	Serial.println(" bps");
 
-	#ifdef ARDUINO_ARCH_ESP32
+	#ifdef MODULE_ARCH_ESP32
 		Serial.print("  > using SJA1000 RX ");
 		Serial.print(_cs);
 		Serial.print(" - TX ");

@@ -14,27 +14,17 @@
 #pragma once
 
 #include <Arduino.h>
-
-struct CAN_MESSAGE {
-    uint32_t id;
-    uint16_t uuid;
-    uint8_t data[8];
-    uint8_t size;
-    uint8_t func;
-};
-
 #include "../../../config.h"
+#include "can_message.h"
 
 extern CAN_MESSAGE can_message;
 
 
 // select platform
-#ifdef MODULE_PLATFORM_ATMEGA
-  #include "atmega_can.h"
-#endif
-
-#ifdef MODULE_PLATFORM_ESP32
+#ifdef MODULE_ARCH_ESP32
   #include "ESP32_can.h"
+#else
+  #include "atmega_can.h"
 #endif
 
 #include "../timeout/intelliTimeout.h"

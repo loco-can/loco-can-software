@@ -25,7 +25,7 @@
 	// ======================================
 	// BASIC SETTINGS
 	// ======================================
-	#define MODULE_PLATFORM_ATMEGA
+	#define MODULE_ARCH_AVR
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 
 	#define CAN_RX 10
@@ -83,7 +83,7 @@
 	// ======================================
 	// BASIC SETTINGS
 	// ======================================
-	#define MODULE_PLATFORM_ATMEGA
+	#define MODULE_ARCH_AVR
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 
 	#define CAN_RX 10
@@ -141,7 +141,7 @@
 	// BASIC SETTINGS
 	// ======================================
 
-	#define MODULE_PLATFORM_ATMEGA
+	#define MODULE_ARCH_AVR
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 
 	#define CAN_RX 10
@@ -198,7 +198,7 @@
  */
 #elif MODULE_VERSION == V_3_0
 
-	#define MODULE_PLATFORM_ESP32
+	#define MODULE_ARCH_ESP32
 	#define PLATFORM_ANALOG_RESOLUTION 2048
 
 

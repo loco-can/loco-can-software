@@ -5,7 +5,7 @@
 
 ArduinoUniqueID::ArduinoUniqueID()
 {
-#if defined(ARDUINO_ARCH_AVR)
+#if defined(MODULE_ARCH_AVR)
 	for (size_t i = 0; i < UniqueIDsize; i++)
 	{
 		id[i] = boot_signature_byte_get(0x0E + i + (UniqueIDsize == 9 && i > 5 ? 1 : 0));
@@ -21,7 +21,7 @@ ArduinoUniqueID::ArduinoUniqueID()
 	id[6] = chipid >> 8;
 	id[7] = chipid;
 
-#elif defined(ARDUINO_ARCH_ESP32)
+#elif defined(MODULE_ARCH_ESP32)
 	uint64_t chipid = ESP.getEfuseMac();
 	id[0] = 0;
 	id[1] = 0;

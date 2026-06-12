@@ -14,7 +14,7 @@
 #include "driver/twai.h"
 
 
-class CAN_HANDLER {
+class ESP32_CAN_HANDLER {
 
 	public:
 		// start can communication with tx, rx ports
@@ -26,3 +26,6 @@ class CAN_HANDLER {
 		bool send(CAN_MESSAGE message);
 		uint8_t read(void);
 };
+
+
+ESP32_CAN_HANDLER CAN_HANDLER

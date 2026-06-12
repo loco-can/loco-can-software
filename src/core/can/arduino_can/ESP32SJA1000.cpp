@@ -3,10 +3,10 @@
 #include "../../../../config.h"
 
 // use can.h if is ATMEGA or ESP32 
-#ifdef MODULE_PLATFORM_ESP32
+#ifdef MODULE_ARCH_ESP32
 
 
-// #ifdef ARDUINO_ARCH_ESP32
+// #ifdef MODULE_ARCH_ESP32
 
 #include "esp_intr.h"
 #include "soc/dport_reg.h"

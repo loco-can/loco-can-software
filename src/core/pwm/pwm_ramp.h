@@ -9,6 +9,8 @@
  */
 #pragma once
 
+
+#include <Arduino.h>
 #include "../timeout/intellitimeout.h"
 
 // =====================================

@@ -8,10 +8,10 @@
 
 #include "../../../config.h"
 
-#undef MODULE_PLATFORM_ESP32
+#undef MODULE_ARCH_ESP32
 
 // use twai if is ESP32-S3 
-#ifdef MODULE_PLATFORM_ESP32
+#ifdef MODULE_ARCH_ESP32
 
 	#include "ESP32_can.h"
 	#include "driver/twai.h"
