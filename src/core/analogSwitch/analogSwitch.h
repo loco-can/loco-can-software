@@ -11,10 +11,12 @@
  * for a multi position switch 
  */
 
-#pragma once
+#ifndef ANALOGSWITCH_H
+#define ANALOGSWITCH_H
+
 
 #include <Arduino.h>
-#include "../../../config.h"
+#include "../../config.h"
 
 
 class ANALOGSWITCH {
@@ -41,3 +43,5 @@ class ANALOGSWITCH {
 		void _sort(void); // sort the positions
 		static int _compare(const void*, const void*); // compare method for qsort
 };
+
+#endif

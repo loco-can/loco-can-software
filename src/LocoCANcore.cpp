@@ -37,56 +37,16 @@ void LocoCANcore::begin(void) {
 
 
 	/* ********************************************************
-	 * start all registered functions
+	 * start module
 	 ******************************************************* */
-	uint8_t func = 1;
-
 	#ifdef DEBUG
 		Serial.println("*******************");
 		Serial.println("starting functions");
 	#endif
 
 	// =========================
-	// start function CONTROLLER
-	#ifdef FUNCTION_CONTROLLER_H
-		_controller.begin(func++);
-	#endif
-
-	// =========================
-	// start function GAUGE
-	#ifdef FUNCTION_GAUGE_H
-		_gauge.begin(func++);
-	#endif
-
-	// =========================
-	// start function SWITCH
-	#ifdef FUNCTION_SWITCH_H
-		_switch.begin(func++);
-	#endif
-
-	// =========================
-	// start function SERVO
-	#ifdef FUNCTION_SERVO_H
-		_servo.begin(func++);
-	#endif
-
-	// =========================
-	// start function SERVO
-	#ifdef FUNCTION_SENSOR_H
-		_sensor.begin(func++);
-	#endif
-
-	// =========================
-	// start function ELECTRIC
-	#ifdef FUNCTION_ELECTRIC_H
-		_electric.begin(func++);
-	#endif
-
-	// =========================
-	// start function COMBUSTION
-	#ifdef FUNCTION_COMBUSTION_H
-		_combustion.begin(func++);
-	#endif
+	// start module
+	_module.begin();
 
 	#ifdef DEBUG
 		Serial.println();
@@ -101,7 +61,6 @@ void LocoCANcore::begin(void) {
 void LocoCANcore::update(void) {
 
 	can_message.uuid = 0;
-	can_message.func = 0xFF;
 
 	can.read(can_message);
 
@@ -110,41 +69,9 @@ void LocoCANcore::update(void) {
 	 */
 
 	// ==========================
-	// update function CONTROLLER
-	#ifdef FUNCTION_CONTROLLER_H
-		_controller.update(can_message);
+	// update module
+	#ifdef MODULE_CONTROLLER_H
+		_module.update(can_message);
 	#endif
-
-	// =========================
-	// update function GAUGE
-	#ifdef FUNCTION_GAUGE_H
-		_gauge.update(can_message);
-	#endif
-
-	// =========================
-	// update function MOTOR
-	#ifdef FUNCTION_MOTOR_H
-		_motor.update(can_message);
-	#endif
-
-	// =========================
-	// update function SWITCH
-	#ifdef FUNCTION_SWITCH_H
-		_switch.update(can_message);
-	#endif
-
-	// =========================
-	// update function SERVO
-	#ifdef FUNCTION_SERVO_H
-		_servo.update(can_message);
-	#endif
-
-	// =========================
-	// update function SERVO
-	#ifdef FUNCTION_SENSOR_H
-		_sensor.update(can_message);
-	#endif
-
-	can.send();
 
 }

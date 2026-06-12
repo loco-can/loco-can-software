@@ -27,7 +27,7 @@
  * can_com.h: CAN communication class
  * LocoCANcore.h: The main class
  */
-#include "config.h"
+#include "src/config.h"
 #include "src/LocoCANcore.h"
 
 /*

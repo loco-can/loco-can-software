@@ -5,7 +5,9 @@
  * @copyright: 2019-11-17
  * @lizence: CC0
  */
-#pragma once
+#ifndef INTELLITIMEOUT_H
+#define INTELLITIMEOUT_H
+
 
 #include <Arduino.h>
 
@@ -27,3 +29,5 @@ class INTELLITIMEOUT {
 		uint16_t _timeout;
 		uint32_t _last_time;
 };
+
+#endif

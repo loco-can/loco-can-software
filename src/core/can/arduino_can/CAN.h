@@ -4,7 +4,7 @@
 #ifndef CAN_H
 #define CAN_H
 
-#include "../../../../config.h"
+#include "../../../config.h"
 
 
 #ifdef MODULE_ARCH_ESP32

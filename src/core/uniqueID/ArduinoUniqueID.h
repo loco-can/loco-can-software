@@ -6,7 +6,7 @@
 #define _ARDUINO_UNIQUE_ID_H_
 
 #include <Arduino.h>
-#include "../../../config.h"
+#include "../../config.h"
 
 
 #if defined(MODULE_ARCH_AVR)

@@ -25,7 +25,9 @@
  * 
  * forceFlash(time): set a time to flash, even at on state
  */
-#pragma once
+#ifndef INTELLILED_H
+#define INTELLILED_H
+
 
 #include <Arduino.h>
 
@@ -89,3 +91,5 @@ class INTELLILED {
     double _timeout;
     uint16_t _blink_time;
 };
+
+#endif

@@ -6,7 +6,9 @@
  * @lizence: GG0
  */
 
-#pragma once
+#ifndef MEASURE_H
+#define MEASURE_H
+
 
 #include <Arduino.h>
 
@@ -48,3 +50,5 @@ class MEASURE {
     uint32_t _timestamp_prev;
 
 };
+
+#endif

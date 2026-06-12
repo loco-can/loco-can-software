@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INTELLISERVO_H
+#define INTELLISERVO_H
 
 
 #include <Arduino.h>
@@ -29,3 +30,5 @@ class INTELLISERVO {
 		uint16_t _val_min;
 		uint16_t _val_max;
 };
+
+#endif

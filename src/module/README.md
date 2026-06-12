@@ -1,7 +1,7 @@
 # Modules
 
 In the modules directory all supported modules are defined. Each module can use
-Loco-CAN functions, that are stored in the functions directory.
+Loco-CAN core functions, that are stored in the src/core directory.
 
 The module platform must be defined as MODULE_ARCH_AVR or MODULE_ARCH_ESP32
 

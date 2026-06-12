@@ -24,7 +24,8 @@
  * to a percentage in 1/100 percent. 100% equals percentage = 10000. The percentage is a 16 bit
  * value, hence maximal values of 205% of the reference value can be handled.
  */
-#pragma once
+#ifndef INTELLIVALUE_H
+#define INTELLIVALUE_H
 
 
 struct MEASURE_VALUE {
@@ -68,3 +69,5 @@ class INTELLIVALUE {
 	private:
 		MEASURE_VALUE _value;
 };
+
+#endif

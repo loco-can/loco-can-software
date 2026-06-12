@@ -10,7 +10,7 @@
  * create can communication
  */
 
-#include "../../../config.h"
+#include "../../config.h"
 
 #include "../uniqueID/ArduinoUniqueID.h"
 #include "../hash/RokkitHash.h"
@@ -168,10 +168,6 @@ bool CAN_COM::_begin(long speed) {
 	}
 
 
-	// reset fifo buffer
-	buffer_reset();
-
-
 	#ifdef DEBUG
 	Serial.println("CAN is up and running!");
 	Serial.println("**********************");
@@ -216,52 +212,6 @@ bool CAN_COM::alive(void) {
 ************************************************ */
 
 
-/* ************************************************
-* MESSAGE FIFO BUFFER
-************************************************ */
-
-/*
- * reset the message fifo buffer
- */
-void CAN_COM::buffer_reset(void) {
-
-	_buffer_count = 0;
-	_head = 0;
-	_tail = 0;
-}
-
-// print fifo buffer to serial
-void CAN_COM::print_buffer(void) {
-
-	uint8_t i = 0;
-	uint8_t idx;
-
-	idx = _head;
-
-	Serial.print("dump FIFO buffer with ");
-	Serial.print(_buffer_count);
-	Serial.print("/");
-	Serial.print(CAN_BUFFER_SIZE);
-	Serial.println(" entries");
-
-	Serial.print("tail: ");
-	Serial.print(_tail);
-	Serial.print(", head: ");
-	Serial.println(_head);
-
-	while (i < _buffer_count) {
-
-		Serial.print(idx);
-		Serial.print(": ");
-
-		print_message(_buffer[idx]);
-		i++;
-
-		idx = (idx + 1) % CAN_BUFFER_SIZE;
-	}
-}
-
-
 void CAN_COM::print_message(CAN_MESSAGE message) {
 
 	uint8_t j;
@@ -270,8 +220,6 @@ void CAN_COM::print_message(CAN_MESSAGE message) {
 	Serial.print(message.id, HEX);
 	Serial.print(", uuid=");
 	Serial.print(message.uuid, HEX);
-	Serial.print(", func_id: ");
-	Serial.print(message.func);
 	Serial.print(", size=");
 	Serial.print(message.size);
 	Serial.print(", data: ");
@@ -282,92 +230,6 @@ void CAN_COM::print_message(CAN_MESSAGE message) {
 	}
 
 	Serial.println();
-}
-
-
-/*
- * add a message to the output buffer
- * returns false if buffer is full
- */
-bool CAN_COM::add(uint8_t* data, uint8_t size, uint16_t can_id) {
-
-	return add(data2message(can_id, 0, data, size));
-}
-
-bool CAN_COM::add(CAN_MESSAGE message) {
-
-	// buffer is full
-	if (isFull()) {
-		return false;
-	}
-
-	_buffer[_tail] = message;
-	_buffer[_tail].uuid = uuid();
-
-	_tail = (_tail + 1) % CAN_BUFFER_SIZE;
-	
-	_buffer_count++;
-
-	return true;
-}
-
-
-/*
- * fetch message from buffer
- */
-bool CAN_COM::fetch(CAN_MESSAGE &msg) {
-
-	// Buffer is empty
-	if (isEmpty()) {
-		return false;
-	}
-
-	// has message in buffer > return from fifo
-	msg = _buffer[_head];
-	_head = (_head + 1) % CAN_BUFFER_SIZE;
-
-	_buffer_count--;
-
-	return true;
-}
-
-
-bool CAN_COM::isEmpty(void) {
-	return _buffer_count == 0;
-}
-
-
-bool CAN_COM::isFull(void) {
-	return _buffer_count == CAN_BUFFER_SIZE;
-}
-
-
-uint8_t CAN_COM::buffer_size(void) {
-	return _buffer_count;
-}
-
-
-/*
- * send the message from the fifo buffer
- */
-bool CAN_COM::send(void) {
-
-	// message in buffer
-	if (fetch(can_message)) {
-
-		// is message to send
-		if (can_message.func != 0) {
-
-			#ifdef DEVEL
-				Serial.print("send message: ");
-				print_message(can_message);
-			#endif
-
-			return _send(can_message);
-		}
-	}
-
-	return false;
 }
 
 
@@ -386,11 +248,9 @@ uint16_t CAN_COM::read(CAN_MESSAGE message) {
 	// get message from can controller
 	filter = _read(message);
 
-	// valid message received > add to fifo with function id zero
+	// valid message received
 	if (filter) {
-
-		message.func = 0;
-		add(message);
+		// add(message);
 	}
 
 	// assume no message > uuid=0
@@ -407,7 +267,7 @@ uint16_t CAN_COM::read(CAN_MESSAGE message) {
 * SEND MESSAGE TO CAN CONTROLLER
 ************************************************ */
 // uint8_t* data, uint8_t length, uint32_t id
-bool CAN_COM::_send(CAN_MESSAGE message) {
+bool CAN_COM::send(CAN_MESSAGE message) {
 
 	delay(10);
 

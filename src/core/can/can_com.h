@@ -11,16 +11,19 @@
  * https://github.com/SukkoPera/Arduino-Rokkit-Hash
  */
 
-#pragma once
+#ifndef CAN_COM_H
+#define CAN_COM_H
+
 
 #include <Arduino.h>
-#include "../../../config.h"
+#include "../../config.h"
 #include "can_message.h"
 
 extern CAN_MESSAGE can_message;
 
 
 // select platform
+// MODULE_ARCH_ESP32 or MODULE_ARCH_AVR
 #ifdef MODULE_ARCH_ESP32
   #include "ESP32_can.h"
 #else
@@ -66,18 +69,10 @@ class CAN_COM {
     bool alive(void);
     void set_alive(uint16_t alive_timeout); // set alive timeout
     
-    void buffer_reset(void); // reset fifo buffer
-    void print_buffer(void); // print buffer to serial
     void print_message(CAN_MESSAGE message); // print message to serial
 
-    bool add(uint8_t* data, uint8_t count, uint16_t can_id);
-    bool add(CAN_MESSAGE message); // add a message to the fifo buffer
-
     uint16_t read(CAN_MESSAGE message); // get message from buffer
-    bool send(void); // send message from biffer
-
-    bool fetch(CAN_MESSAGE &message); // fetch message from buffer; false if empty
-    uint8_t buffer_size(void); // get size of buffer
+    bool send(CAN_MESSAGE message); // send data
 
     void clear_filter();
     bool register_filter(uint16_t mask, uint16_t filter); // add mask and filter
@@ -89,20 +84,11 @@ class CAN_COM {
 
     void create_uuid(void);
     bool _begin(long speed);
-    bool _send(CAN_MESSAGE message); // send data
     uint16_t _read(CAN_MESSAGE message); // receive data > true if no filter or filter match
-
-    bool isEmpty(void);
-    bool isFull(void);
 
     CAN_MESSAGE data2message(uint32_t id, uint16_t uuid, uint8_t* data, uint8_t size);
 
     CAN_HANDLER _can_handler; // handler depending on platform
-    CAN_MESSAGE _buffer[CAN_BUFFER_SIZE]; // fifo buffer of can messages
-
-    uint8_t _buffer_count; // count of messages in buffer
-    uint8_t _head;
-    uint8_t _tail;
 
     long _uuid;
 
@@ -120,3 +106,6 @@ class CAN_COM {
     INTELLILED _led_r;
     INTELLILED _led_w;
 };
+
+
+#endif

@@ -7,7 +7,8 @@
  * 
  * using can library: https://github.com/sandeepmistry/arduino-CAN
  */
-#pragma once
+#ifndef PWM_RAMP_H
+#define PWM_RAMP_H
 
 
 #include <Arduino.h>
@@ -62,3 +63,5 @@ class PWM_RAMP {
 		uint16_t _update_rate;
 		INTELLITIMEOUT _timer;
 };
+
+#endif

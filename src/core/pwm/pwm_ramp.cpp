@@ -8,7 +8,7 @@
  * using can library: https://github.com/sandeepmistry/arduino-CAN
  */
 
-#include "../../../config.h"
+#include "../../config.h"
 
 
 #include <Arduino.h>

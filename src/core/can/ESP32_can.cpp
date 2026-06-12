@@ -6,7 +6,7 @@
  * @lizence: GG0
  */
 
-#include "../../../config.h"
+#include "../../config.h"
 
 #undef MODULE_ARCH_ESP32
 

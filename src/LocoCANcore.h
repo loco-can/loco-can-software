@@ -11,7 +11,7 @@
 
  #pragma once
 
-#include "../config.h"
+#include "config.h"
 #include "core/can/can_com.h"
 
 
@@ -26,39 +26,38 @@ class LocoCANcore {
 		/*
 		 * define all functions that are included in the module/{module_name}.h file
 		 */
-
 		// train controller
-		#ifdef FUNCTION_CONTROLLER_H
-			FUNCTION_CONTROLLER _controller;
+		#ifdef MODULE_CONTROLLER_H
+			MODULE_CONTROLLER _module;
 		#endif
 
 		// gauge to display measured values
-		#ifdef FUNCTION_GAUGE_H
-			FUNCTION_GAUGE _gauge;
+		#ifdef MODULE_GAUGE_H
+			MODULE_GAUGE _module;
 		#endif
 
 		// remote controlled switches
-		#ifdef FUNCTION_SWITCH_H
-			FUNCTION_SWITCH _switch;
+		#ifdef MODULE_SWITCH_H
+			MODULE_SWITCH _module;
 		#endif
 
 		// servo motor driver
-		#ifdef FUNCTION_SERVO_H
-			FUNCTION_SERVO _servo;
+		#ifdef MODULE_SERVO_H
+			MODULE_SERVO _module;
 		#endif
 
 		// sensor functions
-		#ifdef FUNCTION_SENSOR_H
-			FUNCTION_SENSOR _sensor;
+		#ifdef MODULE_SENSOR_H
+			MODULE_SENSOR _module;
 		#endif
 
 		// electric driven locomotive
-		#ifdef FUNCTION_ELECTRIC_H
-			FUNCTION_ELECTRIC _electric;
+		#ifdef MODULE_ELECTRIC_H
+			MODULE_ELECTRIC _module;
 		#endif
 
 		// combustion motor driven locomotive
-		#ifdef FUNCTION_COMBUSTION_H
-			FUNCTION_COMBUSTION _combustion;
+		#ifdef MODULE_COMBUSTION_H
+			MODULE_COMBUSTION _module;
 		#endif
 };

@@ -6,7 +6,7 @@
  * @lizence: GG0
  */
 
-#include "../../../config.h"
+#include "../../config.h"
 
 // use can.h if is ATMEGA or ESP32 
 #ifdef MODULE_ARCH_AVR

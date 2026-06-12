@@ -6,7 +6,8 @@
  * @lizence: GG0
  */
 
-#pragma once
+#ifndef ESP32_CAN_H
+#define ESP32_CAN_H
 
 
 #include "can_message.h"
@@ -29,3 +30,5 @@ class ESP32_CAN_HANDLER {
 
 
 ESP32_CAN_HANDLER CAN_HANDLER
+
+#endif

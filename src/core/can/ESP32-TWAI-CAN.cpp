@@ -1,4 +1,4 @@
-#include "../../../config.h"
+#include "../../config.h"
 
 #ifdef MODULE_ARCH_ESP32
 

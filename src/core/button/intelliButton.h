@@ -19,7 +19,8 @@
  *      2: long push
  */ 
 
-#pragma once
+#ifndef INTELLIBUTTON_H
+#define INTELLIBUTTON_H
 
 
 #include <Arduino.h>
@@ -49,3 +50,5 @@ class INTELLIBUTTON {
         bool _pressed;
 
 };
+
+#endif

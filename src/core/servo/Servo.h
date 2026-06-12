@@ -48,7 +48,7 @@
 #ifndef Servo_h
 #define Servo_h
 
-#include "../../../config.h"
+#include "../../config.h"
 #include <inttypes.h>
 
 /*

@@ -6,7 +6,9 @@
  * @lizence: GG0
  */
 
-#pragma once
+#ifndef FLAGS_H
+#define FLAGS_H
+
 
 #include <Arduino.h>
 
@@ -26,3 +28,5 @@ class FLAGS {
 		uint8_t _flags; // stati
 
 };
+
+#endif
