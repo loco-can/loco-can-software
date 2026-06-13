@@ -11,7 +11,7 @@
 
 
 // #include <Arduino.h>
-#include "intelliTimeout.h"
+#include "intellitimeout.h"
 
 
 INTELLITIMEOUT::INTELLITIMEOUT() {

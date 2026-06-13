@@ -5,11 +5,13 @@
  * @copyright: 2025
  * @lizence: GG0
  */
+#pragma once
+
 #ifndef ATMEGA_CAN_H
 #define ATMEGA_CAN_H
 
 
-#include "../../config.h"
+// #include "../../config.h"
 
 #include "can_message.h"
 #include "arduino_can/CAN.h"

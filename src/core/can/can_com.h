@@ -10,6 +10,7 @@
  * https://github.com/ricaun/ArduinoUniqueID
  * https://github.com/SukkoPera/Arduino-Rokkit-Hash
  */
+#pragma once
 
 #ifndef CAN_COM_H
 #define CAN_COM_H
@@ -30,7 +31,7 @@ extern CAN_MESSAGE can_message;
   #include "atmega_can.h"
 #endif
 
-#include "../timeout/intelliTimeout.h"
+#include "../timeout/intellitimeout.h"
 #include "../led/intelliLed.h"
 
 
@@ -72,6 +73,7 @@ class CAN_COM {
     void print_message(CAN_MESSAGE message); // print message to serial
 
     uint16_t read(CAN_MESSAGE message); // get message from buffer
+    bool send(uint32_t id, uint8_t* data, uint8_t size);
     bool send(CAN_MESSAGE message); // send data
 
     void clear_filter();

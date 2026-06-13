@@ -10,6 +10,7 @@
  * With the library an analog input can be used
  * for a multi position switch 
  */
+#pragma once
 
 #ifndef ANALOGSWITCH_H
 #define ANALOGSWITCH_H

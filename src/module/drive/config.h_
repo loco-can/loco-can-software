@@ -1,0 +1,101 @@
+/*
+ * Loco-CAN
+ * 
+ * @author: Thomas H Winkler
+ * @copyright: 2018-2025
+ * @lizence: GG0
+ *
+ * Version 3.x
+ */
+
+ /* *************************************************
+ * module definition and
+ * controller board settings
+ */
+#pragma once
+
+#ifndef MODULE_DRIVE_CONFIG_H
+#define MODULE_DRIVE_CONFIG_H
+
+
+/* ******************************************
+ * The module version is set in the config.h file
+ */
+
+#if MODULE_VERSION == V_3_0
+
+	// ======================================
+	// BASIC SETTINGS
+	// ======================================
+	#define MODULE_ARCH_ESP32
+	#define PLATFORM_ANALOG_RESOLUTION 1024
+
+	#define CAN_RX 17
+	#define CAN_TX 18
+	#define CAN_STATUS_LED 46
+	#define CAN_MAX_FILTER 8
+	#define CAN_BUFFER_SIZE 8
+
+	// ======================================
+	// INCLUDED FUNCTIONS
+	// ======================================
+
+	// DRIVE FUNCTION PARAMETERS
+	// H-BRIDGE CONTROL
+	#define DRIVE_PWM 15
+	#define DRIVE_FORW 21
+	#define DRIVE_REV 2
+	#define DRIVE_BREAK 3
+
+	// SENSORS
+	#define DRIVE_MOTOR_VOLTAGE_PLUS 4
+	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
+	#define DRIVE_CURRENT 6
+
+	// TEMPERATUR SENSOR
+	#define DRIVE_TEMP_SDA 7
+	#define DRIVE_TEMP_SCK 8
+
+	// ======================================
+	// CONTROL FUNCTION PARAMETERS
+	#define DRIVE_CONTROLLER__MAINS_PORT 12
+	#define DRIVE_CONTROLLER__DIR_PORT 13
+	#define DRIVE_CONTROLLER__HORN_PORT 14
+	// #define DRIVE_CONTROLLER__HORN2_PORT 9
+	#define DRIVE_CONTROLLER__LIGHT_PORT 38
+	// #define DRIVE_CONTROLLER__LIGHT2_PORT A2
+
+	#define DRIVE_ANALOGSWITCH_MAX_POS 8
+
+	// status display method
+	#define DRIVE_CONTROLER_STATUS_MODE LED
+
+	#if DRIVE_CONTROLLER__STATUS_MODE == LED
+		#define DRIVE_CONTROLLER__STATUS_RED_PORT 41
+		#define DRIVE_CONTROLLER__STATUS_GREEN_PORT 42
+	#elif DRIVE_CONTROLLER__STATUS_MODE == OLED
+		// supported OLED displays
+	#endif
+
+	// FUNCTION SWITCH
+	// #define DRIVE_CONTROLLER__INSTRUMENT_LIGHT_PORT 4
+
+	// FUNCTION GAUGE
+	// #define DRIVE_CONTROLLER__BATTERY_VOLTAGE_PORT 6
+	// #define DRIVE_CONTROLLER__MOTOR_VOLTAGE_PORT 7
+	// #define DRIVE_CONTROLLER__CURRENT_PORT 8
+
+	#define DRIVE_CONTROLLER__DRIVE_MODE SINGLE
+	#define DRIVE_CONTROLLER__DRIVE_PORT A0
+	// #define DRIVE_CONTROLLER__BREAK_PORT A1
+	// #define DRIVE_CONTROLLER__POWER_PORT A2
+
+
+#endif
+
+/*
+ * INCLUDE CLASS
+ */
+#include "main.h"
+
+#endif

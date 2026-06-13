@@ -5,6 +5,7 @@
  * @copyright: 2025
  * @lizence: GG0
  */
+#pragma once
 
 #ifndef ESP32_CAN_H
 #define ESP32_CAN_H
@@ -15,7 +16,7 @@
 #include "driver/twai.h"
 
 
-class ESP32_CAN_HANDLER {
+class CAN_HANDLER {
 
 	public:
 		// start can communication with tx, rx ports
@@ -28,7 +29,5 @@ class ESP32_CAN_HANDLER {
 		uint8_t read(void);
 };
 
-
-ESP32_CAN_HANDLER CAN_HANDLER
 
 #endif

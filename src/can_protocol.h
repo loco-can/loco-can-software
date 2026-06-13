@@ -3,6 +3,11 @@
 // CAN-communication
 //
 // =====================================
+#pragma once
+
+#ifndef CAN_PROTOCOL_H
+#define CAN_PROTOCOL_H
+
 
 #define CAN_BUS_SPEED 500E3
 #define CAN_ALIVE_TIMEOUT 500
@@ -53,6 +58,7 @@
 // when starting to drive. A change in the latern signal list while
 // driving leads to a emergency stop (switch off the heartbeat signal)
 #define CAN_ID_DRIVE_HEARTBEAT 0x010
+#define CAN_ID_DRIVE_HEARTBEAT_TIME 50 // ms between heartbeat packages
 #define CAN_ID_DRIVE_TIME 100 // ms between drive packages
 #define CAN_ID_TRAINEND_HEARTBEAT 0x020 // sent from train end laterns
 
@@ -279,3 +285,5 @@
 
 #define CAN_NAME_MAX_SIZE 5
 #define CAN_VALUE_MAX_SIZE 6
+
+#endif

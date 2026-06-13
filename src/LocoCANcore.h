@@ -9,7 +9,10 @@
  *
  */
 
- #pragma once
+#pragma once
+
+#ifndef LOCOCANCORE_H
+#define LOCOCANCORE_H
 
 #include "config.h"
 #include "core/can/can_com.h"
@@ -61,3 +64,5 @@ class LocoCANcore {
 			MODULE_COMBUSTION _module;
 		#endif
 };
+
+#endif

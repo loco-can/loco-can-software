@@ -49,8 +49,8 @@ void setup() {
 		Serial.println();
 		Serial.print("MODULE: ");
 		Serial.print(MODULE);
-		Serial.print(", VERSION: ");
-		Serial.println(MODULE_VERSION);
+		// Serial.print(", VERSION: ");
+		// Serial.println(MODULE_VERSION);
 		Serial.println();
 	#endif
 

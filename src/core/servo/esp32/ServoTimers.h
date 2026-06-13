@@ -1,3 +1,5 @@
+#pragma once
+
 #define MAX_PWM_SERVOS             16
 
 #define LEDC_MAX_BIT_WIDTH      SOC_LEDC_TIMER_BIT_WIDTH 

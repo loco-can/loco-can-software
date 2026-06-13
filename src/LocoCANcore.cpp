@@ -10,7 +10,8 @@
  */
 
 
-// #include "../config.h"
+#include "config.h"
+
 #include "can_protocol.h"
 #include "LocoCANcore.h"
 
@@ -62,7 +63,7 @@ void LocoCANcore::update(void) {
 
 	can_message.uuid = 0;
 
-	can.read(can_message);
+//	can.read(can_message);
 
 	/*
 	 * update registered functions
@@ -70,8 +71,6 @@ void LocoCANcore::update(void) {
 
 	// ==========================
 	// update module
-	#ifdef MODULE_CONTROLLER_H
-		_module.update(can_message);
-	#endif
+	_module.update(can_message);
 
 }

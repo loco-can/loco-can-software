@@ -18,13 +18,14 @@
  *      1: short push
  *      2: long push
  */ 
+#pragma once
 
 #ifndef INTELLIBUTTON_H
 #define INTELLIBUTTON_H
 
 
 #include <Arduino.h>
-#include "../timeout/intelliTimeout.h"
+#include "../timeout/intellitimeout.h"
 
 // default value for long push detection = 1000ms
 #define INTELLIBUTTON_DEFAULT_LONG 1000

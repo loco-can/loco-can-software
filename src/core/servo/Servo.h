@@ -44,6 +44,7 @@
     attached()  - Returns true if there is a servo attached.
     detach()    - Stops an attached servos from pulsing its I/O pin.
  */
+#pragma once
 
 #ifndef Servo_h
 #define Servo_h

@@ -7,6 +7,8 @@
  * 
  * using can library: https://github.com/sandeepmistry/arduino-CAN
  */
+#pragma once
+
 #ifndef PWM_RAMP_H
 #define PWM_RAMP_H
 

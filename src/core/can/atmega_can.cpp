@@ -12,7 +12,7 @@
 #ifdef MODULE_ARCH_AVR
 
 	#include "atmega_can.h"
-	#include "arduino_can/can.h"
+	#include "arduino_can/CAN.h"
 
 
 	bool CAN_HANDLER::begin(long speed, uint16_t can_cs, uint16_t can_int) {
@@ -30,9 +30,7 @@
 
 
 	uint16_t CAN_HANDLER::parsePacket(void) {
-		CAN.parsePacket();
-
-		return 0;
+		return CAN.parsePacket();
 	}
 
 
@@ -48,20 +46,23 @@
 
 	bool CAN_HANDLER::send(CAN_MESSAGE message) {
 
-		uint8_t i = 0;
-
-		// ATMEGA SEND
-		CAN.beginExtendedPacket((message.id << 18) | message.uuid);
-
-		// send data with length
-		// restrict to 8 uint8_ts
-		while (i < message.size && i < 8) {
-			CAN.write(message.data[i++]);  
+		if (message.size > 8) {
+			return false;
 		}
 
-		CAN.endPacket();
+		const long can_id = ((long)message.id << 18) | (message.uuid & 0x3FFFF);
 
-		return true;
+		if (!CAN.beginExtendedPacket(can_id, message.size)) {
+			return false;
+		}
+
+		for (uint8_t i = 0; i < message.size; i++) {
+			if (CAN.write(message.data[i]) != 1) {
+				return false;
+			}
+		}
+
+		return CAN.endPacket() == 1;
 	}
 
 

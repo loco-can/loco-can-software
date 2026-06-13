@@ -12,7 +12,10 @@
 #if defined(MODULE_ARCH_AVR)
 
 	// Changes for the Loco-CAN project to use is locally.
-	#include "../avr/boot.h"
+	#include <avr/boot.h>
+
+//	#include "../avr/boot.h"
+
 	#ifndef SIGRD
 	#define SIGRD 5
 #endif

@@ -1,5 +1,6 @@
 // Copyright (c) Sandeep Mistry. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+#pragma once
 
 #ifdef MODULE_ARCH_ESP32
 
@@ -59,6 +60,8 @@ private:
 };
 
 extern ESP32SJA1000Class CAN;
+
+#endif
 
 #endif
 

@@ -55,6 +55,10 @@
 #define FLAG_RXM0                  0x20
 #define FLAG_RXM1                  0x40
 
+#ifndef MCP2515_TX_TIMEOUT_MS
+#define MCP2515_TX_TIMEOUT_MS 25
+#endif
+
 
 MCP2515Class::MCP2515Class() :
   CANControllerClass(),
@@ -190,12 +194,17 @@ int MCP2515Class::endPacket()
   writeRegister(REG_TXBnCTRL(n), 0x08);
 
   bool aborted = false;
+  uint32_t start = millis();
 
   while (readRegister(REG_TXBnCTRL(n)) & 0x08) {
-    if (readRegister(REG_TXBnCTRL(n)) & 0x10) {
-      // abort
+    if ((millis() - start) > MCP2515_TX_TIMEOUT_MS) {
       aborted = true;
+      modifyRegister(REG_CANCTRL, 0x10, 0x10);
+      break;
+    }
 
+    if (readRegister(REG_TXBnCTRL(n)) & 0x10) {
+      aborted = true;
       modifyRegister(REG_CANCTRL, 0x10, 0x10);
     }
 
@@ -203,8 +212,15 @@ int MCP2515Class::endPacket()
   }
 
   if (aborted) {
-    // clear abort command
     modifyRegister(REG_CANCTRL, 0x10, 0x00);
+
+    start = millis();
+    while ((readRegister(REG_TXBnCTRL(n)) & 0x08) && ((millis() - start) < MCP2515_TX_TIMEOUT_MS)) {
+      yield();
+    }
+
+    modifyRegister(REG_CANINTF, FLAG_TXnIF(n), 0x00);
+    return 0;
   }
 
   modifyRegister(REG_CANINTF, FLAG_TXnIF(n), 0x00);

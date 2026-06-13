@@ -15,12 +15,12 @@
  */
 #pragma once
 
-#if MODULE_PLATFORM == ESP32
+#ifdef MODULE_ARCH_ESP32
 
     #ifdef ARDUINO
         #include <Arduino.h>
     #else
-        #include "inttypes.h"
+        #include <inttypes.h>
     #endif
 
     // #include "driver/twai.h"

@@ -5,6 +5,7 @@
  * @copyright: 2020-2025
  * @lizence: GG0
  */
+#pragma once
 
 #ifndef FLAGS_H
 #define FLAGS_H

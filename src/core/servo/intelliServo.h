@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef INTELLISERVO_H
 #define INTELLISERVO_H
 

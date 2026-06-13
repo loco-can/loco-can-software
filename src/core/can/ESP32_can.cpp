@@ -8,12 +8,11 @@
 
 #include "../../config.h"
 
-#undef MODULE_ARCH_ESP32
-
 // use twai if is ESP32-S3 
 #ifdef MODULE_ARCH_ESP32
 
 	#include "ESP32_can.h"
+	#include "ESP32-TWAI-CAN.hpp"
 	#include "driver/twai.h"
 
 
@@ -72,11 +71,20 @@
 
 	bool CAN_HANDLER::send(CAN_MESSAGE message) {
 
-		CanFrame ESP32_frame = { 0 };
-	    ESP32_frame.identifier = message.id << 18 | message.uuid;
-	    ESP32_frame.extd = 1;
-	    ESP32_frame.data_length_code = message.size;
-	    
+		if (message.size > 8) {
+			return false;
+		}
+
+		CanFrame frame = { 0 };
+		frame.identifier = ((uint32_t)message.id << 18) | (message.uuid & 0x3FFFF);
+		frame.flags = TWAI_MSG_FLAG_EXTD;
+		frame.data_length_code = message.size;
+
+		for (uint8_t i = 0; i < message.size; i++) {
+			frame.data[i] = message.data[i];
+		}
+
+		return ESP32Can.writeFrame(frame);
 	}
 
 

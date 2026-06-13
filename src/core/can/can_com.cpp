@@ -14,7 +14,7 @@
 
 #include "../uniqueID/ArduinoUniqueID.h"
 #include "../hash/RokkitHash.h"
-#include "../timeout/intelliTimeout.h"
+#include "../timeout/intellitimeout.h"
 
 #include "can_com.h"
 #include "../../can_protocol.h"
@@ -269,11 +269,6 @@ uint16_t CAN_COM::read(CAN_MESSAGE message) {
 // uint8_t* data, uint8_t length, uint32_t id
 bool CAN_COM::send(CAN_MESSAGE message) {
 
-	delay(10);
-
-	// add uuid
-	// message.uuid = uuid();
-
 	// blink write status led if exists, else read
 	if (_led_w.available()) {
 		_led_w.on();
@@ -282,14 +277,14 @@ bool CAN_COM::send(CAN_MESSAGE message) {
 		_led_r.on();
 	}
 
-
 	// begin packet
 	// use 29 bit identifier
 	// 11 bit: id
 	// 18 bit: board uuid
-	_can_handler.send(message);
+	message.uuid = uuid();
+	const bool sent = _can_handler.send(message);
 
-
+	
 	// LEDs off
 	if (_led_w.available()) {
 		_led_w.off();
@@ -298,7 +293,16 @@ bool CAN_COM::send(CAN_MESSAGE message) {
 		_led_r.off();
 	}
 
-	return true;
+	return sent;
+}
+
+// uint8_t* data, uint8_t length, uint32_t id
+bool CAN_COM::send(uint32_t id, uint8_t* data, uint8_t size) {
+	CAN_MESSAGE message;
+
+	message = data2message(id, uuid(), data, size);
+
+	return send(message);
 }
 
 
@@ -412,7 +416,11 @@ bool CAN_COM::register_filter(uint16_t mask, uint16_t filter) {
 CAN_MESSAGE CAN_COM::data2message(uint32_t id, uint16_t uuid, uint8_t* data, uint8_t size) {
 
     can_message.id = id;
-    can_message.uuid = uuid;
+    can_message.uuid = uuid & 0x3FFFF;
+
+    if (size > 8) {
+        size = 8;
+    }
 
     for (uint8_t i = 0; i < size; i++) {
         can_message.data[i] = data[i];

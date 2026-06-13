@@ -1,0 +1,127 @@
+/*
+ * Loco-CAN DRIVE
+ * 
+ * @author: Thomas H Winkler
+ * @copyright: 2025
+ * @lizence: GG0
+ *
+ * Version 3.0
+ *
+ * The drive module is a 4q-motor controller with local and CAN control
+ * ability. The local control works like a stand alone controller.
+ * The modul has integrated sensors for battery voltage, motor voltage
+ * and motor current.
+ *
+ * The module classes has to have the following methods:
+ *		void begin(void)	// initializiation and startup
+ *		void update(void)	// called in loop
+ */
+#include <Arduino.h>
+
+#include "config.h"
+#include "main.h"
+
+
+/*
+ * used additional class includes
+ */
+// LED dim library for ESP32
+#ifdef MODULE_ARCH_ESP32
+    #include "driver/ledc.h"
+#endif
+
+
+/* *************************************************
+ * class initialisation
+ */
+void MODULE_DRIVE::begin(void) {
+
+	// Serial.println("init module");
+	pinMode(DRIVE_FORW, OUTPUT);
+	pinMode(DRIVE_REV, OUTPUT);
+	pinMode(DRIVE_BREAK, OUTPUT);
+
+	// pinMode(PWM, OUTPUT);
+
+	ledc_init();
+
+
+	stop();
+}
+
+
+void MODULE_DRIVE::update(void) {
+
+}
+
+
+void MODULE_DRIVE::stop(void) {
+
+	digitalWrite(DRIVE_FORW, LOW);
+	digitalWrite(DRIVE_REV, LOW);
+	digitalWrite(DRIVE_BREAK, LOW);
+	digitalWrite(DRIVE_PWM, LOW);
+}
+
+
+void MODULE_DRIVE::forw(void) {
+
+	// stop();
+	digitalWrite(DRIVE_FORW, HIGH);
+}
+
+
+void MODULE_DRIVE::rev(void) {
+
+	// stop();
+	digitalWrite(DRIVE_REV, HIGH);
+}
+
+
+void MODULE_DRIVE::drive(void) {
+	digitalWrite(DRIVE_BREAK, LOW);
+}
+
+
+void MODULE_DRIVE::brk(void) {
+	digitalWrite(DRIVE_BREAK, HIGH);
+}
+
+
+
+void MODULE_DRIVE::set_pwm(uint16_t val) {
+	// analogWrite(PWM, val);
+
+	// Set duty to val
+    // ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, val));
+
+    // // Update duty to apply the new value
+    // ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL));
+}
+
+
+void MODULE_DRIVE::ledc_init(void) {
+
+    // // Prepare and then apply the LEDC PWM timer configuration
+    // ledc_timer_config_t ledc_timer = {
+    //     .speed_mode       = LEDC_MODE,
+    //     .duty_resolution  = LEDC_DUTY_RES,
+    //     .timer_num        = LEDC_TIMER,
+    //     .freq_hz          = LEDC_FREQUENCY,  // Set output frequency at 4 kHz
+    //     .clk_cfg          = LEDC_AUTO_CLK
+    // };
+    // ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+
+    // // Prepare and then apply the LEDC PWM channel configuration
+    // ledc_channel_config_t ledc_channel = {
+    //     .gpio_num       = PWM,
+    //     .speed_mode     = LEDC_MODE,
+    //     .channel        = LEDC_CHANNEL,
+    //     .intr_type      = LEDC_INTR_DISABLE,
+    //     .timer_sel      = LEDC_TIMER,
+    //     .duty           = 0, // Set duty to 0%
+    //     .hpoint         = 0
+    // };
+    
+    // ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
+}

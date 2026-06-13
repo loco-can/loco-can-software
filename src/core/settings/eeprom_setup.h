@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef EEPROM_H
+#define EEPROM_H
+
+
 #include <Arduino.h>
 #include <EEPROM.h>
 
@@ -21,3 +25,5 @@ class EEPROM_SETUP {
 		uint8_t _max_settings;
 		uint16_t _uuid;
 };
+
+#endif
