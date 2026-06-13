@@ -35,7 +35,7 @@ The full GNU GENERAL PUBLIC LICENSE Version 3 license text from 29 June 2007.
 
 ### src
 
-The src directory contains all of the project's code. It is divided into three subdirectories:
+The src directory contains all of the project's code. It is divided into two subdirectories:
 
 	- core
 	- module
@@ -64,41 +64,13 @@ The core directory contains all global methods that can be used for the modules.
 
 A module contains the specific code for the required functions. It is called from the core and can use the core functions. The module config file contains the hardware definitions for different versions.
 
-The module is included in the core class.
+The module is included in the core class. It must have two methods that are called from the core.
 
-**src/LocoCANcore.h**
+  /* it is called in the boot sequence and initializes the module */
+  void begin(void);
 
-	#ifdef {MODULE_NAME_H}
-		{MODULE_NAME} _{module_name};
-	#endif
-
-**src/LocoCANcore.cpp**
-
-	void LocoCANcore::begin(void) {
-
-		...
-
-		// =========================
-		// start function {MODULE_NAME}
-		#ifdef {MODULE_NAME_H}
-			_{module_name}.begin(void);
-		#endif
-
-		...
-	}
-
-	void LocoCANcore::update(void) { 
-
-		...
-
-		// ==========================
-		// update function {MODULE_NAME}
-		#ifdef {MODULE_NAME_H}
-			_{module_name}.update(can_message);
-		#endif
-	
-		...
-	}
+  /* it is called in the core loop and gets a received can message */
+  bool update(CAN_MESSAGE message);
 
 There is a definition block for each hardware version, which may differ in terms of the scope of functions.
 
