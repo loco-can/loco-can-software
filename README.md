@@ -19,9 +19,10 @@ The project has the following file structure:
 			- core
 			- module
 			can_protocol.h
+			config.h
 			LocoCANcore.cpp
 			LocoCANcore.h
-		config.h
+		hardware.h
 		loco-can-software.ino
 		README.md
 
@@ -35,7 +36,7 @@ The full GNU GENERAL PUBLIC LICENSE Version 3 license text from 29 June 2007.
 
 ### src
 
-The src directory contains all of the project's code. It is divided into three subdirectories:
+The src directory contains all of the project's code. It is divided into two subdirectories:
 
 	- core
 	- module
@@ -62,45 +63,11 @@ The core directory contains all global methods that can be used for the modules.
 
 ### modules
 
-A module contains the specific code for the required functions. It is called from the core and can use the core functions. The module config file contains the hardware definitions for different versions.
+A module contains the specific code for the required functions for a hardware. It is called from the core and can use the core functions. The module config file contains the definitions for different hardware versions.
 
-The module is included in the core class.
+The module is automatically included at the end of the hardware.h file. It is started in the LocoCANcore class.
 
-**src/LocoCANcore.h**
-
-	#ifdef {MODULE_NAME_H}
-		{MODULE_NAME} _{module_name};
-	#endif
-
-**src/LocoCANcore.cpp**
-
-	void LocoCANcore::begin(void) {
-
-		...
-
-		// =========================
-		// start function {MODULE_NAME}
-		#ifdef {MODULE_NAME_H}
-			_{module_name}.begin(void);
-		#endif
-
-		...
-	}
-
-	void LocoCANcore::update(void) { 
-
-		...
-
-		// ==========================
-		// update function {MODULE_NAME}
-		#ifdef {MODULE_NAME_H}
-			_{module_name}.update(can_message);
-		#endif
-	
-		...
-	}
-
-There is a definition block for each hardware version, which may differ in terms of the scope of functions.
+The hardware settings for a module are defined in the config.h inside of the module subdirectory. At the end of config.h the main.h header of the module class is included.
 
 	#pragma once
 
@@ -127,17 +94,13 @@ There is a definition block for each hardware version, which may differ in terms
 		// INCLUDED FUNCTIONS
 		// ======================================
 
-		/* define corresponding parameters */ 
-
-		#include ".../function/{function_name}/main.h"
-		...
+		/* define corresponding parameters */
 
 	#endif
 
+	/*
+	 * INCLUDE CLASS
+	 */
+	#include "main.h"
+
 The BASIC SETTINGS block must be present. It is used to configure the basic settings for the core methods. The INCLUDED FUNCTIONS block contains all functions that are used in the module. The necessary parameters must follow for each function.
-
-A module is defined in the config.h header file.
-
-**config.h**
-
-	#define {module_name} "{path to module header file}"

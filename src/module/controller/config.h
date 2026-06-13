@@ -198,7 +198,6 @@
 	#define MODULE_ARCH_ESP32
 	#define PLATFORM_ANALOG_RESOLUTION 2048
 
-
 	// CAN ports
 	#define CAN_RX 17
 	#define CAN_TX 18
