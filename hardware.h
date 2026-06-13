@@ -130,6 +130,39 @@
 
 
 /* ====================================================================== */
+// ACTIVE MODULE VERSION AND TYPE (for CAN ping / setup)
+/* ====================================================================== */
+#if defined(CONTROLLER_MODULE_VERSION)
+	#define HARDWARE_VERSION CONTROLLER_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0001
+#elif defined(ELECTRIC_MODULE_VERSION)
+	#define HARDWARE_VERSION ELECTRIC_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0002
+#elif defined(SWITCH_MODULE_VERSION)
+	#define HARDWARE_VERSION SWITCH_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0003
+#elif defined(SENSOR_MODULE_VERSION)
+	#define HARDWARE_VERSION SENSOR_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0004
+#elif defined(SERVO_MODULE_VERSION)
+	#define HARDWARE_VERSION SERVO_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0005
+#elif defined(LED_MODULE_VERSION)
+	#define HARDWARE_VERSION LED_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0006
+#elif defined(DRIVE_MODULE_VERSION)
+	#define HARDWARE_VERSION DRIVE_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0007
+#elif defined(UNIVERSAL_MODULE_VERSION)
+	#define HARDWARE_VERSION UNIVERSAL_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0000
+#else
+	#define HARDWARE_VERSION 0
+	#define MODULE_TYPE_ID 0x0000
+#endif
+
+
+/* ====================================================================== */
 // INCLUDE MODULE CLASS
 /* ====================================================================== */
 #include MODULE

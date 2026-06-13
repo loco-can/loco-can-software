@@ -254,8 +254,11 @@
 // =====================================
 
 // the setup command is used to send and receive module setup data
-//		0x7FF		request setup info from module (0 byte message length)
-//					the identifier uuid is ignored and the info is sent any way
+//		0x7FF		ping (6 byte message length)
+//                  message:
+//                      byte 0,1: module type identifier
+//                      byte 2,3: hardware version
+//                      byte 4,5: software version
 
 //		0x7nn		returns info packages (nn = data id)
 //					+ 8 bytes text description
@@ -273,14 +276,14 @@
 //				0xFF = module name
 //			bytes 3-7 	=> data
 
-#define CAN_REQUEST_MASK 0x7FF
-#define CAN_ID_REQUEST 0x7FF
+#define CAN_ID_PING 0x7FF
+#define CAN_PING_MASK 0x7FF
 
-#define CAN_REPLY_MASK 0x7FF
 #define CAN_ID_REPLY 0x780
+#define CAN_REPLY_MASK 0x7FF
 
-#define CAN_SETUP_MASK 0x700
 #define CAN_ID_SETUP 0x700
+#define CAN_SETUP_MASK 0x700
 
 
 #define CAN_NAME_MAX_SIZE 5

@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "core/can/can_com.h"
+#include "core/ping/modulePing.h"
 
 
 class LocoCANcore {
@@ -25,6 +26,8 @@ class LocoCANcore {
 		void update(void);
 
 	private:
+
+		MODULE_PING _ping;
 
 		/*
 		 * define all functions that are included in the module/{module_name}.h file

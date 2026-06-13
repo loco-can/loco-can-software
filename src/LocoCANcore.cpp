@@ -11,6 +11,7 @@
 
 
 #include "config.h"
+#include "core/ping/modulePing.h"
 
 #include "can_protocol.h"
 #include "LocoCANcore.h"
@@ -35,6 +36,8 @@ void LocoCANcore::begin(void) {
 	can.setPorts(CAN_RX, CAN_TX);
 	can.set_alive(CAN_ALIVE_TIMEOUT);
 	can.begin(CAN_BUS_SPEED, CAN_STATUS_LED); // start with one CAN LED
+
+	can.register_filter(CAN_PING_MASK, CAN_ID_PING);
 
 
 	/* ********************************************************
@@ -63,7 +66,20 @@ void LocoCANcore::update(void) {
 
 	can_message.uuid = 0;
 
-//	can.read(can_message);
+	can.read(can_message);
+
+	// ==========================
+	// check for ping and send version ping
+	if (can_message.uuid != 0
+	    && can_message.id == CAN_ID_PING
+	    && can_message.size == 0) {
+
+		#ifdef DEBUG
+			Serial.println("empty ping received, sending version ping");
+		#endif
+
+		_ping.send(can);
+	}
 
 	/*
 	 * update registered functions

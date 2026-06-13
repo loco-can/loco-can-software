@@ -28,6 +28,10 @@
 /* time to detect a long pressed button */
 #define BUTTON_LONG_PUSH_TIME 1000
 
+/* the software version */
+#define SOFTWARE_VERSION "3.0"
+#define SOFTWARE_VERSION_NUM 30
+
 
 /*
 	In the config.h all supported modules are listed with the module include

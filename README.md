@@ -19,10 +19,9 @@ The project has the following file structure:
 			- core
 			- module
 			can_protocol.h
-			config.h
 			LocoCANcore.cpp
 			LocoCANcore.h
-		hardware.h
+		config.h
 		loco-can-software.ino
 		README.md
 
@@ -63,11 +62,17 @@ The core directory contains all global methods that can be used for the modules.
 
 ### modules
 
-A module contains the specific code for the required functions for a hardware. It is called from the core and can use the core functions. The module config file contains the definitions for different hardware versions.
+A module contains the specific code for the required functions. It is called from the core and can use the core functions. The module config file contains the hardware definitions for different versions.
 
-The module is automatically included at the end of the hardware.h file. It is started in the LocoCANcore class.
+The module is included in the core class. It must have two methods that are called from the core.
 
-The hardware settings for a module are defined in the config.h inside of the module subdirectory. At the end of config.h the main.h header of the module class is included.
+ /* it is called in the boot sequence and initializes the module */
+ void begin(void);
+
+ /* it is called in the core loop and gets a received can message */
+ bool update(CAN_MESSAGE message);
+
+There is a definition block for each hardware version, which may differ in terms of the scope of functions.
 
 	#pragma once
 
@@ -94,13 +99,17 @@ The hardware settings for a module are defined in the config.h inside of the mod
 		// INCLUDED FUNCTIONS
 		// ======================================
 
-		/* define corresponding parameters */
+		/* define corresponding parameters */ 
+
+		#include ".../function/{function_name}/main.h"
+		...
 
 	#endif
 
-	/*
-	 * INCLUDE CLASS
-	 */
-	#include "main.h"
-
 The BASIC SETTINGS block must be present. It is used to configure the basic settings for the core methods. The INCLUDED FUNCTIONS block contains all functions that are used in the module. The necessary parameters must follow for each function.
+
+A module is defined in the config.h header file.
+
+**config.h**
+
+	#define {module_name} "{path to module header file}"
