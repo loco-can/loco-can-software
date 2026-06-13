@@ -66,11 +66,11 @@ A module contains the specific code for the required functions. It is called fro
 
 The module is included in the core class. It must have two methods that are called from the core.
 
-  /* it is called in the boot sequence and initializes the module */
-  void begin(void);
+ /* it is called in the boot sequence and initializes the module */
+ void begin(void);
 
-  /* it is called in the core loop and gets a received can message */
-  bool update(CAN_MESSAGE message);
+ /* it is called in the core loop and gets a received can message */
+ bool update(CAN_MESSAGE message);
 
 There is a definition block for each hardware version, which may differ in terms of the scope of functions.
 
