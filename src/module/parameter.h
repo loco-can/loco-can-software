@@ -38,6 +38,10 @@
 
   struct PARAM_ELECTRIC {
     MODULE_TYPE type;
+    int paired; // uuid of paired controller
+    int multi_traction; // 0=single, 1=leading engine, 2=supporting engine
+    int tacho_pulses; // tacho pulses per meter
+    int battery_type; // battery type (1x12V/24V, 2x12V in serie) 
   }
 
 #endif
