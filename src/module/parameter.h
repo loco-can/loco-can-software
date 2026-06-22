@@ -1,3 +1,12 @@
+/*
+ * Loco-CAN module parameters
+ *
+ * @author: Thomas H Winkler
+ * @copyright: 2026
+ * @lizence: GG0
+ *
+ * The parameter structures for all modules are defined in this file.
+ */
 #pragma once
 
 #ifnded PARAMETER_H
