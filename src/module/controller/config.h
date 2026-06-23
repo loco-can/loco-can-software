@@ -30,7 +30,9 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
+
 	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 10
 	#define CAN_TX 2
@@ -86,7 +88,9 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
+
 	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 10
 	#define CAN_TX 2
@@ -141,7 +145,9 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
+
 	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 10
 	#define CAN_TX 2
@@ -196,7 +202,9 @@
 #elif CONTROLLER_MODULE_VERSION == V_3_0
 
 	#define MODULE_ARCH_ESP32
+
 	#define PLATFORM_ANALOG_RESOLUTION 2048
+	#define ANALOGSWITCH_MAX_POS 8
 
 	// CAN ports
 	#define CAN_RX 17
@@ -210,7 +218,6 @@
 	// INCLUDED FUNCTIONS
 	// ======================================
 
-	#define ANALOGSWITCH_MAX_POS 8
 	// CAN LED
 
 #else

@@ -1,6 +1,3 @@
-// TO BE MODIFIED
-
-
 /*
  * Loco-CAN
  * 
@@ -25,14 +22,16 @@
  * The module version is set in the config.h file
  */
 
-#if MODULE_VERSION == V_1_0
+#if SENSOR_MODULE_VERSION == V_2_0 || SENSOR_MODULE_VERSION == V_2_1
 
 	// ======================================
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
-	#define PLATFORM_ANALOG_RESOLUTION 1024
 
+	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
+ 	
 	#define CAN_RX 17
 	#define CAN_TX 18
 	#define CAN_STATUS_LED 46
@@ -83,7 +82,8 @@
 	// #define SENSOR_BREAK_PORT A1
 	// #define SENSOR_POWER_PORT A2
 
-
+#else
+	#error "No valid board version selected"
 #endif
 
 /*

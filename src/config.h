@@ -138,6 +138,18 @@ Versions:
 //#define DRIVE_MODULE "src/module/drive/config.h"
 
 
+/* ========================================================================
+CONFIGURATOR MODULE
+	Tool module to discover and configure other modules on the CAN bus.
+	Sends empty pings and collects version replies.
+
+Versions:
+	V_1_0
+	V_3_0
+======================================================================== */
+#define CONFIGURATOR_MODULE "src/module/configurator/config.h"
+
+
 /* ===================================================================== */
 // VERSIONS
 #define V_1_0 10

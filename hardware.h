@@ -129,6 +129,20 @@
 /* ===================================================================== */
 
 
+/* ========================================================================
+ * CONFIGURATOR MODULE
+ *
+ * Tool module for bus discovery and module setup. Sends empty pings on
+ * CAN_ID_PING and listens for version replies from other modules.
+ */
+// #define MODULE CONFIGURATOR_MODULE
+
+/* ===== MODULE VERSIONS ===== */
+// #define CONFIGURATOR_MODULE_VERSION V_1_0
+// #define CONFIGURATOR_MODULE_VERSION V_3_0
+/* ===================================================================== */
+
+
 /* ====================================================================== */
 // ACTIVE MODULE VERSION AND TYPE (for CAN ping / setup)
 /* ====================================================================== */
@@ -153,6 +167,9 @@
 #elif defined(DRIVE_MODULE_VERSION)
 	#define HARDWARE_VERSION DRIVE_MODULE_VERSION
 	#define MODULE_TYPE_ID 0x0007
+#elif defined(CONFIGURATOR_MODULE_VERSION)
+	#define HARDWARE_VERSION CONFIGURATOR_MODULE_VERSION
+	#define MODULE_TYPE_ID 0x0008
 #elif defined(UNIVERSAL_MODULE_VERSION)
 	#define HARDWARE_VERSION UNIVERSAL_MODULE_VERSION
 	#define MODULE_TYPE_ID 0x0000

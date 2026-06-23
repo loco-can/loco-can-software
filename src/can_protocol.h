@@ -1,3 +1,13 @@
+/*
+ * Loco-CAN
+ *
+ * @author: Thomas H Winkler
+ * @copyright: 2018-2026
+ * @lizence: GG0
+ *
+ * CAN communicatiion definitions
+ */
+
 // =====================================
 //
 // CAN-communication

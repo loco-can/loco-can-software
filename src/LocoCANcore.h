@@ -66,6 +66,11 @@ class LocoCANcore {
 		#ifdef MODULE_COMBUSTION_H
 			MODULE_COMBUSTION _module;
 		#endif
+
+		// bus configurator / discovery tool
+		#ifdef MODULE_CONFIGURATOR_H
+			MODULE_CONFIGURATOR _module;
+		#endif
 };
 
 #endif

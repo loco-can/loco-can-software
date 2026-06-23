@@ -69,7 +69,8 @@ void LocoCANcore::update(void) {
 	can.read(can_message);
 
 	// ==========================
-	// check for ping and send version ping
+	// check for ping and send version ping (not on configurator module)
+	#ifndef MODULE_CONFIGURATOR_H
 	if (can_message.uuid != 0
 	    && can_message.id == CAN_ID_PING
 	    && can_message.size == 0) {
@@ -80,6 +81,7 @@ void LocoCANcore::update(void) {
 
 		_ping.send(can);
 	}
+	#endif
 
 	/*
 	 * update registered functions
