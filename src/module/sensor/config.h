@@ -83,8 +83,7 @@
 	// #define SENSOR_POWER_PORT A2
 
 #else
-	#error "Set SENSOR_MODULE_VERSION in hardware.h (V_2_0 or V_2_1)"
-
+	#error "No valid board version selected"
 #endif
 
 /*
