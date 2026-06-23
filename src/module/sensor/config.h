@@ -22,7 +22,7 @@
  * The module version is set in the config.h file
  */
 
-#if SENSOR_MODULE_VERSION == V_2_0 || SENSOR_MODULE_VERSION == V_2_1
+#if HARDWARE_VERSION == V_2_0 || HARDWARE_VERSION == V_2_1
 
 	// ======================================
 	// BASIC SETTINGS
@@ -83,7 +83,7 @@
 	// #define SENSOR_POWER_PORT A2
 
 #else
-	#error "No valid board version selected"
+	#error "No valid hardware selected in hardware.h"
 #endif
 
 /*

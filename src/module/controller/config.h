@@ -22,9 +22,7 @@
  * The module version is set in the hardware.h file
  */
 
-// #pragma message "module controller config.h"
-
-#if CONTROLLER_MODULE_VERSION == V_1_0
+#if HARDWARE_VERSION == V_1_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -82,7 +80,7 @@
  * CONTROLLER ADAPTER with universal module V2.0
  * (has wrong ICP pinout)
  */
-#elif CONTROLLER_MODULE_VERSION == V_2_0
+#elif HARDWARE_VERSION == V_2_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -139,7 +137,7 @@
 /*
  * CONTROLLER ADAPTER with universal module V2.1
  */
- #elif CONTROLLER_MODULE_VERSION == V_2_1
+ #elif HARDWARE_VERSION == V_2_1
 
 	// ======================================
 	// BASIC SETTINGS
@@ -199,7 +197,7 @@
  * ESP32S3 based version
  * not yet implemented, only for debugging use
  */
-#elif CONTROLLER_MODULE_VERSION == V_3_0
+#elif HARDWARE_VERSION == V_3_0
 
 	#define MODULE_ARCH_ESP32
 
@@ -221,8 +219,7 @@
 	// CAN LED
 
 #else
-	#error "Set CONTROLLER_MODULE_VERSION in hardware.h (V_1_0, V_2_0, V_2_1, or V_3_0)"
-
+	#error "No valid hardware selected in hardware.h"
 #endif
 
 /*

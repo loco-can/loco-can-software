@@ -25,7 +25,7 @@
  * The module version is set in the config.h file
  */
 
-#if SWITCH_MODULE_VERSION == V_1_0
+#if HARDWARE_VERSION == V_1_0
 
 	// BOARD VERSION 1.0
 	//
@@ -80,7 +80,7 @@
 	#define C1 A0
 
 
-#elif SWITCH_MODULE_VERSION == V_2_0
+#elif HARDWARE_VERSION == V_2_0
 
 	// Print V1.2 extension bus
 	// 8x2 pins
@@ -130,7 +130,7 @@
 	// CURRENT
 	#define C1 A0
 
-#elif SWITCH_MODULE_VERSION == V_2_1
+#elif HARDWARE_VERSION == V_2_1
 
 	// Print V1.2 extension bus
 	// 8x2 pins
@@ -181,7 +181,7 @@
 	#define C1 A0
 
 #else
-	#error "No valid board version selected"
+	#error "No valid hardware selected in hardware.h"
 #endif
 
 /*

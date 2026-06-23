@@ -22,7 +22,7 @@
  * The module version is set in the hardware.h file
  */
 
-#if ELECTRIC_MODULE_VERSION == V_2_0
+#if HARDWARE_VERSION == V_2_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -53,7 +53,7 @@
 	#define DRIVE_MOTOR_VOLTAGE_PLUS 4
 	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
 
-#elif ELECTRIC_MODULE_VERSION == V_2_1
+#elif HARDWARE_VERSION == V_2_1
 
 	// ======================================
 	// BASIC SETTINGS
@@ -85,7 +85,7 @@
 	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
 
 #else
-	#error "No valid board version selected"
+	#error "No valid hardware selected in hardware.h"
 #endif
 
 /*
