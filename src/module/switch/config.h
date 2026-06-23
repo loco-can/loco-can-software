@@ -52,7 +52,7 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
-	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 1024
 
 	#define CAN_RX 17
 	#define CAN_TX 18
@@ -105,7 +105,7 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
-	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 1024
 
 	#define CAN_RX 17
 	#define CAN_TX 18
@@ -158,7 +158,7 @@
 	#define CAN_STATUS_LED 8
 	#define CAN_STATUS_LED_WRITE 9
 
-	#define ANALOG_RESOLUTION 10
+	#define ANALOGSWITCH_MAX_POS 1024
 
 
 	// digital intput/output
@@ -178,7 +178,6 @@
 
 #else
 	#error "No valid board version selected"
-#endif
 #endif
 
 /*
