@@ -52,7 +52,9 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
+
 	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 17
 	#define CAN_TX 18
@@ -101,7 +103,9 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
+
 	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 17
 	#define CAN_TX 18
@@ -149,7 +153,9 @@
 	// BASIC SETTINGS
 	// ======================================
 	#define MODULE_ARCH_AVR
+
 	#define PLATFORM_ANALOG_RESOLUTION 1024
+	#define ANALOGSWITCH_MAX_POS 8
 
 	#define CAN_RX 17
 	#define CAN_TX 18
