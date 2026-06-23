@@ -60,7 +60,7 @@ uint8_t ANALOGSWITCH::get(void) {
 		// entry between
 		else {
 
-			if (analogval >= ((_positions[i - 1] + _positions[i]) / 2) && analogval <= ANALOGSWITCH_MAX_POS) {
+			if (analogval >= ((_positions[i - 1] + _positions[i]) / 2) && analogval <= PLATFORM_ANALOG_RESOLUTION) {
 				return i;
 			}
 		}
