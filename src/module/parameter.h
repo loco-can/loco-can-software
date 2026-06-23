@@ -124,7 +124,7 @@ struct SWITCH_MAP {
 
 struct PARAM_SWITCH {
 	MODULE_TYPE type;
-	SWITCH_MAP output[SWITCH_MAX_PORTS];
+	SWITCH_MAP output[SWITCH_PORT_COUNT];
 };
 
 #endif
