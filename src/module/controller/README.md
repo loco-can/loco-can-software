@@ -49,20 +49,21 @@ light: steady on
 
 ## Controller Status
 - **OFF**
-  
-  mains off, listening to bus for heartbeat
+  - mains off
+  - listening to bus for heartbeat
   - no bus: **red flashing**
   - bus active: **green flashing**
   - other heartbeat received: **red light**
 - **STANDBY**
-  - no loco received: **red blinking** 
+  - listening to bus for heartbeat
   - mains on, no direction: **yellow blinking**
+  - no loco received: **red blinking** 
 - **ON**
   - mains on, no direction, motor on/started: **yellow light**
 - **READY**
   - mains on, direction selected: **green light blinking**
 - **MOVING**
-  - on and train is moving: **green light**
+  - ON and train is moving: **green light**
 - **SETUP**
   - set locomotive parameters
 ---
