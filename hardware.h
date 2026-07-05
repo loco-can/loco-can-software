@@ -20,6 +20,18 @@
  * Uncomment the corresponding line of the module and the used harware version. 
  */
 
+ /* ===== MODULE TYPES ===== */
+ #define MODULE_TYPE_CONFIGURATOR 0x0008
+ #define MODULE_TYPE_CONTROLLER 0x0001
+ #define MODULE_TYPE_ELECTRIC 0x0002
+ #define MODULE_TYPE_SWITCH 0x0003
+ #define MODULE_TYPE_SENSOR 0x0004
+ #define MODULE_TYPE_SERVO 0x0005
+ #define MODULE_TYPE_LED 0x0006
+ #define MODULE_TYPE_DRIVE 0x0007
+// #define MODULE_TYPE_UNIVERSAL 0x0000
+ /* ===================================================================== */
+
 
 /* ========================================================================
  * UNIVERSAL MODULE
@@ -47,27 +59,12 @@
  * It is used to control locomotives with an electic or combution motor.
  */
 #define MODULE CONTROLLER_MODULE
+#define MODULE_TYPE MODULE_TYPE_CONTROLLER
 
 /* ===== MODULE VERSIONS ===== */
-// #define CONTROLLER_MODULE_VERSION V_2_0
-#define CONTROLLER_MODULE_VERSION V_2_1
+// #define HARDWARE_VERSION V_2_0
+#define HARDWARE_VERSION V_2_1
 /* ===================================================================== */
-
-
-/* ========================================================================
- * MOTOR MODULE
- *
- * The motor module connects the CAN control with a electro motor driver.
- * It has no power amplifier but only control lines to operate different
- * motor drivers.
- */
-// #define MODULE ELECTRIC_MODULE
-
-/* ===== MODULE VERSIONS ===== */
-// #define ELECTRIC_MODULE_VERSION V_1_0
-// #define ELECTRIC_MODULE_VERSION V_2_0
-/* ===================================================================== */
-
 
 /* ========================================================================
  * SWITCH MODULE
@@ -77,10 +74,11 @@
  * The default mapping is for switching lights. 
  */
 // #define MODULE SWITCH_MODULE
+// #define MODULE_TYPE MODULE_TYPE_SWITCH
 
 /* ===== MODULE VERSIONS ===== */
-// #define SWITCH_MODULE_VERSION V_2_0
-// #define SWITCH_MODULE_VERSION V_2_1
+// #define HARDWARE_VERSION V_2_0
+// #define HARDWARE_VERSION V_2_1
 /* ===================================================================== */
 
 
@@ -91,10 +89,11 @@
  * voltage and electric current to pulse measuring for speed or rpm values.
  */
 // #define MODULE SENSOR_MODULE
+// #define MODULE_TYPE MODULE_TYPE_SENSOR
 
 /* ===== MODULE VERSIONS ===== */
-// #define SENSOR_MODULE_VERSION V_2_0
-// #define SENSOR_MODULE_VERSION V_2_1
+// #define HARDWARE_VERSION V_2_0
+// #define HARDWARE_VERSION V_2_1
 /* ===================================================================== */
 
 
@@ -106,9 +105,10 @@
  * The module can drive LEDs with different brightnes and color.
  */
 // #define MODULE LED_MODULE
+// #define MODULE_TYPE MODULE_TYPE_LED
 
 /* ===== MODULE VERSIONS ===== */
-// #define LED_MODULE_VERSION V_2_0
+// #define HARDWARE_VERSION V_2_0
 /* ===================================================================== */
 
 
@@ -123,9 +123,10 @@
  * via the CAN bus.
  */
 // #define MODULE DRIVE_MODULE
+// #define MODULE_TYPE MODULE_TYPE_DRIVE
 
 /* ===== MODULE VERSIONS ===== */
-// #define DRIVE_MODULE_VERSION V_2_0
+// #define HARDWARE_VERSION V_2_0
 /* ===================================================================== */
 
 
@@ -136,56 +137,22 @@
  * CAN_ID_PING and listens for version replies from other modules.
  */
 // #define MODULE CONFIGURATOR_MODULE
+// #define MODULE_TYPE MODULE_TYPE_CONFIGURATOR
 
 /* ===== MODULE VERSIONS ===== */
-// #define CONFIGURATOR_MODULE_VERSION V_1_0
-// #define CONFIGURATOR_MODULE_VERSION V_3_0
+// #define HARDWARE_VERSION V_1_0
+// #define HARDWARE_VERSION V_3_0
 /* ===================================================================== */
 
 
 /* ====================================================================== */
-// ACTIVE MODULE VERSION AND TYPE (for CAN ping / setup)
+// INCLUDE MODULE CLASS (defines ANALOGSWITCH_MAX_POS and module settings)
 /* ====================================================================== */
-#if defined(CONTROLLER_MODULE_VERSION)
-	#define HARDWARE_VERSION CONTROLLER_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0001
-#elif defined(ELECTRIC_MODULE_VERSION)
-	#define HARDWARE_VERSION ELECTRIC_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0002
-#elif defined(SWITCH_MODULE_VERSION)
-	#define HARDWARE_VERSION SWITCH_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0003
-#elif defined(SENSOR_MODULE_VERSION)
-	#define HARDWARE_VERSION SENSOR_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0004
-#elif defined(SERVO_MODULE_VERSION)
-	#define HARDWARE_VERSION SERVO_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0005
-#elif defined(LED_MODULE_VERSION)
-	#define HARDWARE_VERSION LED_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0006
-#elif defined(DRIVE_MODULE_VERSION)
-	#define HARDWARE_VERSION DRIVE_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0007
-#elif defined(CONFIGURATOR_MODULE_VERSION)
-	#define HARDWARE_VERSION CONFIGURATOR_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0008
-#elif defined(UNIVERSAL_MODULE_VERSION)
-	#define HARDWARE_VERSION UNIVERSAL_MODULE_VERSION
-	#define MODULE_TYPE_ID 0x0000
-#else
-	#define HARDWARE_VERSION 0
-	#define MODULE_TYPE_ID 0x0000
-#endif
+#include MODULE
 
 
 /* include the module parameters */
 #include "src/module/parameter.h"
 
-
-/* ====================================================================== */
-// INCLUDE MODULE CLASS
-/* ====================================================================== */
-#include MODULE
 
 #endif

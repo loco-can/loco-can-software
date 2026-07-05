@@ -166,6 +166,34 @@ Versions:
 /* ===================================================================== */
 #include "../hardware.h"
 
+
+/* ====================================================================== */
+// verify module architecture matches Arduino IDE board selection
+/* ====================================================================== */
+#if defined(ARDUINO)
+
+	#if defined(MODULE_ARCH_AVR)
+
+		#if defined(ARDUINO_ARCH_ESP32)
+			#error "Loco-CAN: hardware.h uses MODULE_ARCH_AVR (V2.x) but the Arduino IDE board is ESP32. Select an ATmega board."
+		#elif !defined(__AVR__) && !defined(ARDUINO_ARCH_AVR)
+			#error "Loco-CAN: hardware.h uses MODULE_ARCH_AVR (V2.x) but the Arduino IDE board is not AVR. Select an ATmega board."
+		#endif
+
+	#elif defined(MODULE_ARCH_ESP32)
+
+		#if !defined(ARDUINO_ARCH_ESP32)
+			#error "Loco-CAN: hardware.h uses MODULE_ARCH_ESP32 (V3.x) but the Arduino IDE board is not ESP32. Select an ESP32 board."
+		#endif
+
+	#else
+
+		#warning "Loco-CAN: no MODULE_ARCH_AVR or MODULE_ARCH_ESP32 defined for the selected module."
+
+	#endif
+
+#endif
+
 /* ====================================================================== */
 
 #endif

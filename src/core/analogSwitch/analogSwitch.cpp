@@ -26,6 +26,8 @@ void ANALOGSWITCH::begin(uint8_t port) {
 	_port = port;
 
 	pinMode(_port, INPUT);
+
+	_pos_count = 0;
 }
 
 

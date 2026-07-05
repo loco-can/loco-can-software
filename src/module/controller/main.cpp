@@ -139,21 +139,97 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 
 
 	// ===========================
-	// get switches
-
-
-	// ===========================
 	// get analog values
 	uint16_t analog_value = analogRead(CONTROLLER_DRIVE_PORT);
 
 
+	// ===========================
+	// CHANGE STATUS
 
 	// ===========================
-	// update status
+	// OFF
+	//   -> STANDBY
+	//      mains on
+	if (_status == CONTROLLER_STATUS_OFF && _mains_switch.get() == CONTROLLER_MAINS_ON) {
+		_status = CONTROLLER_STATUS_STANDBY;
+	}
+	//   -> SETUP
+	//      mains on, horn or horn2 pushed
+	if (_status == CONTROLLER_STATUS_OFF && _mains_switch.get() == CONTROLLER_MAINS_ON && (_horn_switch.pushed() || _horn2_switch.pushed())) {
+		_status = CONTROLLER_STATUS_SETUP;
+	}
+
+	// ===========================
+	// STANDBY
+	//   <- OFF
+	// 		mains off
+	if (_status == CONTROLLER_STATUS_STANDBY && _mains_switch.get() == CONTROLLER_MAINS_OFF) {
+		_status = CONTROLLER_STATUS_OFF;
+	}
+	//   -> ON
+	//      motor on/started
+	if (_status == CONTROLLER_STATUS_STANDBY && _mains_switch.get() == CONTROLLER_MAINS_MOTOR) {
+		_status = CONTROLLER_STATUS_ON;
+	}
+
+	// ===========================
+	// ON
+	//   <- STANDBY
+	//      direction off
+	if (_status == CONTROLLER_STATUS_ON && _mains_switch.get() == CONTROLLER_MAINS_ON) {
+		_status = CONTROLLER_STATUS_STANDBY;
+	}
+	//   -> READY
+	//      direction selected
+	if (_status == CONTROLLER_STATUS_ON && _dir_switch.get() == CONTROLLER_DIR_FORWARD || _dir_switch.get() == CONTROLLER_DIR_REVERSE) {
+		_status = CONTROLLER_STATUS_READY;
+	}
+
+	// READY
+	//   <- ON
+	//      direction off
+	if (_status == CONTROLLER_STATUS_READY && _dir_switch.get() == CONTROLLER_DIR_NEUTRAL) {
+		_status = CONTROLLER_STATUS_ON;
+	}
+	//   -> MOVING
+	//      motor on/started
+	if (_status == CONTROLLER_STATUS_READY && _moving == true) {
+		_status = CONTROLLER_STATUS_MOVING;
+	}
+	//   <- MOVING
+	//      motor off/stopped
+	if (_status == CONTROLLER_STATUS_MOVING && _moving == false) {
+		_status = CONTROLLER_STATUS_READY;
+	}
+
+
+	// ===========================
+	// SETUP
+	//   -> OFF
+	//      mains off
+	if (_status == CONTROLLER_STATUS_SETUP && _mains_switch.get() == CONTROLLER_MAINS_OFF) {
+		_status = CONTROLLER_STATUS_OFF;
+	}
 
 
 	// ==================
-	// check state
+	// EXECUTE ACTIONS FOR CURRENT STATE
+	switch(_status) {
+		case CONTROLLER_STATUS_OFF:
+			break;
+		case CONTROLLER_STATUS_STANDBY:
+			break;
+		case CONTROLLER_STATUS_ON:
+			break;
+		case CONTROLLER_STATUS_READY:
+			break;
+		case CONTROLLER_STATUS_MOVING:
+			break;
+		case CONTROLLER_STATUS_SETUP:
+			break;
+		default:
+			break;
+	}
 
 	
 	// ==================

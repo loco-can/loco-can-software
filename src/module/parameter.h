@@ -1,117 +1,186 @@
 /*
- * LOCO-DRIVE hardware selection file
- * 
+ * LOCO-DRIVE parameter definition file
+ *
  * @author: Thomas H Winkler
  * @copyright: 2026
  * @lizence: GG0
  *
- * Version 3.0
+ * Version 1.0: initial version
+ *
+ * Included from hardware.h after the active module config.h.
+ * Define PARAMETER_IMPLEMENTATION in one .cpp to allocate module_parameters.
  */
 #pragma once
 
-#ifndef HARDWARE_H
-#define HARDWARE_H
+#ifndef PARAMETER_H
+#define PARAMETER_H
 
 
-/* ========================================================================
- * HARDWARE SELECTION
- *
- * Select the harware module and its version to compile the sofware.
- * Uncomment the corresponding line of the module and the used harware version. 
- */
+#ifndef ANALOGSWITCH_MAX_POS
+	#define ANALOGSWITCH_MAX_POS 8
+#endif
 
 
-/* ========================================================================
- * CONTROLLER MODULE
- *
- * The controller module is based on a universal hardware combined with
- * an adapter PCB with sockets for the potentiometer and switches.
- * It is used to control locomotives with an electic or combution motor.
- */
-#define MODULE CONTROLLER_MODULE
-
-/* ===== MODULE VERSIONS ===== */
-// #define CONTROLLER_MODULE_VERSION V_2_0
-#define CONTROLLER_MODULE_VERSION V_2_1
-/* ===================================================================== */
+#ifdef PARAMETER_IMPLEMENTATION
+	#define MODULE_PARAMETERS_DECLARE
+#else
+	#define MODULE_PARAMETERS_DECLARE extern
+#endif
 
 
-/* ========================================================================
- * DRIVE MODULE
- *
- * The drive module is a 4-Q controller for electric locomotives with an
- * integrated CAN bus interface. In addition potiometers and seitches as
- * well as gauges can directly be connected, if the driver sits in the
- * locomotive and teh module is also installed inside the vehicle. In this
- * case the loco is controlled directly, but another loco can be controlled
- * via the CAN bus.
- */
-// #define MODULE DRIVE_MODULE
-
-/* ===== MODULE VERSIONS ===== */
-// #define DRIVE_MODULE_VERSION V_2_0
-/* ===================================================================== */
+#define MODULE_PARAMETERS_INIT_META(params)          \
+	do {                                             \
+		(params).type = (char)(MODULE_TYPE & 0xFF); \
+		(params).software_version = SOFTWARE_VERSION_NUM; \
+		(params).hardware_version = HARDWARE_VERSION; \
+	} while (0)
 
 
-/* ========================================================================
- * ELECTRIC MOTOR MODULE
- *
- * The motor module connects the CAN control with a electro motor driver.
- * It has no power amplifier but only control lines to operate different
- * motor drivers.
- */
-// #define MODULE ELECTRIC_MODULE
+/* ======================================================================== */
+// CONTROLLER MODULE PARAMETERS
+/* ======================================================================== */
+#if defined(CONTROLLER_MODULE)
 
-/* ===== MODULE VERSIONS ===== */
-// #define ELECTRIC_MODULE_VERSION V_2_0
-// #define ELECTRIC_MODULE_VERSION V_2_1
-/* ===================================================================== */
+	struct PARAM_CONTROLLER {
+		char type;
+		int software_version;
+		int hardware_version;
+		int mains_points[ANALOGSWITCH_MAX_POS];
+        int mains_count;
+		int dir_points[ANALOGSWITCH_MAX_POS];
+		int dir_count;
+		char status_mode;
+		char drive_mode;
+		int paired_uuid;
+	};
+
+	MODULE_PARAMETERS_DECLARE PARAM_CONTROLLER module_parameters;
+	#define MODULE_PARAMETERS_SIZE sizeof(PARAM_CONTROLLER)
+
+    /**
+     * Set the default parameters for the controller module.
+     */
+	static inline void module_parameters_set_defaults(void) {
+
+		MODULE_PARAMETERS_INIT_META(module_parameters);
+		module_parameters.status_mode = 0;
+		module_parameters.drive_mode = 0;
+		module_parameters.paired_uuid = 0;
+
+        // ================================
+        // clear analogswitch points
+		memset(module_parameters.mains_points, 0, sizeof(module_parameters.mains_points));
+		memset(module_parameters.dir_points, 0, sizeof(module_parameters.dir_points));
+
+        // set default mains points
+        module_parameters.mains_points[0] = 0;
+        module_parameters.mains_points[1] = PLATFORM_ANALOG_RESOLUTION / 2;
+        module_parameters.mains_points[2] = PLATFORM_ANALOG_RESOLUTION; 
+        
+        module_parameters.mains_count = 3;
+
+        // set default dir points
+        module_parameters.dir_points[0] = 0;
+        module_parameters.dir_points[1] = PLATFORM_ANALOG_RESOLUTION / 2;
+        module_parameters.dir_points[2] = PLATFORM_ANALOG_RESOLUTION;
+        
+        module_parameters.dir_count = 3;
+    }
 
 
-/* ========================================================================
- * SENSOR MODULE
- *
- * The sensor module offers different sensors for electric values from
- * voltage and electric current to pulse measuring for speed or rpm values.
- */
-// #define MODULE SENSOR_MODULE
+/* ======================================================================== */
+// ELECTRIC MODULE PARAMETERS
+/* ======================================================================== */
+#elif defined(ELECTRIC_MODULE)
 
-/* ===== MODULE VERSIONS ===== */
-// #define SENSOR_MODULE_VERSION V_2_0
-// #define SENSOR_MODULE_VERSION V_2_1
-/* ===================================================================== */
+	struct PARAM_ELECTRIC {
+		char type;
+		int software_version;
+		int hardware_version;
+		bool reverse;
+		int paired_uuid;
+	};
 
+	MODULE_PARAMETERS_DECLARE PARAM_ELECTRIC module_parameters;
+	#define MODULE_PARAMETERS_SIZE sizeof(PARAM_ELECTRIC)
 
-/* ========================================================================
- * SERVO MODULE
- *
- * The servo module can drive up to four analog model servo motors.
- */
-// #define MODULE SERVO_MODULE
+	static inline void module_parameters_set_defaults(void) {
 
-/* ===== MODULE VERSIONS ===== */
-// #define SERVO_MODULE_VERSION V_2_0
-// #define SERVO_MODULE_VERSION V_2_1
-/* ===================================================================== */
+		MODULE_PARAMETERS_INIT_META(module_parameters);
+		module_parameters.reverse = false;
+		module_parameters.paired_uuid = 0;
+	}
 
 
-/* ========================================================================
- * SWITCH MODULE
- *
- * The switch module offers six 5 Ampere outputs. The outputs can be mapped
- * to all switching operations, that are defined in the CAN protocol.
- * The default mapping is for switching lights. 
- */
-// #define MODULE SWITCH_MODULE
+/* ======================================================================== */
+// SENSOR MODULE PARAMETERS
+/* ======================================================================== */
+#elif defined(SENSOR_MODULE)
 
-/* ===== MODULE VERSIONS ===== */
-// #define SWITCH_MODULE_VERSION V_2_0
-// #define SWITCH_MODULE_VERSION V_2_1
-/* ===================================================================== */
+	struct PARAM_SENSOR {
+		char type;
+		int software_version;
+		int hardware_version;
+	};
 
-/* ====================================================================== */
-// INCLUDE MODULE CLASS
-/* ====================================================================== */
-#include MODULE
+	MODULE_PARAMETERS_DECLARE PARAM_SENSOR module_parameters;
+	#define MODULE_PARAMETERS_SIZE sizeof(PARAM_SENSOR)
+
+	static inline void module_parameters_set_defaults(void) {
+
+		MODULE_PARAMETERS_INIT_META(module_parameters);
+	}
+
+
+/* ======================================================================== */
+// SERVO MODULE PARAMETERS
+/* ======================================================================== */
+#elif defined(SERVO_MODULE)
+
+	struct PARAM_SERVO {
+		char type;
+		int software_version;
+		int hardware_version;
+	};
+
+	MODULE_PARAMETERS_DECLARE PARAM_SERVO module_parameters;
+	#define MODULE_PARAMETERS_SIZE sizeof(PARAM_SERVO)
+
+	static inline void module_parameters_set_defaults(void) {
+
+		MODULE_PARAMETERS_INIT_META(module_parameters);
+	}
+
+
+/* ======================================================================== */
+// SWITCH MODULE PARAMETERS
+/* ======================================================================== */
+#elif defined(SWITCH_MODULE)
+
+	struct PARAM_SWITCH {
+		char type;
+		int software_version;
+		int hardware_version;
+	};
+
+	MODULE_PARAMETERS_DECLARE PARAM_SWITCH module_parameters;
+	#define MODULE_PARAMETERS_SIZE sizeof(PARAM_SWITCH)
+
+	static inline void module_parameters_set_defaults(void) {
+
+		MODULE_PARAMETERS_INIT_META(module_parameters);
+	}
+
+
+#elif defined(CONFIGURATOR_MODULE)
+
+	/* configurator has no local module parameters */
+
+#else
+	#error "No module version defined in hardware.h"
+#endif
+
+
+#undef MODULE_PARAMETERS_DECLARE
 
 #endif

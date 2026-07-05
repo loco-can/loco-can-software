@@ -117,15 +117,6 @@ buttons
 #define MODULE_CONTROLLER_H
 
 
-#define CONTROLLER_STATUS_OFF 0
-#define CONTROLLER_STATUS_LOCKED 1
-#define CONTROLLER_STATUS_STANDBY 2
-#define CONTROLLER_STATUS_NULLED 3
-#define CONTROLLER_STATUS_READY 4
-#define CONTROLLER_STATUS_MOVING 5
-#define CONTROLLER_STATUS_SETUP 6
-
-
 /* PARAMETERS
 	The mandatory parameters sets the basic settings and the hardware mapping.
 	Additional parameters can select additional functions like supported gauges
@@ -197,6 +188,42 @@ buttons
 #define CONTROLLER_BLOCKED		0
 #define CONTROLLER_CONNECTED	1
 #define CONTROLLER_PAIRED		2
+// #define CONTROLLER_STATUS_LOCKED 3
+// #define CONTROLLER_STATUS_NULLED 4
+
+/* CONTROLLER STATUS
+	OFF:
+		- mains off
+		- listening to bus for heartbeat
+		- no bus: red flashing
+		- bus active: green flashing
+		- other heartbeat received: red light
+	STANDBY:
+		- listening to bus for heartbeat
+		- mains on, no direction: yellow blinking
+		- no loco received: red blinking
+	ON:
+		- mains on, no direction, motor on/started: yellow light
+	READY:
+		- mains on, direction selected: green light blinking
+	MOVING:
+		- ON and train is moving: green light
+	SETUP:
+		- set locomotive parameters
+
+	ERROR:
+		- system error red fast blinking
+*/
+
+#define CONTROLLER_STATUS_OFF 0
+#define CONTROLLER_STATUS_LOCKED 1
+#define CONTROLLER_STATUS_STANDBY 2
+#define CONTROLLER_STATUS_NULLED 3
+#define CONTROLLER_STATUS_ON 4
+#define CONTROLLER_STATUS_READY 5
+#define CONTROLLER_STATUS_MOVING 6
+#define CONTROLLER_STATUS_SETUP 7
+
 
 // #error "create controller class"
 
@@ -212,6 +239,7 @@ class MODULE_CONTROLLER {
 
 		// the controller status
 		uint8_t _status;
+		bool _moving;
 
 		// additional flags
 		FLAGS _controller_flags;

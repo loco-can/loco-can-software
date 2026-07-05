@@ -11,14 +11,15 @@
 
 #if defined(MODULE_ARCH_AVR)
 
-	#include <avr/boot.h>
-
-	// Changes for the Loco-CAN project to use is locally.
-	// #include "../avr/boot.h"
+	#if defined(__has_include) && __has_include(<avr/boot.h>)
+		#include <avr/boot.h>
+	#else
+		#include "../avr/boot.h"
+	#endif
 
 	#ifndef SIGRD
-	#define SIGRD 5
-#endif
+		#define SIGRD 5
+	#endif
 
 #elif defined(ARDUINO_ARCH_ESP8266)
 #elif defined(MODULE_ARCH_ESP32)

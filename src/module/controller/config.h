@@ -18,85 +18,14 @@
 #define MODULE_CONTROLLER_CONFIG_H
 
 
-/* ******************************************
- * controller status definition
- OFF
-  mains off, listening to bus for heartbeat
-  no bus: red flashing
-  bus active: green flashing
-  other heartbeat received: red light
+/* ANALOG SWITCHES */
+#define CONTROLLER_MAINS_OFF 0
+#define CONTROLLER_MAINS_ON 1
+#define CONTROLLER_MAINS_MOTOR 2
 
-STANDBY
-  no loco received: red blinking
-  mains on, no direction: yellow blinking
-
-ON
-  mains on, no direction, motor on/started: yellow light
-
-READY
-  mains on, direction selected: green light blinking
-
-MOVING
-  on and train is moving: green light
-
-SETUP
-  set locomotive parameters
-
-ERROR
-  system error red fast blinking
-*/
-
-
-/* ******************************************
- * Status changes
-OFF
-  -> standby
-     CONTROLLER: mains on
-       AND
-     BUS: no heartbeat received for 5x heartbeat timeout
-  -> setup
-     CONTROLLER: mains on
-       AND
-     CONTROLLER: horn low OR horn high
-       AND
-     BUS: not moving
-
-STANDBY
-  -> off
-     CONTROLLER: mains off
-       OR
-     BUS: system error
-       OR
-     CONTROLLER: emergency break
-  -> on
-     CONTROLLER: motor on
-
-ON
-  -> standby
-     CONTROLLER: motor off
-  -> off
-     BUS: system error
-       OR
-     CONTROLLER: emergency break
-  -> ready
-     CONTROLLER: select direction
-
-READY
-  -> moving
-     BUS: moving
-  -> on
-     CONTROLLER: direction off
-       AND
-     BUS: not moving
-  -> off
-     BUS: system error
-       OR
-     CONTROLLER: emergency break
-
-SETUP
-  -> off
-     CONTROLLER: mains off
-*/
+#define CONTROLLER_DIR_REVERSE 0
+#define CONTROLLER_DIR_NEUTRAL 1
+#define CONTROLLER_DIR_FORWARD 2
 
 
 /* ******************************************
@@ -126,22 +55,8 @@ SETUP
 	// FUNCTION PARAMETERS
 	#define CONTROLLER_MAINS_PORT A1
 	#define CONTROLLER_DIR_PORT A2
-	// #define CONTROLLER_HORN_PORT 5
-	// #define CONTROLLER_HORN2_PORT 9
-	#define CONTROLLER_LIGHT_PORT A3
-	// #define CONTROLLER_LIGHT2_PORT A2
-
-	#define ANALOGSWITCH_MAX_POS 8
-
-	// status display method
-	#define CONTROLLER_STATUS_MODE LED
-
-	#if CONTROLLER_STATUS_MODE == LED
-		#define CONTROLLER_STATUS_RED_PORT 6
-		#define CONTROLLER_STATUS_GREEN_PORT 7
-	#elif CONTROLLER_STATUS_MODE == OLED
-		// supported OLED displays
-	#endif
+	#define CONTROLLER_HORN_PORT 5
+	#define CONTROLLER_HORN2_PORT 9
 
 	// FUNCTION SWITCH
 	// #define CONTROLLER_INSTRUMENT_LIGHT_PORT 4
