@@ -58,6 +58,8 @@ OFF
      CONTROLLER: mains on
        AND
      CONTROLLER: horn low OR horn high
+       AND
+     BUS: not moving
 
 STANDBY
   -> off
