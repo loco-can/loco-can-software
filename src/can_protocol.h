@@ -92,9 +92,15 @@
  * the buttons for horn-h and horn-l are used for up and down signals
  *
  * byte 0:   7      6      5      4      3      2      1      0
- *         error  aux-1   aux    down   up     dir   drive  mains
+ *         error  aux-1   aux    down   up     dir   motor  mains
  * byte 1:   7      6      5      4      3      2      1      0
- *                                                          
+ *
+ * mains: train main switch
+ * motor: pantograph up, start combustion motor
+ * dir: direction 0=forward
+ * aux: special function
+ * aux-1: special function 1
+ * error: controller error   
  *
  * DRIVE VALUE: 10-bit value of drive voltage
  * byte 2: bits 10-14 = multi traktion main UUID bits 11-15
