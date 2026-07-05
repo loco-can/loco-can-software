@@ -41,6 +41,76 @@ The input pins for light, mains and direction use the analog switch library. The
 ### Measurement Outputs
 The outputs to display voltage or current values can be set to analog or servo signals (analog output is not yet implemented).
 
+## LED Status
+flashing: 100ms on every second
+blinking: 1/2 time on every second 
+fast blinking: 1/2 time on every 500ms
+light: steady on
+
+## Controller Status
+- **OFF**
+  mains off, listening to bus for heartbeat
+  no bus: **red flashing**
+  bus active: **green flashing**
+  other heartbeat received: **red light**
+- **STANDBY**
+  no loco received: **red blinking** 
+  mains on, no direction: **yellow blinking**
+- **ON**
+  mains on, no direction, motor on/started: **yellow light**
+- **READY**
+  mains on, direction selected: **green light blinking**
+- **MOVING**
+  on and train is moving: **green light**
+- **SETUP**
+  set locomotive parameters
+---
+- **ERROR**
+  system error **red fast blinking**
+
+# Status changes
+## OFF
+### -> standby
+- CONTROLLER: mains on
+  AND
+- BUS: no heartbeat received for 5x heartbeat timeout
+### -> setup
+- CONTROLLER: mains on
+  AND
+- CONTROLLER: horn low OR horn high
+## STANDBY
+### -> off
+- CONTROLLER: mains off
+  OR
+- BUS: system error
+  OR
+- CONTROLLER: emergency break
+### -> on
+- CONTROLLER: motor on
+## ON
+### -> standby
+- CONTROLLER: motor off
+### -> off
+- BUS: system error
+  OR
+- CONTROLLER: emergency break
+### -> ready
+- CONTROLLER: select direction
+## READY
+### -> moving
+- BUS: moving
+### -> on
+- CONTROLLER: direction off
+  AND
+- BUS: not moving
+### -> off
+- BUS: system error
+  OR
+- CONTROLLER: emergency break
+## SETUP
+### -> off
+CONTROLLER: mains off
+
 ## Functions
 
 ### Locomotive Setup
