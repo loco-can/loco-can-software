@@ -15,8 +15,12 @@
 #define LOCOCANCORE_H
 
 #include "config.h"
+#ifdef FEATURE_CAN
 #include "core/can/can_com.h"
+#endif
+#ifdef FEATURE_PING
 #include "core/ping/modulePing.h"
+#endif
 
 
 class LocoCANcore {
@@ -27,7 +31,9 @@ class LocoCANcore {
 
 	private:
 
+#ifdef FEATURE_PING
 		MODULE_PING _ping;
+#endif
 
 		/*
 		 * define all functions that are included in the module/{module_name}.h file

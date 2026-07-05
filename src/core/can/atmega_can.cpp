@@ -8,7 +8,8 @@
 
 #include "../../config.h"
 
-// use can.h if is ATMEGA or ESP32 
+#ifdef FEATURE_CAN
+
 #ifdef MODULE_ARCH_AVR
 
 	#include "atmega_can.h"
@@ -71,4 +72,6 @@
 		return CAN.read();
 	}
 
-#endif
+#endif /* MODULE_ARCH_AVR */
+
+#endif /* FEATURE_CAN */

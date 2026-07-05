@@ -16,6 +16,8 @@
 #define ANALOGSWITCH_H
 
 
+#ifdef FEATURE_ANALOGSWITCH
+
 #include <Arduino.h>
 #include "../../config.h"
 
@@ -33,6 +35,9 @@ class ANALOGSWITCH {
 
 		uint8_t remove(uint8_t); // remove position with index idx
 
+		void load(const int* points, uint8_t count);
+		uint8_t store(int* points, uint8_t max_count);
+
 		uint8_t get(void); // get the switch position
 		uint16_t get_analog(void); // get the analog value
 
@@ -44,5 +49,7 @@ class ANALOGSWITCH {
 		void _sort(void); // sort the positions
 		static int _compare(const void*, const void*); // compare method for qsort
 };
+
+#endif /* FEATURE_ANALOGSWITCH */
 
 #endif

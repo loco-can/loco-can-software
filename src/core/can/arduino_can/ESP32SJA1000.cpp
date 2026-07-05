@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 #include "../../../config.h"
 
-// use can.h if is ATMEGA or ESP32 
+#ifdef FEATURE_CAN
+
 #ifdef MODULE_ARCH_ESP32
 
 
@@ -417,4 +418,6 @@ void ESP32SJA1000Class::onInterrupt(void* arg)
 
 ESP32SJA1000Class CAN;
 
-#endif
+#endif /* MODULE_ARCH_ESP32 */
+
+#endif /* FEATURE_CAN */

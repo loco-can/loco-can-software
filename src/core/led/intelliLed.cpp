@@ -6,6 +6,10 @@
  * @lizence: CC0
  */
 
+#include "../../config.h"
+
+#ifdef FEATURE_LED
+
 #include "intelliLed.h"
 
 
@@ -351,3 +355,5 @@ void INTELLILED::_flash_on(void) {
 void INTELLILED::_flash_off(void) {
   _flash_status = false;
 }
+
+#endif /* FEATURE_LED */

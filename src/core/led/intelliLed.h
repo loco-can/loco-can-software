@@ -31,6 +31,8 @@
 #define INTELLILED_H
 
 
+#ifdef FEATURE_LED
+
 #include <Arduino.h>
 
 
@@ -93,5 +95,7 @@ class INTELLILED {
     double _timeout;
     uint16_t _blink_time;
 };
+
+#endif /* FEATURE_LED */
 
 #endif

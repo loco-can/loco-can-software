@@ -7,6 +7,10 @@
  */
 
 
+#include "../../config.h"
+
+#ifdef FEATURE_FLAGS
+
 #include "flags.h"
 
 
@@ -46,3 +50,5 @@ void FLAGS::set(uint8_t bit, bool value) {
 bool FLAGS::get(uint8_t bit) {
 	return (_flags >> bit) & 1;
 }
+
+#endif /* FEATURE_FLAGS */

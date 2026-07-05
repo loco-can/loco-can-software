@@ -18,6 +18,17 @@
 #define MODULE_CONTROLLER_CONFIG_H
 
 
+/* core features used by this module */
+#define FEATURE_CAN
+#define FEATURE_LED
+#define FEATURE_TIMEOUT
+#define FEATURE_ANALOGSWITCH
+#define FEATURE_BUTTON
+#define FEATURE_FLAGS
+#define FEATURE_PARAMETERS
+#define FEATURE_PING
+
+
 /* ANALOG SWITCHES */
 #define CONTROLLER_MAINS_OFF 0
 #define CONTROLLER_MAINS_ON 1
@@ -40,13 +51,13 @@
 	#define MODULE_ARCH_AVR
 
 	#define PLATFORM_ANALOG_RESOLUTION 1024
-	#define ANALOGSWITCH_MAX_POS 8
+	#define ANALOGSWITCH_MAX_POS 6
 
 	#define CAN_RX 10
 	#define CAN_TX 2
 	#define CAN_STATUS_LED 5
-	#define CAN_MAX_FILTER 8
-	#define CAN_BUFFER_SIZE 8
+	#define CAN_MAX_FILTER 4
+	#define CAN_BUFFER_SIZE 4
 
 	// ======================================
 	// INCLUDED FUNCTIONS
@@ -84,13 +95,13 @@
 	#define MODULE_ARCH_AVR
 
 	#define PLATFORM_ANALOG_RESOLUTION 1024
-	#define ANALOGSWITCH_MAX_POS 8
+	#define ANALOGSWITCH_MAX_POS 6
 
 	#define CAN_RX 10
 	#define CAN_TX 2
 	#define CAN_STATUS_LED 5
-	#define CAN_MAX_FILTER 8
-	#define CAN_BUFFER_SIZE 8
+	#define CAN_MAX_FILTER 4
+	#define CAN_BUFFER_SIZE 4
 
 	// ======================================
 	// INCLUDED FUNCTIONS
@@ -104,7 +115,7 @@
 	#define CONTROLLER_LIGHT_PORT A5
 	#define CONTROLLER_LIGHT2_PORT A2
 
-	#define ANALOGSWITCH_MAX_POS 8
+	#define ANALOGSWITCH_MAX_POS 6
 
 	// status display method
 	#define CONTROLLER_STATUS_MODE LED
@@ -141,13 +152,13 @@
 	#define MODULE_ARCH_AVR
 
 	#define PLATFORM_ANALOG_RESOLUTION 1024
-	#define ANALOGSWITCH_MAX_POS 8
+	#define ANALOGSWITCH_MAX_POS 6
 
 	#define CAN_RX 10
 	#define CAN_TX 2
 	#define CAN_STATUS_LED 5
-	#define CAN_MAX_FILTER 8
-	#define CAN_BUFFER_SIZE 8
+	#define CAN_MAX_FILTER 4
+	#define CAN_BUFFER_SIZE 4
 
 
 	// ======================================
@@ -163,22 +174,14 @@
 	#define CONTROLLER_LIGHT_PORT A5
 	#define CONTROLLER_LIGHT2_PORT A2
 
-	#define ANALOGSWITCH_MAX_POS 8
+	#define ANALOGSWITCH_MAX_POS 6
 
-	#define CONTROLLER_DRIVE_MODE SINGLE
 	#define CONTROLLER_DRIVE_PORT A0
 	#define CONTROLLER_BREAK_PORT A1
 	// #define CONTROLLER_POWER_PORT A2
 
-	// status display method
-	#define CONTROLLER_STATUS_MODE LED
-
-	#if CONTROLLER_STATUS_MODE == LED
-		#define CONTROLLER_STATUS_RED_PORT 2
-		#define CONTROLLER_STATUS_GREEN_PORT 3
-	#elif CONTROLLER_STATUS_MODE == OLED
-		// supported OLED displays
-	#endif
+	#define CONTROLLER_STATUS_RED_PORT 2
+	#define CONTROLLER_STATUS_GREEN_PORT 3
 
 	// FUNCTION SWITCH
 	#define CONTROLLER_INSTRUMENT_LIGHT_PORT 4

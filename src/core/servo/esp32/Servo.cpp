@@ -1,5 +1,9 @@
 #if defined(MODULE_ARCH_ESP32)
 
+#include "../../../config.h"
+
+#ifdef FEATURE_SERVO
+
 #include <Arduino.h>
 #include "../Servo.h"
 
@@ -142,5 +146,7 @@ bool Servo::attached()
 {
   return servos[this->servoIndex] != NULL;
 }
+
+#endif /* FEATURE_SERVO */
 
 #endif

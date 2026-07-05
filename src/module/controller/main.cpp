@@ -8,12 +8,53 @@
 
 #include "../../config.h"
 #include "main.h"
+#include "../parameter.h"
+#include "../../core/parameters/moduleParameters.h"
 
 
 extern CAN_COM can;
 
 
 #ifdef MODULE_CONTROLLER_CONFIG_H
+
+void MODULE_CONTROLLER::apply_parameters(void) {
+
+	if (module_parameters.mains_count > 0) {
+		_mains_switch.load(
+			module_parameters.mains_points,
+			(uint8_t)module_parameters.mains_count
+		);
+	}
+
+	if (module_parameters.dir_count > 0) {
+		_dir_switch.load(
+			module_parameters.dir_points,
+			(uint8_t)module_parameters.dir_count
+		);
+	}
+}
+
+
+void MODULE_CONTROLLER::store_parameters(void) {
+
+	module_parameters.mains_count = _mains_switch.store(
+		module_parameters.mains_points,
+		ANALOGSWITCH_MAX_POS
+	);
+	module_parameters.dir_count = _dir_switch.store(
+		module_parameters.dir_points,
+		ANALOGSWITCH_MAX_POS
+	);
+
+	#ifdef CONTROLLER_STATUS_MODE
+		module_parameters.status_mode = CONTROLLER_STATUS_MODE;
+	#endif
+
+	#ifdef CONTROLLER_DRIVE_MODE
+		module_parameters.drive_mode = CONTROLLER_DRIVE_MODE;
+	#endif
+}
+
 
 void MODULE_CONTROLLER::begin(void) {
 
@@ -43,6 +84,9 @@ void MODULE_CONTROLLER::begin(void) {
 	// SWITCHES
 	_mains_switch.begin(CONTROLLER_MAINS_PORT);
 	_dir_switch.begin(CONTROLLER_DIR_PORT);
+
+	_parameters.begin();
+	apply_parameters();
 
 	// HORN SWITCH
 	#ifdef CONTROLLER_HORN_PORT
@@ -208,6 +252,8 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 	//   -> OFF
 	//      mains off
 	if (_status == CONTROLLER_STATUS_SETUP && _mains_switch.get() == CONTROLLER_MAINS_OFF) {
+		store_parameters();
+		_parameters.save();
 		_status = CONTROLLER_STATUS_OFF;
 	}
 
@@ -234,26 +280,26 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 	
 	// ==================
 	// send drive package not off or locked
-	if (_heartbeat_time.check()) {
+	if (_heartbeat_time.check() && _status != CONTROLLER_STATUS_OFF && _status != CONTROLLER_STATUS_LOCKED) {
 
 		_heartbeat_time.retrigger();
 
-		_message.id = CAN_ID_DRIVE_HEARTBEAT;
-		_message.size = 0;
+		can_message.id = CAN_ID_DRIVE_HEARTBEAT;
+		can_message.size = 0;
 
-		can.send(_message);
+		can.send(can_message);
 	}
 
 	if (_drive_time.check() && _status >= CONTROLLER_STATUS_STANDBY) {
 
 		_drive_time.retrigger();
 
-		_message.id = CAN_ID_DRIVE;
-		_message.size = 2;
-		_message.data[0] = 0b10010010;
-		_message.data[1] = 0x23;
+		can_message.id = CAN_ID_DRIVE;
+		can_message.size = 2;
+		can_message.data[0] = 0b10010010;
+		can_message.data[1] = 0x23;
 
-		can.send(_message);
+		can.send(can_message);
 	}
 }
 

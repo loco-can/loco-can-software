@@ -18,6 +18,14 @@
 #define MODULE_ELECTRIC_CONFIG_H
 
 
+/* core features used by this module */
+#define FEATURE_CAN
+#define FEATURE_LED
+#define FEATURE_TIMEOUT
+#define FEATURE_PWM
+#define FEATURE_PING
+
+
 /* ******************************************
  * The module version is set in the hardware.h file
  */

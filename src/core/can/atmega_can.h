@@ -11,6 +11,8 @@
 #define ATMEGA_CAN_H
 
 
+#ifdef FEATURE_CAN
+
 // #include "../../config.h"
 
 #include "can_message.h"
@@ -31,6 +33,6 @@ class CAN_HANDLER {
 };
 
 
-// ATMEGA_CAN_HANDLER CAN_HANDLER
+#endif /* FEATURE_CAN */
 
 #endif

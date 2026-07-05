@@ -11,6 +11,8 @@
 #define MEASURE_H
 
 
+#ifdef FEATURE_MEASURE
+
 #include <Arduino.h>
 
 // get types
@@ -51,5 +53,7 @@ class MEASURE {
     uint32_t _timestamp_prev;
 
 };
+
+#endif /* FEATURE_MEASURE */
 
 #endif

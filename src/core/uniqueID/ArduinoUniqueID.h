@@ -5,6 +5,8 @@
 #ifndef _ARDUINO_UNIQUE_ID_H_
 #define _ARDUINO_UNIQUE_ID_H_
 
+#ifdef FEATURE_CAN
+
 #include <Arduino.h>
 #include "../../config.h"
 
@@ -110,5 +112,7 @@ class ArduinoUniqueID
 };
 
 extern ArduinoUniqueID _UniqueID;
+
+#endif /* FEATURE_CAN */
 
 #endif

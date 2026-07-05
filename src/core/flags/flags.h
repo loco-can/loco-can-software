@@ -11,6 +11,8 @@
 #define FLAGS_H
 
 
+#ifdef FEATURE_FLAGS
+
 #include <Arduino.h>
 
 
@@ -29,5 +31,7 @@ class FLAGS {
 		uint8_t _flags; // stati
 
 };
+
+#endif /* FEATURE_FLAGS */
 
 #endif

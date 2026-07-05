@@ -24,6 +24,8 @@
 #define INTELLIBUTTON_H
 
 
+#ifdef FEATURE_BUTTON
+
 #include <Arduino.h>
 #include "../timeout/intellitimeout.h"
 
@@ -51,5 +53,7 @@ class INTELLIBUTTON {
         bool _pressed;
 
 };
+
+#endif /* FEATURE_BUTTON */
 
 #endif

@@ -164,14 +164,15 @@ buttons
 
 #include "../../core/can/can_com.h"
 #include "../../can_protocol.h"
+#include "../parameter.h"
 
 
 /* CORE COMPONENTS */
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
-#include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
 #include "../../core/flags/flags.h"
+#include "../../core/parameters/moduleParameters.h"
 
 
 /* local classes */
@@ -235,8 +236,6 @@ class MODULE_CONTROLLER {
 
 	private:
 
-		CAN_MESSAGE _message;
-
 		// the controller status
 		uint8_t _status;
 		bool _moving;
@@ -253,8 +252,13 @@ class MODULE_CONTROLLER {
 		INTELLIBUTTON _horn2_switch;
 
 		ANALOGSWITCH _light_switch;
-		INTELLIBUTTON _light2_switch;
+		ANALOGSWITCH _light2_switch;
 		INTELLIBUTTON _instrument_switch;
+
+		MODULE_PARAMETERS _parameters;
+
+		void apply_parameters(void);
+		void store_parameters(void);
 };
 
 #endif

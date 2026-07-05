@@ -17,6 +17,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "../../../config.h"
+
+#ifdef FEATURE_SERVO
+
 #if defined(MODULE_ARCH_AVR)
 
 #include <avr/interrupt.h>
@@ -314,4 +318,6 @@ bool Servo::attached()
   return servos[this->servoIndex].Pin.isActive ;
 }
 
-#endif // MODULE_ARCH_AVR
+#endif /* MODULE_ARCH_AVR */
+
+#endif /* FEATURE_SERVO */

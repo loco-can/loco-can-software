@@ -11,6 +11,8 @@
 #define ESP32_CAN_H
 
 
+#ifdef FEATURE_CAN
+
 #include "can_message.h"
 // #include <ESP32-TWAI-CAN.hpp>
 #include "driver/twai.h"
@@ -29,5 +31,7 @@ class CAN_HANDLER {
 		uint8_t read(void);
 };
 
+
+#endif /* FEATURE_CAN */
 
 #endif

@@ -6,6 +6,10 @@
  * @lizence: GG0
  */
 
+#include "../../config.h"
+
+#ifdef FEATURE_VALUE
+
 #include <Arduino.h>
 #include "intelliValue.h"
 
@@ -129,3 +133,5 @@ uint8_t INTELLIVALUE::index(void) {
 void INTELLIVALUE::index(uint8_t val) {
     _value.index = val;
 }
+
+#endif /* FEATURE_VALUE */

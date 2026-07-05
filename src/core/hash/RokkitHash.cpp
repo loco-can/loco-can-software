@@ -26,6 +26,10 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "../../config.h"
+
+#ifdef FEATURE_CAN
+
 #include "RokkitHash.h"
 
 uint32_t rokkit(const char * data, int len) {
@@ -74,3 +78,5 @@ uint32_t rokkit(const char * data, int len) {
 
     return hash;
 }
+
+#endif /* FEATURE_CAN */

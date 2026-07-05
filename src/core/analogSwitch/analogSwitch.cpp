@@ -16,6 +16,8 @@
 #include "analogSwitch.h"
 
 
+#ifdef FEATURE_ANALOGSWITCH
+
 ANALOGSWITCH::ANALOGSWITCH(void) {
 	_port = false;
 }
@@ -126,6 +128,40 @@ uint8_t ANALOGSWITCH::remove(uint8_t idx) {
 }
 
 
+// load positions from array
+void ANALOGSWITCH::load(const int* points, uint8_t count) {
+
+	if (count > ANALOGSWITCH_MAX_POS) {
+		count = ANALOGSWITCH_MAX_POS;
+	}
+
+	_pos_count = count;
+
+	for (uint8_t i = 0; i < count; i++) {
+		_positions[i] = (uint16_t)points[i];
+	}
+
+	_sort();
+}
+
+
+// store positions to array
+uint8_t ANALOGSWITCH::store(int* points, uint8_t max_count) {
+
+	uint8_t n = _pos_count;
+
+	if (n > max_count) {
+		n = max_count;
+	}
+
+	for (uint8_t i = 0; i < n; i++) {
+		points[i] = (int)_positions[i];
+	}
+
+	return _pos_count;
+}
+
+
 // sort positions ascending
 void ANALOGSWITCH::_sort(void) {
 
@@ -147,3 +183,5 @@ uint16_t ANALOGSWITCH::get_analog(void) {
 
 	return false;
 }
+
+#endif /* FEATURE_ANALOGSWITCH */

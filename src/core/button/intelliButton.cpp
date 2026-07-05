@@ -6,6 +6,10 @@
  * @lizence: GG0
  */
 
+#include "../../config.h"
+
+#ifdef FEATURE_BUTTON
+
 #include "intelliButton.h"
 
 
@@ -72,3 +76,5 @@ uint8_t INTELLIBUTTON::check(void) {
 
     return state;
 }
+
+#endif /* FEATURE_BUTTON */

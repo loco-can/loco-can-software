@@ -1,3 +1,7 @@
+#include "../../config.h"
+
+#ifdef FEATURE_SERVO
+
 #include "intelliServo.h"
 
 
@@ -47,3 +51,5 @@ void INTELLISERVO::set(uint16_t value) {
 
 	_servo.write(calc);
 }
+
+#endif /* FEATURE_SERVO */

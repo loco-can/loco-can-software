@@ -11,6 +11,8 @@
 #include "../../config.h"
 
 
+#ifdef FEATURE_PWM
+
 #include <Arduino.h>
 #include "pwm_ramp.h"
 #include "../timeout/intellitimeout.h"
@@ -193,3 +195,5 @@ void PWM_RAMP::write_pwm(uint16_t pwm) {
 	// write pwm
 	analogWrite(_port, pwm);
 }
+
+#endif /* FEATURE_PWM */

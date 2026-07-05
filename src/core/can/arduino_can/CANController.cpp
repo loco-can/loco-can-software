@@ -1,6 +1,10 @@
 // Copyright (c) Sandeep Mistry. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "../../../config.h"
+
+#ifdef FEATURE_CAN
+
 #include "CANController.h"
 
 CANControllerClass::CANControllerClass() :
@@ -214,3 +218,5 @@ int CANControllerClass::wakeup()
 {
   return 0;
 }
+
+#endif /* FEATURE_CAN */

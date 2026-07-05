@@ -16,6 +16,8 @@
 #define CAN_COM_H
 
 
+#ifdef FEATURE_CAN
+
 #include <Arduino.h>
 #include "../../config.h"
 #include "can_message.h"
@@ -109,5 +111,7 @@ class CAN_COM {
     INTELLILED _led_w;
 };
 
+
+#endif /* FEATURE_CAN */
 
 #endif

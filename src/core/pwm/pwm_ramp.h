@@ -13,6 +13,8 @@
 #define PWM_RAMP_H
 
 
+#ifdef FEATURE_PWM
+
 #include <Arduino.h>
 #include "../timeout/intellitimeout.h"
 
@@ -65,5 +67,7 @@ class PWM_RAMP {
 		uint16_t _update_rate;
 		INTELLITIMEOUT _timer;
 };
+
+#endif /* FEATURE_PWM */
 
 #endif

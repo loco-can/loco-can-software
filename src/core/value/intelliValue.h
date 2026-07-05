@@ -28,6 +28,8 @@
 #define INTELLIVALUE_H
 
 
+#ifdef FEATURE_VALUE
+
 struct MEASURE_VALUE {
 	uint16_t reference;		// 16 bit reference value
 	uint8_t precission;		// precission: number of decimal places in the integer percentage value
@@ -69,5 +71,7 @@ class INTELLIVALUE {
 	private:
 		MEASURE_VALUE _value;
 };
+
+#endif /* FEATURE_VALUE */
 
 #endif

@@ -1,6 +1,10 @@
 // Copyright © Luiz Henrique Cassettari. All rights reserved.
 // Licensed under the MIT license.
 
+#include "../../config.h"
+
+#ifdef FEATURE_CAN
+
 #include "ArduinoUniqueID.h"
 
 ArduinoUniqueID::ArduinoUniqueID()
@@ -195,3 +199,5 @@ ArduinoUniqueID::ArduinoUniqueID()
 }
 
 ArduinoUniqueID _UniqueID;
+
+#endif /* FEATURE_CAN */

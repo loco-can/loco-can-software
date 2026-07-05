@@ -10,6 +10,8 @@
 #include "main.h"
 
 
+#ifdef FEATURE_GAUGE
+
 void GAUGE::begin(void) {
 
 	#ifdef DEBUG
@@ -63,3 +65,5 @@ void GAUGE::update(CAN_MESSAGE message) {
 
 	can_message = message;
 }
+
+#endif /* FEATURE_GAUGE */

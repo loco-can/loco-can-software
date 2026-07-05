@@ -20,6 +20,8 @@
 #define GAUGE_H
 
 
+#ifdef FEATURE_GAUGE
+
 /* GLOBAL COMPONENTS*/
 #include "../../config.h"
 #include "../../can_protocol.h"
@@ -45,5 +47,7 @@ class GAUGE {
 		INTELLISERVO _battery_current_gauge;
 		INTELLISERVO _motor_current_gauge;
 };
+
+#endif /* FEATURE_GAUGE */
 
 #endif

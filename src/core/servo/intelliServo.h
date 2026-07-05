@@ -4,6 +4,8 @@
 #define INTELLISERVO_H
 
 
+#ifdef FEATURE_SERVO
+
 #include <Arduino.h>
 #include "Servo.h"
 
@@ -32,5 +34,7 @@ class INTELLISERVO {
 		uint16_t _val_min;
 		uint16_t _val_max;
 };
+
+#endif /* FEATURE_SERVO */
 
 #endif

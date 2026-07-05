@@ -10,7 +10,10 @@
  */
 
 
-// #include <Arduino.h>
+#include "../../config.h"
+
+#ifdef FEATURE_TIMEOUT
+
 #include "intellitimeout.h"
 
 
@@ -62,3 +65,5 @@ uint8_t INTELLITIMEOUT::progress(void) {
 
 	return (millis() - _last_time) * 100 / _timeout;
 }
+
+#endif /* FEATURE_TIMEOUT */

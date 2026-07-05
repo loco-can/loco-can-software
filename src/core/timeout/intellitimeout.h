@@ -9,6 +9,8 @@
 #define INTELLITIMEOUT_H
 
 
+#ifdef FEATURE_TIMEOUT
+
 #include <Arduino.h>
 
 
@@ -29,5 +31,7 @@ class INTELLITIMEOUT {
 		uint16_t _timeout;
 		uint32_t _last_time;
 };
+
+#endif /* FEATURE_TIMEOUT */
 
 #endif

@@ -19,6 +19,8 @@
 #include "can_com.h"
 #include "../../can_protocol.h"
 
+#ifdef FEATURE_CAN
+
 // CAN_MESSAGE can_message;
 
 
@@ -430,3 +432,5 @@ CAN_MESSAGE CAN_COM::data2message(uint32_t id, uint16_t uuid, uint8_t* data, uin
 
     return can_message;
 }
+
+#endif /* FEATURE_CAN */

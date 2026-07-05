@@ -6,6 +6,10 @@
  * @lizence: GG0
  */
 
+#include "../../config.h"
+
+#ifdef FEATURE_MEASURE
+
 #include <Arduino.h>
 #include "measure.h"
 
@@ -141,3 +145,5 @@ int32_t MEASURE::get(uint8_t type) {
 
     return val;
 }
+
+#endif /* FEATURE_MEASURE */

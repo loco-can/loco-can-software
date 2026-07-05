@@ -1,5 +1,7 @@
 #include "../../config.h"
 
+#ifdef FEATURE_CAN
+
 #ifdef MODULE_ARCH_ESP32
 
 #include "ESP32-TWAI-CAN.hpp"
@@ -163,4 +165,6 @@ bool TwaiCAN::end() {
 
 TwaiCAN ESP32Can;
 
-#endif
+#endif /* MODULE_ARCH_ESP32 */
+
+#endif /* FEATURE_CAN */

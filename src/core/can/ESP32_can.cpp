@@ -8,7 +8,8 @@
 
 #include "../../config.h"
 
-// use twai if is ESP32-S3 
+#ifdef FEATURE_CAN
+
 #ifdef MODULE_ARCH_ESP32
 
 	#include "ESP32_can.h"
@@ -93,4 +94,6 @@
 	}
 
 
-#endif
+#endif /* MODULE_ARCH_ESP32 */
+
+#endif /* FEATURE_CAN */

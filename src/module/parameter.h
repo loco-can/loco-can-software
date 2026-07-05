@@ -16,6 +16,9 @@
 #define PARAMETER_H
 
 
+#include <Arduino.h>
+#include <string.h>
+
 #ifndef ANALOGSWITCH_MAX_POS
 	#define ANALOGSWITCH_MAX_POS 8
 #endif
@@ -39,16 +42,16 @@
 /* ======================================================================== */
 // CONTROLLER MODULE PARAMETERS
 /* ======================================================================== */
-#if defined(CONTROLLER_MODULE)
+#if MODULE_TYPE == MODULE_TYPE_CONTROLLER
 
 	struct PARAM_CONTROLLER {
 		char type;
 		int software_version;
 		int hardware_version;
 		int mains_points[ANALOGSWITCH_MAX_POS];
-        int mains_count;
+        char mains_count;
 		int dir_points[ANALOGSWITCH_MAX_POS];
-		int dir_count;
+		char dir_count;
 		char status_mode;
 		char drive_mode;
 		int paired_uuid;
@@ -91,7 +94,7 @@
 /* ======================================================================== */
 // ELECTRIC MODULE PARAMETERS
 /* ======================================================================== */
-#elif defined(ELECTRIC_MODULE)
+#elif MODULE_TYPE == MODULE_TYPE_ELECTRIC
 
 	struct PARAM_ELECTRIC {
 		char type;
@@ -115,7 +118,7 @@
 /* ======================================================================== */
 // SENSOR MODULE PARAMETERS
 /* ======================================================================== */
-#elif defined(SENSOR_MODULE)
+#elif MODULE_TYPE == MODULE_TYPE_SENSOR
 
 	struct PARAM_SENSOR {
 		char type;
@@ -135,7 +138,7 @@
 /* ======================================================================== */
 // SERVO MODULE PARAMETERS
 /* ======================================================================== */
-#elif defined(SERVO_MODULE)
+#elif MODULE_TYPE == MODULE_TYPE_SERVO
 
 	struct PARAM_SERVO {
 		char type;
@@ -155,7 +158,7 @@
 /* ======================================================================== */
 // SWITCH MODULE PARAMETERS
 /* ======================================================================== */
-#elif defined(SWITCH_MODULE)
+#elif MODULE_TYPE == MODULE_TYPE_SWITCH
 
 	struct PARAM_SWITCH {
 		char type;
@@ -172,7 +175,7 @@
 	}
 
 
-#elif defined(CONFIGURATOR_MODULE)
+#elif MODULE_TYPE == MODULE_TYPE_CONFIGURATOR
 
 	/* configurator has no local module parameters */
 

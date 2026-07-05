@@ -18,6 +18,17 @@
 #define MODULE_SENSOR_CONFIG_H
 
 
+/* core features used by this module */
+#define FEATURE_CAN
+#define FEATURE_LED
+#define FEATURE_TIMEOUT
+#define FEATURE_ANALOGSWITCH
+#define FEATURE_BUTTON
+#define FEATURE_MEASURE
+#define FEATURE_PWM
+#define FEATURE_PING
+
+
 /* ******************************************
  * The module version is set in the config.h file
  */

@@ -17,8 +17,10 @@
 #include "LocoCANcore.h"
 
 
+#ifdef FEATURE_CAN
 CAN_COM can;
 CAN_MESSAGE can_message;
+#endif
 
 
 void LocoCANcore::begin(void) {
@@ -71,6 +73,7 @@ void LocoCANcore::update(void) {
 	// ==========================
 	// check for ping and send version ping (not on configurator module)
 	#ifndef MODULE_CONFIGURATOR_H
+	#ifdef FEATURE_PING
 	if (can_message.uuid != 0
 	    && can_message.id == CAN_ID_PING
 	    && can_message.size == 0) {
@@ -81,6 +84,7 @@ void LocoCANcore::update(void) {
 
 		_ping.send(can);
 	}
+	#endif /* FEATURE_PING */
 	#endif
 
 	/*

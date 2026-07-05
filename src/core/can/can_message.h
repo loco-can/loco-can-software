@@ -8,6 +8,8 @@
 #ifndef CAN_MESSAGE_H
 #define CAN_MESSAGE_H
 
+#ifdef FEATURE_CAN
+
 #include <inttypes.h>
 
 
@@ -17,5 +19,7 @@ struct CAN_MESSAGE {
     uint8_t data[8];
     uint8_t size;
 };
+
+#endif /* FEATURE_CAN */
 
 #endif
