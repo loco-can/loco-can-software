@@ -49,6 +49,7 @@ light: steady on
 
 ## Controller Status
 - **OFF**
+  
   mains off, listening to bus for heartbeat
   - no bus: **red flashing**
   - bus active: **green flashing**
