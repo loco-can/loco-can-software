@@ -15,3 +15,30 @@ The programmer starts in the analysis mode. It scans the bus and shows the messa
 In the setup mode all parameters of the connected modules can be set. The modules are pinged to collect informations about the type and UUID of the modules. Formatting and plain text labels are used for simple identification like in analysis mode.
 
 A list shows the connected modules. When selecting a module, the available parameters are shown in the way of the analysis mode, can be modified and written back.
+
+## Drop-in for loco-can-software
+
+Copy this folder to `src/module/programmer/` of [loco-can-software](https://github.com/loco-can/loco-can-software).
+
+In `src/config.h`:
+
+```c
+#define PROGRAMMER_MODULE "src/module/programmer/config.h"
+```
+
+In `hardware.h` select the programmer instead of the controller:
+
+```c
+#define MODULE PROGRAMMER_MODULE
+#define PROGRAMMER_MODULE_VERSION V_3_0
+```
+
+In `src/LocoCANcore.h` add:
+
+```c
+#ifdef MODULE_PROGRAMMER_H
+    MODULE_PROGRAMMER _module;
+#endif
+```
+
+Board: ESP32 / ESP32-S3, Arduino core. Pins are in `config.h` (CAN 17/18, ST7789 SPI, KY-040 encoder). The webservice in the repository root is what the access point should serve.

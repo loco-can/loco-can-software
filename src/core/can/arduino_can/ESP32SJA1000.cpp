@@ -2,11 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 #include "../../../config.h"
 
-// use can.h if is ATMEGA or ESP32 
-#ifdef MODULE_ARCH_ESP32
-
-
-// #ifdef MODULE_ARCH_ESP32
+/* Legacy SJA1000 — see ESP32SJA1000.h. ESP32 builds use TWAI. */
+#ifdef USE_LEGACY_ESP32_SJA1000
 
 #include "esp_intr.h"
 #include "soc/dport_reg.h"

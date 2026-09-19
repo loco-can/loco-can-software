@@ -73,8 +73,8 @@
         void setSpeed(TwaiSpeed);
         TwaiSpeed getSpeed() { return speed; };
 
-        // Converts from numeric CAN speed to enum values: setSpeed(convertSpeed(500));
-        TwaiSpeed convertSpeed(uint16_t canSpeed = 0);
+        // Converts from numeric CAN speed (kbps or bps) to enum: convertSpeed(500) or convertSpeed(500000)
+        TwaiSpeed convertSpeed(uint32_t canSpeed = 0);
         
         // Size of queues for TWAI-CAN driver - remember about memory constrains!
         void setTxQueueSize(uint16_t);

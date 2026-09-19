@@ -29,6 +29,11 @@ class LocoCANcore {
 		/*
 		 * define all functions that are included in the module/{module_name}.h file
 		 */
+		// programmer
+		#ifdef MODULE_PROGRAMMER_H
+			MODULE_PROGRAMMER _module;
+		#endif
+
 		// train controller
 		#ifdef MODULE_CONTROLLER_H
 			MODULE_CONTROLLER _module;

@@ -9,8 +9,14 @@ void TwaiCAN::setSpeed(TwaiSpeed twaiSpeed) {
     if(twaiSpeed < TWAI_SPEED_SIZE) speed = twaiSpeed;
 }
 
-TwaiSpeed TwaiCAN::convertSpeed(uint16_t canSpeed) { 
+TwaiSpeed TwaiCAN::convertSpeed(uint32_t canSpeed) {
     TwaiSpeed actualSpeed = getSpeed();
+
+    // Accept both kbps (500) and bps (500E3 / 500000)
+    if (canSpeed >= 1000) {
+        canSpeed /= 1000;
+    }
+
 	switch(canSpeed) {
         default: break;
         #if (SOC_TWAI_BRP_MAX > 256)

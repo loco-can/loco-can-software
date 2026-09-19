@@ -8,26 +8,27 @@
 
 #include "../../config.h"
 
-// use twai if is ESP32-S3 
+// use twai if is ESP32
 #ifdef MODULE_ARCH_ESP32
 
 	#include "ESP32_can.h"
 	#include "ESP32-TWAI-CAN.hpp"
-	#include "driver/twai.h"
 
 
-	// #include "can_com.h"
-	// #include <ESP32-TWAI-CAN.hpp>
+	CAN_HANDLER::CAN_HANDLER() :
+		_rxId(-1),
+		_rxExtended(false),
+		_rxLength(0),
+		_rxIndex(0)
+	{
+		memset(_rxData, 0, sizeof(_rxData));
+	}
 
 
 	bool CAN_HANDLER::begin(long speed, uint16_t can_rx, uint16_t can_tx) {
 
-		ESP32Can.setPins(can_rx, can_tx);
-
-	    // You can set custom size for the queues - those are default
-		// ESP32Can.setRxQueueSize(ESP_QUEUE_SIZE);
-		// ESP32Can.setTxQueueSize(ESP_QUEUE_SIZE);
-
+		// TwaiCAN::setPins(tx, rx)
+		ESP32Can.setPins(can_tx, can_rx);
 
 	    // .setSpeed() and .begin() functions require to use TwaiSpeed enum,
 	    // but you can easily convert it from numerical value using .convertSpeed()
@@ -49,23 +50,42 @@
 
 
 	bool CAN_HANDLER::available(void) {
-
+		return _rxIndex < _rxLength;
 	}
 
 
 	uint16_t CAN_HANDLER::parsePacket(void) {
 
-		return 0;
+		CanFrame frame = { 0 };
+
+		if (!ESP32Can.readFrame(frame, 0)) {
+			return 0;
+		}
+
+		_rxId = frame.identifier;
+		_rxExtended = frame.extd;
+		_rxLength = frame.data_length_code;
+		_rxIndex = 0;
+
+		if (_rxLength > 8) {
+			_rxLength = 8;
+		}
+
+		for (uint8_t i = 0; i < _rxLength; i++) {
+			_rxData[i] = frame.data[i];
+		}
+
+		return _rxLength;
 	}
 
 
 	bool CAN_HANDLER::packetExtended(void) {
-
+		return _rxExtended;
 	}
 
 
 	long CAN_HANDLER::packetId(void) {
-
+		return _rxId;
 	}
 
 
@@ -77,7 +97,7 @@
 
 		CanFrame frame = { 0 };
 		frame.identifier = ((uint32_t)message.id << 18) | (message.uuid & 0x3FFFF);
-		frame.flags = TWAI_MSG_FLAG_EXTD;
+		frame.extd = 1;
 		frame.data_length_code = message.size;
 
 		for (uint8_t i = 0; i < message.size; i++) {
@@ -90,6 +110,11 @@
 
 	uint8_t CAN_HANDLER::read(void) {
 
+		if (_rxIndex >= _rxLength) {
+			return 0;
+		}
+
+		return _rxData[_rxIndex++];
 	}
 
 

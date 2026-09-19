@@ -44,6 +44,16 @@
 
 
 /* ========================================================================
+PROGRAMMER MODULE
+	The programmer module is the interface to program the Loco-CAN system.
+
+Versions:
+	V_3_0
+======================================================================== */
+#define PROGRAMMER_MODULE "src/module/programmer/config.h"
+
+
+/* ========================================================================
 UNIVERSAL MODULE
 	The universal module has no special hardware. It has GPIO ports, that
 	can be used for different functions. There is no specific module but

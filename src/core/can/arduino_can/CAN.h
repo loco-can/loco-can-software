@@ -9,7 +9,10 @@
 
 
 #ifdef MODULE_ARCH_ESP32
-	#include "ESP32SJA1000.h"
+	/* ESP32 uses TWAI (ESP32_can); legacy SJA1000 is optional */
+	#ifdef USE_LEGACY_ESP32_SJA1000
+		#include "ESP32SJA1000.h"
+	#endif
 #else
 	#include "MCP2515.h"
 #endif

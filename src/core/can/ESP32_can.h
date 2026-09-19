@@ -12,14 +12,15 @@
 
 
 #include "can_message.h"
-// #include <ESP32-TWAI-CAN.hpp>
 #include "driver/twai.h"
 
 
 class CAN_HANDLER {
 
 	public:
-		// start can communication with tx, rx ports
+		CAN_HANDLER();
+
+		// start can communication with rx, tx ports
 		bool begin(long speed, uint16_t rx, uint16_t tx);
 		bool available(void);
 		uint16_t parsePacket(void);
@@ -27,6 +28,13 @@ class CAN_HANDLER {
 		long packetId(void);
 		bool send(CAN_MESSAGE message);
 		uint8_t read(void);
+
+	private:
+		long _rxId;
+		bool _rxExtended;
+		uint8_t _rxLength;
+		uint8_t _rxIndex;
+		uint8_t _rxData[8];
 };
 
 

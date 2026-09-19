@@ -2,7 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 #pragma once
 
-#ifdef MODULE_ARCH_ESP32
+/*
+ * Legacy classic-CAN (SJA1000) driver for original ESP32.
+ * Disabled: Loco-CAN ESP32 targets use TWAI via ESP32_can.cpp.
+ * Set USE_LEGACY_ESP32_SJA1000 to revive (needs ESP32 Arduino 2.x APIs).
+ */
+#ifdef USE_LEGACY_ESP32_SJA1000
 
 #ifndef ESP32_SJA1000_H
 #define ESP32_SJA1000_H
@@ -60,8 +65,6 @@ private:
 };
 
 extern ESP32SJA1000Class CAN;
-
-#endif
 
 #endif
 

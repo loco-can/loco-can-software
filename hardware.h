@@ -38,6 +38,17 @@
 // #define UNIVERSAL_MODULE_VERSION V_3_0
 /* ===================================================================== */
 
+/* ========================================================================
+ * PROGRAMMER MODULE
+ *
+ * The programmer module is the interface to program the Loco-CAN system.
+ */
+#define MODULE PROGRAMMER_MODULE
+
+/* ===== MODULE VERSIONS ===== */
+#define PROGRAMMER_MODULE_VERSION V_3_0
+/* ===================================================================== */
+
 
 /* ========================================================================
  * CONTROLLER MODULE
@@ -46,11 +57,11 @@
  * an adapter PCB with sockets for the potentiometer and switches.
  * It is used to control locomotives with an electic or combution motor.
  */
-#define MODULE CONTROLLER_MODULE
+//#define MODULE CONTROLLER_MODULE
 
 /* ===== MODULE VERSIONS ===== */
 // #define CONTROLLER_MODULE_VERSION V_2_0
-#define CONTROLLER_MODULE_VERSION V_2_1
+//#define CONTROLLER_MODULE_VERSION V_2_1
 /* ===================================================================== */
 
 
