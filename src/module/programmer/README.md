@@ -4,6 +4,8 @@ The programmer is a module that is used to analyse the CAN communication and edi
 
 In addition a webserver hosted on the ESP32, using a WIFI accesspoint, gives an more powerfull access to all internal functions. The webservice is responsive and can be used on smartphones, tablets and computers. All functions can be used locally and via the webservice.
 
+Join **LOCO-CAN-PRG** (password `lococanprg`) and open [http://192.168.4.1](http://192.168.4.1). The packed Next.js UI lives in LittleFS; CAN frames are relayed through `/api/status`, `/api/frames` and `/api/tx`.
+
 The programmer has two modes, to analyse the CAN bus and to setup modules.
 
 ## CAN analysis mode
@@ -41,4 +43,22 @@ In `src/LocoCANcore.h` add:
 #endif
 ```
 
-Board: ESP32 / ESP32-S3, Arduino core. Pins are in `config.h` (CAN 17/18, ST7789 SPI, KY-040 encoder). The webservice in the repository root is what the access point should serve.
+Board: ESP32 / ESP32-S3, Arduino core. Pins are in `config.h` (CAN 17/18, ST7789 SPI, KY-040 encoder).
+
+## Pack and upload the webservice
+
+From the repository root:
+
+```bash
+npm run firmware
+```
+
+That writes a gzipped static export to `firmware/module/programmer/data/`. Copy that folder to `data/` next to `loco-can-software.ino` (Arduino LittleFS looks next to the sketch, not inside the module). Then upload the filesystem:
+
+- Arduino IDE: **Tools → ESP32 Sketch Data Upload** (LittleFS)
+- PlatformIO: set `board_build.filesystem = littlefs` and run `pio run -t uploadfs`
+
+Reboot the programmer, join **LOCO-CAN-PRG** / `lococanprg`, and open http://192.168.4.1. If LittleFS is empty the access point still starts and shows a short setup page.
+
+WPA2 needs eight or more characters; the password is `lococanprg`.
+

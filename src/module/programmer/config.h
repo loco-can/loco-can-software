@@ -47,9 +47,9 @@
 	#define PROGRAMMER_ENC_B 6
 	#define PROGRAMMER_ENC_BTN 4
 
-	/* WiFi access point for the webservice */
+	/* WiFi access point for the webservice (WPA2 password must be ≥ 8 chars) */
 	#define PROGRAMMER_WIFI_SSID "LOCO-CAN-PRG"
-	#define PROGRAMMER_WIFI_PASS "lococan"
+	#define PROGRAMMER_WIFI_PASS "lococanprg"
 	#define PROGRAMMER_HTTP_PORT 80
 
 	#define PROGRAMMER_GROUP_MAX 48
