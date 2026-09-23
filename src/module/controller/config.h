@@ -176,7 +176,7 @@ SETUP
 	#define CAN_RX 10
 	#define CAN_TX 2
 	#define CAN_STATUS_LED 5
-	#define CAN_MAX_FILTER 8
+	#define CAN_MAX_FILTER 12
 	#define CAN_BUFFER_SIZE 8
 
 	// ======================================
@@ -233,7 +233,7 @@ SETUP
 	#define CAN_RX 10
 	#define CAN_TX 2
 	#define CAN_STATUS_LED 5
-	#define CAN_MAX_FILTER 8
+	#define CAN_MAX_FILTER 12
 	#define CAN_BUFFER_SIZE 8
 
 

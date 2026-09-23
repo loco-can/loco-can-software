@@ -3,8 +3,11 @@
  */
 
 #include "module/controller/drive_codec.h"
+#include "module/controller/gauge.h"
 #include "module/controller/params.h"
 #include "module/controller/status.h"
+
+#include <string.h>
 
 #include <stdio.h>
 
@@ -274,6 +277,64 @@ int controller_logic_check(void) {
 		g_fails++;
 	}
 	expect_u8("version stays", params.bytes[CONTROLLER_PARAM_VERSION], 21);
+
+	expect_u8("gauge mode", params.bytes[CONTROLLER_PARAM_GAUGE_BATT_MODE], CONTROLLER_GAUGE_MODE_SERVO);
+	expect_u16("gauge batt ref", controller_params_get16(params, CONTROLLER_PARAM_GAUGE_BATT_REF), CONTROLLER_GAUGE_REF_VOLTAGE);
+	expect_u16("gauge current ref", controller_params_get16(params, CONTROLLER_PARAM_GAUGE_CURRENT_REF), CONTROLLER_GAUGE_REF_CURRENT);
+	expect_u8("gauge bytes", CONTROLLER_PARAM_BYTES, 57);
+
+	uint8_t package[4];
+	package[0] = (uint8_t)((3 << 5) | (1000 >> 8));
+	package[1] = (uint8_t)(1000 & 0xFF);
+	package[2] = (uint8_t)(12000 >> 8);
+	package[3] = (uint8_t)(12000 & 0xFF);
+	uint16_t percentage = 0;
+	uint16_t reference = 0;
+	uint8_t index = 0;
+	if (!controller_gauge_decode(package, 4, percentage, reference, index)) {
+		fprintf(stderr, "FAIL gauge package was rejected\n");
+		g_fails++;
+	}
+	expect_u8("gauge index", index, 3);
+	expect_u16("gauge percent", percentage, 1000);
+	expect_u16("gauge reference", reference, 12000);
+	expect_u8("batt channel", controller_gauge_channel(CAN_ID_BATT_VOLTAGE), CONTROLLER_GAUGE_BATT_VOLTAGE);
+	expect_u8("motor channel", controller_gauge_channel(CAN_ID_MOTOR_VOLTAGE), CONTROLLER_GAUGE_MOTOR_VOLTAGE);
+	expect_u8("current channel", controller_gauge_channel(CAN_ID_CURRENT), CONTROLLER_GAUGE_CURRENT);
+	expect_u8("reduce batt", controller_gauge_reduce(CONTROLLER_GAUGE_BATT_VOLTAGE), CONTROLLER_GAUGE_REDUCE_MIN);
+	expect_u8("reduce current", controller_gauge_reduce(CONTROLLER_GAUGE_CURRENT), CONTROLLER_GAUGE_REDUCE_MAX);
+
+	expect_u16("12V meter at 9.6V", controller_gauge_output(800, 12000, 12000, CONTROLLER_GAUGE_ANALOG_FULL), 204);
+	expect_u16("12V meter saturates", controller_gauge_output(700, 24000, 12000, CONTROLLER_GAUGE_ANALOG_FULL), CONTROLLER_GAUGE_ANALOG_FULL);
+	expect_u16("servo at 70 percent", controller_gauge_output(700, 24000, 24000, CONTROLLER_GAUGE_SERVO_FULL), 126);
+	expect_u16("gauge reference zero", controller_gauge_output(800, 12000, 0, CONTROLLER_GAUGE_ANALOG_FULL), 0);
+
+	CONTROLLER_GAUGE_SAMPLE slots[CONTROLLER_MAX_VEHICLES];
+	memset(slots, 0, sizeof(slots));
+	controller_gauge_note(slots, CONTROLLER_MAX_VEHICLES, 0x1111, 800, 12000, 1000, 2000);
+	controller_gauge_note(slots, CONTROLLER_MAX_VEHICLES, 0x2222, 700, 24000, 1000, 2000);
+	uint16_t picked_pct = 0;
+	uint16_t picked_ref = 0;
+	if (!controller_gauge_select(slots, CONTROLLER_MAX_VEHICLES, CONTROLLER_GAUGE_REDUCE_MIN, 1500, 2000, picked_pct, picked_ref)) {
+		fprintf(stderr, "FAIL gauge select found nothing\n");
+		g_fails++;
+	}
+	expect_u16("lowest charge", picked_pct, 700);
+	expect_u16("lowest charge ref", picked_ref, 24000);
+
+	memset(slots, 0, sizeof(slots));
+	controller_gauge_note(slots, CONTROLLER_MAX_VEHICLES, 0x1111, 400, 12000, 1000, 2000);
+	controller_gauge_note(slots, CONTROLLER_MAX_VEHICLES, 0x2222, 900, 12000, 1200, 2000);
+	if (!controller_gauge_select(slots, CONTROLLER_MAX_VEHICLES, CONTROLLER_GAUGE_REDUCE_MAX, 1500, 2000, picked_pct, picked_ref)) {
+		fprintf(stderr, "FAIL current select found nothing\n");
+		g_fails++;
+	}
+	expect_u16("highest current", picked_pct, 900);
+
+	if (controller_gauge_select(slots, CONTROLLER_MAX_VEHICLES, CONTROLLER_GAUGE_REDUCE_MAX, 4000, 2000, picked_pct, picked_ref)) {
+		fprintf(stderr, "FAIL expired gauge sample was kept\n");
+		g_fails++;
+	}
 
 	if (g_fails == 0) {
 		printf("controller status and drive frame check ok\n");

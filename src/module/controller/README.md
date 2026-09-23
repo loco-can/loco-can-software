@@ -39,7 +39,7 @@ The hardware specifications are described in the README files of the Universal a
 The input pins for light, mains and direction use the analog switch library. The output values are set by learned voltages, that represent the different switch positions. On the hardware side a switch witch resistors can be used.
 
 ### Measurement Outputs
-The outputs to display voltage or current values can be set to analog or servo signals (analog output is not yet implemented).
+The outputs to display voltage or current values are either an analog level or a model-servo signal. Each gauge stores that choice, and its full-scale reference, as a parameter.
 
 ## LED Status
 flashing: 100ms on every second

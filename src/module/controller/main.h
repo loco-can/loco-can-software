@@ -171,12 +171,12 @@ buttons
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
 #include "../../core/led/intelliLed.h"
-#include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
 #include "../../core/flags/flags.h"
 
 #include "status.h"
 #include "params.h"
+#include "gauge.h"
 
 
 /* local classes */
@@ -219,6 +219,11 @@ class MODULE_CONTROLLER {
 		void _save_params(void);
 		void _apply_params(void);
 		void _handle_setup(CAN_MESSAGE message);
+#ifdef CONTROLLER_HAS_GAUGES
+		void _note_gauge(CAN_MESSAGE message);
+		void _refresh_gauges(void);
+		int16_t _gauge_port(uint8_t channel);
+#endif
 
 		CAN_MESSAGE _message;
 
@@ -272,6 +277,12 @@ class MODULE_CONTROLLER {
 
 		ANALOGSWITCH _light_switch;
 		ANALOGSWITCH _light2_switch;
+
+#ifdef CONTROLLER_HAS_GAUGES
+		CONTROLLER_GAUGE_SAMPLE _gauge_samples[CONTROLLER_GAUGE_ROWS][CONTROLLER_GAUGE_SLOTS];
+		uint8_t _gauge_mode[CONTROLLER_GAUGE_COUNT];
+		uint16_t _gauge_duty[CONTROLLER_GAUGE_COUNT];
+#endif
 
 #if defined(CONTROLLER_STATUS_RED_PORT) && defined(CONTROLLER_STATUS_GREEN_PORT)
 		void _update_led(void);

@@ -19,8 +19,18 @@
  *   39..40 drive full
  *   41..42 brake zero
  *   43..44 brake full
+ *   45     battery-voltage gauge mode (0 analog, 1 servo)
+ *   46..47 battery-voltage full-scale reference
+ *   48     motor-voltage gauge mode
+ *   49..50 motor-voltage full-scale reference
+ *   51     current gauge mode
+ *   52..53 current full-scale reference
+ *   54     motor-current gauge mode
+ *   55..56 motor-current full-scale reference
  *
- * CAN id 0x700 writes the module name. Ids 0x701.. write parameter bytes.
+ * Gauge references use the same units as a measurement frame
+ * (12.000 V is 12000). CAN id 0x700 writes the module name.
+ * Ids 0x701.. write parameter bytes.
  */
 #pragma once
 
@@ -55,11 +65,27 @@
 #define CONTROLLER_PARAM_BRAKE_ZERO 41
 #define CONTROLLER_PARAM_BRAKE_FULL 43
 
-#define CONTROLLER_PARAM_BYTES 45
+#define CONTROLLER_GAUGE_MODE_ANALOG 0
+#define CONTROLLER_GAUGE_MODE_SERVO 1
+
+#define CONTROLLER_GAUGE_REF_VOLTAGE 12000
+#define CONTROLLER_GAUGE_REF_CURRENT 10000
+
+#define CONTROLLER_PARAM_GAUGE_STRIDE 3
+#define CONTROLLER_PARAM_GAUGE_BATT_MODE 45
+#define CONTROLLER_PARAM_GAUGE_BATT_REF 46
+#define CONTROLLER_PARAM_GAUGE_MOTOR_V_MODE 48
+#define CONTROLLER_PARAM_GAUGE_MOTOR_V_REF 49
+#define CONTROLLER_PARAM_GAUGE_CURRENT_MODE 51
+#define CONTROLLER_PARAM_GAUGE_CURRENT_REF 52
+#define CONTROLLER_PARAM_GAUGE_MOTOR_I_MODE 54
+#define CONTROLLER_PARAM_GAUGE_MOTOR_I_REF 55
+
+#define CONTROLLER_PARAM_BYTES 57
 #define CONTROLLER_PARAM_NAME_LEN 15
 
 #define CONTROLLER_PARAM_MAGIC 0xC3
-#define CONTROLLER_PARAM_SCHEMA 1
+#define CONTROLLER_PARAM_SCHEMA 2
 
 struct CONTROLLER_PARAMS {
 	uint8_t bytes[CONTROLLER_PARAM_BYTES];
