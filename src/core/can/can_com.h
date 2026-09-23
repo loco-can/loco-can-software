@@ -72,9 +72,11 @@ class CAN_COM {
     
     void print_message(CAN_MESSAGE message); // print message to serial
 
-    uint16_t read(CAN_MESSAGE message); // get message from buffer
+    uint16_t read(CAN_MESSAGE &message); // get message from buffer
+    bool fetch(CAN_MESSAGE &message); // take one hardware frame, ignore filters
     bool send(uint32_t id, uint8_t* data, uint8_t size);
-    bool send(CAN_MESSAGE message); // send data
+    bool send(CAN_MESSAGE message); // send data, stamp this board's UUID
+    bool forward(CAN_MESSAGE message); // send data, keep the original UUID
 
     void clear_filter();
     bool register_filter(uint16_t mask, uint16_t filter); // add mask and filter
@@ -86,7 +88,7 @@ class CAN_COM {
 
     void create_uuid(void);
     bool _begin(long speed);
-    uint16_t _read(CAN_MESSAGE message); // receive data > true if no filter or filter match
+    uint16_t _read(CAN_MESSAGE &message); // receive data > true if no filter or filter match
 
     CAN_MESSAGE data2message(uint32_t id, uint16_t uuid, uint8_t* data, uint8_t size);
 

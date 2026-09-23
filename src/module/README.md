@@ -3,7 +3,10 @@
 The modules directory is the place for all modules. Each module can use
 Loco-CAN core functions, that are stored in the src/core directory.
 
-The module hardware platform must be defined as MODULE_ARCH_AVR or MODULE_ARCH_ESP32
+The module hardware platform must be defined as MODULE_ARCH_AVR or MODULE_ARCH_ESP32.
+
+The WIFI module (ESP32) adds an ESP-NOW link so two boards can copy CAN
+frames between isolated bus segments when no physical cable is connected.
 
 With the MODULE_VERSION different hardware versions can be distinguished in the
 parameter section.

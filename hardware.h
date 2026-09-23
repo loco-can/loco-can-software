@@ -114,6 +114,20 @@
 
 
 /* ========================================================================
+ * WIFI MODULE
+ *
+ * ESP32 wireless CAN bridge. Two boards pair over ESP-NOW and transfer
+ * CAN messages between isolated bus segments when no physical cable
+ * is connected.
+ */
+// #define MODULE WIFI_MODULE
+
+/* ===== MODULE VERSIONS ===== */
+// #define WIFI_MODULE_VERSION V_3_0
+/* ===================================================================== */
+
+
+/* ========================================================================
  * LED MODULE
  *
  * This module is not yet implemented.
