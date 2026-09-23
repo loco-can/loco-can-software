@@ -80,6 +80,53 @@ inline uint16_t controller_scale_10bit(uint16_t raw, uint16_t resolution) {
 }
 
 /*
+ * Map a raw ADC reading between a stored zero position and a stored full
+ * position onto 0..1023. The full position may sit above or below zero.
+ * Readings on the zero side of the lever, and the first
+ * CONTROLLER_ZERO_THRESHOLD counts, stay at 0.
+ */
+inline uint16_t controller_map_axis(uint16_t raw, uint16_t zero, uint16_t full) {
+
+	int32_t span = (int32_t)full - (int32_t)zero;
+	int32_t delta = (int32_t)raw - (int32_t)zero;
+
+	if (span == 0) {
+		return 0;
+	}
+
+	if ((span > 0 && delta <= CONTROLLER_ZERO_THRESHOLD) || (span < 0 && delta >= -CONTROLLER_ZERO_THRESHOLD)) {
+		return 0;
+	}
+
+	if ((span > 0 && delta < 0) || (span < 0 && delta > 0)) {
+		return 0;
+	}
+
+	if (span < 0) {
+		delta = -delta;
+		span = -span;
+	}
+
+	if (delta >= span) {
+		return 1023;
+	}
+
+	return (uint16_t)(((uint32_t)delta * 1023UL) / (uint32_t)span);
+}
+
+
+/*
+ * One lever: center is zero, above center drives, below center brakes.
+ * brake_full, zero and drive_full are the stored ADC positions.
+ */
+inline void controller_split_calibrated(uint16_t raw, uint16_t brake_full, uint16_t zero, uint16_t drive_full, uint16_t &drive, uint16_t &brake) {
+
+	drive = controller_map_axis(raw, zero, drive_full);
+	brake = controller_map_axis(raw, zero, brake_full);
+}
+
+
+/*
  * One lever: center is zero, above center drives, below center brakes.
  */
 inline void controller_split_single_pot(uint16_t scaled, uint16_t &drive, uint16_t &brake) {

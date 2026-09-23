@@ -33,6 +33,11 @@ class ANALOGSWITCH {
 
 		uint8_t remove(uint8_t); // remove position with index idx
 
+		// replace every stored point; index 0 is the lowest voltage
+		void set_positions(const uint16_t *points, uint8_t count);
+		uint8_t count(void);
+		uint16_t position(uint8_t logical_index);
+
 		uint8_t get(void); // get the switch position
 		uint16_t get_analog(void); // get the analog value
 

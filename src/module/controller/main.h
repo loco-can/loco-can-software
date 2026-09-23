@@ -176,6 +176,7 @@ buttons
 #include "../../core/flags/flags.h"
 
 #include "status.h"
+#include "params.h"
 
 
 /* local classes */
@@ -203,7 +204,6 @@ class MODULE_CONTROLLER {
 
 	private:
 
-		void _seed_switch(ANALOGSWITCH &sw, uint8_t positions);
 		void _read_controls(void);
 		void _handle_can(CAN_MESSAGE message);
 		void _note_vehicle(uint16_t uuid, uint8_t status);
@@ -215,6 +215,10 @@ class MODULE_CONTROLLER {
 		void _send_setup(bool disable);
 		void _apply_instrument(uint8_t light);
 		uint16_t _main_loco(void);
+		void _load_params(void);
+		void _save_params(void);
+		void _apply_params(void);
+		void _handle_setup(CAN_MESSAGE message);
 
 		CAN_MESSAGE _message;
 
@@ -258,6 +262,8 @@ class MODULE_CONTROLLER {
 		INTELLITIMEOUT _heartbeat_time;
 		INTELLITIMEOUT _drive_time;
 		INTELLITIMEOUT _foreign_timeout;
+
+		CONTROLLER_PARAMS _params;
 
 		ANALOGSWITCH _mains_switch;
 		ANALOGSWITCH _dir_switch;

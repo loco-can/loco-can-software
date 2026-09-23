@@ -9,6 +9,7 @@
 #include "../../config.h"
 #include "main.h"
 #include "drive_codec.h"
+#include <EEPROM.h>
 
 
 extern CAN_COM can;
@@ -17,8 +18,8 @@ extern CAN_COM can;
 /* intelliButton::check() returns 2 for a short release and 1 for a long one. */
 #define CONTROLLER_BUTTON_SHORT 2
 
-#define CONTROLLER_LIGHT_POSITIONS 5
 #define CONTROLLER_VEHICLE_TIMEOUT (MODULE_HEARTBEAT_TIMEOUT * 2)
+#define CONTROLLER_EEPROM_BYTES 80
 
 
 #ifdef MODULE_CONTROLLER_CONFIG_H
@@ -58,23 +59,123 @@ static uint8_t light2_from_position(uint8_t pos) {
 }
 
 
-void MODULE_CONTROLLER::_seed_switch(ANALOGSWITCH &sw, uint8_t positions) {
+static void controller_eeprom_begin(void) {
 
-	if (positions < 2) {
-		positions = 2;
+	#ifdef MODULE_ARCH_ESP32
+		EEPROM.begin(CONTROLLER_EEPROM_BYTES);
+	#endif
+}
+
+
+static void controller_eeprom_put(int idx, uint8_t value) {
+
+	if (EEPROM.read(idx) != value) {
+		EEPROM.write(idx, value);
 	}
-	if (positions > ANALOGSWITCH_MAX_POS) {
-		positions = ANALOGSWITCH_MAX_POS;
+}
+
+
+void MODULE_CONTROLLER::_load_params(void) {
+
+	controller_eeprom_begin();
+
+	bool dual = false;
+	#ifdef CONTROLLER_BREAK_PORT
+		dual = true;
+	#endif
+
+	uint8_t version = (uint8_t)CONTROLLER_MODULE_VERSION;
+	uint8_t magic = EEPROM.read(0);
+	uint8_t schema = EEPROM.read(1);
+	uint8_t stored_version = EEPROM.read(2);
+
+	if (magic != CONTROLLER_PARAM_MAGIC || schema != CONTROLLER_PARAM_SCHEMA || stored_version != version) {
+		controller_params_defaults(_params, PLATFORM_ANALOG_RESOLUTION, dual, version);
+		_save_params();
+		return;
 	}
 
-	uint16_t span = PLATFORM_ANALOG_RESOLUTION;
-	if (span > 0) {
-		span--;
+	for (uint8_t i = 0; i < CONTROLLER_PARAM_BYTES; i++) {
+		_params.bytes[i] = EEPROM.read((int)(3 + i));
 	}
 
-	for (uint8_t i = 0; i < positions; i++) {
-		uint16_t value = (uint16_t)(((uint32_t)span * i) / (uint8_t)(positions - 1));
-		sw.learn(value);
+	for (uint8_t i = 0; i < CONTROLLER_PARAM_NAME_LEN; i++) {
+		_params.name[i] = (char)EEPROM.read((int)(3 + CONTROLLER_PARAM_BYTES + i));
+	}
+	_params.name[CONTROLLER_PARAM_NAME_LEN] = 0;
+	_params.bytes[CONTROLLER_PARAM_VERSION] = version;
+}
+
+
+void MODULE_CONTROLLER::_save_params(void) {
+
+	controller_eeprom_begin();
+
+	controller_eeprom_put(0, (uint8_t)CONTROLLER_PARAM_MAGIC);
+	controller_eeprom_put(1, (uint8_t)CONTROLLER_PARAM_SCHEMA);
+	controller_eeprom_put(2, _params.bytes[CONTROLLER_PARAM_VERSION]);
+
+	for (uint8_t i = 0; i < CONTROLLER_PARAM_BYTES; i++) {
+		controller_eeprom_put((int)(3 + i), _params.bytes[i]);
+	}
+
+	for (uint8_t i = 0; i < CONTROLLER_PARAM_NAME_LEN; i++) {
+		controller_eeprom_put((int)(3 + CONTROLLER_PARAM_BYTES + i), (uint8_t)_params.name[i]);
+	}
+
+	#ifdef MODULE_ARCH_ESP32
+		EEPROM.commit();
+	#endif
+}
+
+
+void MODULE_CONTROLLER::_apply_params(void) {
+
+	uint16_t points[CONTROLLER_PARAM_LIGHT_POINTS];
+	uint8_t point_count = 0;
+
+	#ifdef CONTROLLER_MAINS_PORT
+		point_count = controller_params_points(_params, CONTROLLER_PARAM_MAINS_COUNT, CONTROLLER_PARAM_MAINS_POINTS, points);
+		_mains_switch.set_positions(points, point_count);
+	#endif
+
+	#ifdef CONTROLLER_DIR_PORT
+		point_count = controller_params_points(_params, CONTROLLER_PARAM_DIR_COUNT, CONTROLLER_PARAM_DIR_POINTS, points);
+		_dir_switch.set_positions(points, point_count);
+	#endif
+
+	#ifdef CONTROLLER_LIGHT_PORT
+		point_count = controller_params_points(_params, CONTROLLER_PARAM_LIGHT_COUNT, CONTROLLER_PARAM_LIGHT_POINTS, points);
+		_light_switch.set_positions(points, point_count);
+	#endif
+
+	#ifdef CONTROLLER_LIGHT2_PORT
+		point_count = controller_params_points(_params, CONTROLLER_PARAM_LIGHT2_COUNT, CONTROLLER_PARAM_LIGHT2_POINTS, points);
+		_light2_switch.set_positions(points, point_count);
+	#endif
+
+	(void)points;
+	(void)point_count;
+}
+
+
+void MODULE_CONTROLLER::_handle_setup(CAN_MESSAGE message) {
+
+	CONTROLLER_PARAM_RESULT result = controller_params_on_can(
+		_params,
+		message,
+		(uint16_t)can.uuid(),
+		(uint8_t)CONTROLLER_MODULE_VERSION,
+		CONTROLLER_TYPE_ID
+	);
+
+	for (uint8_t i = 0; i < result.reply_count && i < 2; i++) {
+		can.send(result.reply[i]);
+	}
+
+	if (result.changed) {
+		_save_params();
+		_apply_params();
 	}
 }
 
@@ -131,15 +232,17 @@ void MODULE_CONTROLLER::begin(void) {
 	can.register_filter(CAN_ID_MASK, CAN_ID_VEHICLE_STATUS);
 	can.register_filter(0x7FF, CAN_ID_EMERGENCY);
 	can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
+	can.register_filter(0x7FF, CAN_ID_REQUEST);
+	can.register_filter(0x780, CAN_ID_SETUP);
+
+	_load_params();
 
 	#ifdef CONTROLLER_MAINS_PORT
 		_mains_switch.begin(CONTROLLER_MAINS_PORT);
-		_seed_switch(_mains_switch, 3);
 	#endif
 
 	#ifdef CONTROLLER_DIR_PORT
 		_dir_switch.begin(CONTROLLER_DIR_PORT);
-		_seed_switch(_dir_switch, 3);
 	#endif
 
 	#ifdef CONTROLLER_HORN_PORT
@@ -164,7 +267,6 @@ void MODULE_CONTROLLER::begin(void) {
 			Serial.println(CONTROLLER_LIGHT_PORT);
 		#endif
 		_light_switch.begin(CONTROLLER_LIGHT_PORT);
-		_seed_switch(_light_switch, CONTROLLER_LIGHT_POSITIONS);
 	#endif
 
 	#ifdef CONTROLLER_LIGHT2_PORT
@@ -173,7 +275,6 @@ void MODULE_CONTROLLER::begin(void) {
 			Serial.println(CONTROLLER_LIGHT2_PORT);
 		#endif
 		_light2_switch.begin(CONTROLLER_LIGHT2_PORT);
-		_seed_switch(_light2_switch, CONTROLLER_LIGHT_POSITIONS);
 	#endif
 
 	#ifdef CONTROLLER_INSTRUMENT_LIGHT_PORT
@@ -185,6 +286,8 @@ void MODULE_CONTROLLER::begin(void) {
 	_status_led.begin(CONTROLLER_STATUS_RED_PORT, CONTROLLER_STATUS_GREEN_PORT);
 	_led_mode = 0xFF;
 #endif
+
+	_apply_params();
 }
 
 
@@ -231,12 +334,17 @@ void MODULE_CONTROLLER::_read_controls(void) {
 	#endif
 
 	#ifdef CONTROLLER_DRIVE_PORT
-		uint16_t scaled = controller_scale_10bit(analogRead(CONTROLLER_DRIVE_PORT), PLATFORM_ANALOG_RESOLUTION);
+		uint16_t drive_raw = analogRead(CONTROLLER_DRIVE_PORT);
+		uint16_t drive_zero = controller_params_get16(_params, CONTROLLER_PARAM_DRIVE_ZERO);
+		uint16_t drive_full = controller_params_get16(_params, CONTROLLER_PARAM_DRIVE_FULL);
+		uint16_t brake_zero = controller_params_get16(_params, CONTROLLER_PARAM_BRAKE_ZERO);
+		uint16_t brake_full = controller_params_get16(_params, CONTROLLER_PARAM_BRAKE_FULL);
 		#ifdef CONTROLLER_BREAK_PORT
-			_drive_value = scaled;
-			_break_value = controller_scale_10bit(analogRead(CONTROLLER_BREAK_PORT), PLATFORM_ANALOG_RESOLUTION);
+			_drive_value = controller_map_axis(drive_raw, drive_zero, drive_full);
+			_break_value = controller_map_axis(analogRead(CONTROLLER_BREAK_PORT), brake_zero, brake_full);
 		#else
-			controller_split_single_pot(scaled, _drive_value, _break_value);
+			(void)brake_zero;
+			controller_split_calibrated(drive_raw, brake_full, drive_zero, drive_full, _drive_value, _break_value);
 		#endif
 	#else
 		_drive_value = 0;
@@ -613,7 +721,10 @@ void MODULE_CONTROLLER::_update_led(void) {
 
 void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 
-	if (message.uuid != 0) {
+	if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
+		_handle_setup(message);
+	}
+	else if (message.uuid != 0) {
 		#ifdef DEVEL
 			Serial.print("got message ");
 			can.print_message(message);

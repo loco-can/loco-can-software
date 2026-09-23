@@ -111,6 +111,43 @@ uint8_t ANALOGSWITCH::remove(uint8_t idx) {
 }
 
 
+void ANALOGSWITCH::set_positions(const uint16_t *points, uint8_t count) {
+
+	if (count > ANALOGSWITCH_MAX_POS) {
+		count = ANALOGSWITCH_MAX_POS;
+	}
+
+	_pos_count = 0;
+
+	if (points == 0) {
+		return;
+	}
+
+	for (uint8_t i = 0; i < count; i++) {
+		_positions[i] = points[i];
+		_pos_count++;
+	}
+
+	_sort();
+}
+
+
+uint8_t ANALOGSWITCH::count(void) {
+	return _pos_count;
+}
+
+
+// logical index 0 is the lowest stored voltage
+uint16_t ANALOGSWITCH::position(uint8_t logical_index) {
+
+	if (_pos_count == 0 || logical_index >= _pos_count) {
+		return 0;
+	}
+
+	return _positions[(_pos_count - 1) - logical_index];
+}
+
+
 // sort positions ascending
 void ANALOGSWITCH::_sort(void) {
 
