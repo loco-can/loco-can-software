@@ -125,6 +125,18 @@ Versions:
 
 
 /* ========================================================================
+WIFI MODULE
+	ESP32 wireless CAN bridge. Two modules pair over ESP-NOW and copy
+	CAN frames between isolated bus segments when no physical cable
+	is connected.
+
+Versions:
+	V_3_0
+======================================================================== */
+#define WIFI_MODULE "src/module/wifi/config.h"
+
+
+/* ========================================================================
 LED MODULE
 	A module with LED drivers.
 

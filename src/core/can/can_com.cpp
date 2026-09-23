@@ -240,7 +240,7 @@ void CAN_COM::print_message(CAN_MESSAGE message) {
  *
  * if no message is in buffer, return message with uuid = 0
  */
-uint16_t CAN_COM::read(CAN_MESSAGE message) {
+uint16_t CAN_COM::read(CAN_MESSAGE &message) {
 
 	uint16_t filter;
 
@@ -296,6 +296,32 @@ bool CAN_COM::send(CAN_MESSAGE message) {
 	return sent;
 }
 
+
+/*
+ * send a frame that already belongs to another node
+ * used by the WIFI bridge so the original UUID stays in the identifier
+ */
+bool CAN_COM::forward(CAN_MESSAGE message) {
+
+	if (_led_w.available()) {
+		_led_w.on();
+	}
+	else {
+		_led_r.on();
+	}
+
+	const bool sent = _can_handler.send(message);
+
+	if (_led_w.available()) {
+		_led_w.off();
+	}
+	else {
+		_led_r.off();
+	}
+
+	return sent;
+}
+
 // uint8_t* data, uint8_t length, uint32_t id
 bool CAN_COM::send(uint32_t id, uint8_t* data, uint8_t size) {
 	CAN_MESSAGE message;
@@ -312,74 +338,71 @@ bool CAN_COM::send(uint32_t id, uint8_t* data, uint8_t size) {
 /*
  * read data, return true if filter
  */
-uint16_t CAN_COM::_read(CAN_MESSAGE message) {
+bool CAN_COM::fetch(CAN_MESSAGE &message) {
 
 	uint8_t i;
 	uint8_t size;
 	uint32_t can_id;
 
-	// check and connection and update alive status
 	_alive = !_alive_timeout.check();
 
-
-	// ===============================================
-	// check for package
 	size = _can_handler.parsePacket();
 
-	// received a package
-	if (size) {
+	if (!size) {
+		message.id = 0;
+		message.uuid = 0;
+		message.size = 0;
+		return false;
+	}
 
-		_led_r.on();
+	_led_r.on();
+	_alive_timeout.retrigger();
 
-		// retrigger connection timeout
-		_alive_timeout.retrigger();
+	i = 0;
+	while (_can_handler.available() && i < 8) {
+		message.data[i++] = (uint8_t)_can_handler.read();
+	}
+
+	message.size = i;
+
+	if (_can_handler.packetExtended()) {
+		can_id = _can_handler.packetId();
+		message.id = can_id >> 18;
+		message.uuid = can_id & 0x3FFFF;
+	}
+	else {
+		message.id = _can_handler.packetId();
+		message.uuid = 0;
+	}
+
+	_led_r.off();
+	return true;
+}
 
 
-		// fetch data
-		i = 0;
-		while (_can_handler.available() && i < 8) {
-			message.data[i++] = (uint8_t)_can_handler.read();
+uint16_t CAN_COM::_read(CAN_MESSAGE &message) {
+
+	uint8_t i;
+
+	if (!fetch(message)) {
+		return 0;
+	}
+
+	// check for filter criteriy
+	if (_filter_count == 0) {
+		return message.id ? message.id : 1;
+	}
+
+	// check for registered filters
+	i = 0;
+	while (i < _filter_count) {
+
+		// filter found
+		if ((message.id & _masks[i]) == _filters[i]) {
+			return _filters[i] ? _filters[i] : 1;
 		}
 
-		// add size
-		message.size = i;
-		
-		// get packet id
-		// is extended
-		// split in group id (11 bit) and uuid (18 bit)
-		if (_can_handler.packetExtended()) {
-
-			can_id = _can_handler.packetId();
-
-			message.id = can_id >> 18;
-			message.uuid = can_id & 0x3FFFF;
-		}
-
-
-		else {
-			message.id = _can_handler.packetId();
-			message.uuid = 0;
-		}
-		
-		_led_r.off();
-
-		// check for filter criteriy
-		if (_filter_count == 0) {
-			return message.id;
-		}
-
-		// check for registered filters
-		i = 0;
-		while (i < _filter_count) {
-
-			// filter found
-			if ((message.id & _masks[i]) == _filters[i]) {
-			return _filters[i];
-			}
-
-			i++;
-		}
-
+		i++;
 	}
 
 	return false;

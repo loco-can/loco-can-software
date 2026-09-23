@@ -6,8 +6,10 @@
  */
 
 #include "can_protocol.h"
+#include "module/wifi/now_packet.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #define REQUIRE(cond, name) \
 	do { \
@@ -38,6 +40,42 @@ int main(void) {
 	REQUIRE(LIGHT_MAIN == 7, "LIGHT_MAIN");
 	REQUIRE(CAN_ID_MASK == 0x770, "CAN_ID_MASK");
 
-	printf("LocoCAN protocol host check ok (drive=0x%03X)\n", CAN_ID_DRIVE);
+	WIFI_NOW_PACKET pkt;
+	memset(&pkt, 0, sizeof(pkt));
+	pkt.type = WIFI_NOW_CAN;
+	pkt.seq = 7;
+	pkt.uuid = 0xA11E;
+	pkt.can_id = CAN_ID_DRIVE;
+	pkt.can_uuid = 0x1234;
+	pkt.size = 3;
+	pkt.flags = 0;
+	pkt.data[0] = 0x01;
+	pkt.data[1] = 0x02;
+	pkt.data[2] = 0x03;
+
+	uint8_t wire[WIFI_NOW_WIRE_SIZE];
+	REQUIRE(wifi_now_pack(&pkt, wire, sizeof(wire)) == WIFI_NOW_WIRE_SIZE, "wifi_now_pack");
+
+	WIFI_NOW_PACKET out;
+	REQUIRE(wifi_now_unpack(wire, WIFI_NOW_WIRE_SIZE, &out), "wifi_now_unpack");
+	REQUIRE(out.type == WIFI_NOW_CAN, "wifi now type");
+	REQUIRE(out.uuid == 0xA11E, "wifi now uuid");
+	REQUIRE(out.can_id == CAN_ID_DRIVE, "wifi now can id");
+	REQUIRE(out.can_uuid == 0x1234, "wifi now can uuid");
+	REQUIRE(out.size == 3, "wifi now size");
+	REQUIRE(out.data[0] == 0x01 && out.data[2] == 0x03, "wifi now payload");
+	REQUIRE(wifi_now_should_bridge(true, false), "bridge when no cable");
+	REQUIRE(!wifi_now_should_bridge(true, true), "no bridge when cable");
+	REQUIRE(!wifi_now_should_bridge(false, false), "no bridge without peer");
+	REQUIRE(wifi_now_same_frame(
+		out.can_id, out.can_uuid, out.data, out.size,
+		CAN_ID_DRIVE, 0x1234, pkt.data, 3
+	), "wifi now same frame");
+	wire[0] = 0xFF;
+	REQUIRE(!wifi_now_unpack(wire, WIFI_NOW_WIRE_SIZE, &out), "wifi now reject version");
+	REQUIRE(wifi_now_pack(&pkt, wire, 8) == 0, "wifi now short buffer");
+
+	printf("LocoCAN protocol host check ok (drive=0x%03X wifi-now=%u)\n",
+		CAN_ID_DRIVE, WIFI_NOW_WIRE_SIZE);
 	return 0;
 }
