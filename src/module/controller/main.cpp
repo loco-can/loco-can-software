@@ -9,6 +9,7 @@
 #include "../../config.h"
 #include "main.h"
 #include "drive_codec.h"
+#include "../../core/servo/intelliServo.h"
 #include <EEPROM.h>
 
 
@@ -156,6 +157,10 @@ void MODULE_CONTROLLER::_apply_params(void) {
 
 	(void)points;
 	(void)point_count;
+
+#ifdef CONTROLLER_HAS_GAUGES
+	_refresh_gauges();
+#endif
 }
 
 
@@ -213,6 +218,21 @@ void MODULE_CONTROLLER::begin(void) {
 	_vehicle_count = 0;
 	_setup_index = 0;
 
+#ifdef CONTROLLER_HAS_GAUGES
+	for (uint8_t channel = 0; channel < CONTROLLER_GAUGE_COUNT; channel++) {
+		_gauge_mode[channel] = 0xFF;
+		_gauge_duty[channel] = 0xFFFF;
+	}
+	for (uint8_t row = 0; row < CONTROLLER_GAUGE_ROWS; row++) {
+		for (uint8_t i = 0; i < CONTROLLER_GAUGE_SLOTS; i++) {
+			_gauge_samples[row][i].uuid = 0;
+			_gauge_samples[row][i].percentage = 0;
+			_gauge_samples[row][i].reference = 0;
+			_gauge_samples[row][i].seen = 0;
+		}
+	}
+#endif
+
 	for (uint8_t i = 0; i < CONTROLLER_MAX_VEHICLES; i++) {
 		_vehicles[i].uuid = 0;
 		_vehicles[i].status = 0;
@@ -234,6 +254,10 @@ void MODULE_CONTROLLER::begin(void) {
 	can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
 	can.register_filter(0x7FF, CAN_ID_REQUEST);
 	can.register_filter(0x780, CAN_ID_SETUP);
+#ifdef CONTROLLER_HAS_GAUGES
+	can.register_filter(0x700, CAN_ID_CURRENT);
+	can.register_filter(0x700, CAN_ID_VOLTAGE);
+#endif
 
 	_load_params();
 
@@ -453,6 +477,9 @@ void MODULE_CONTROLLER::_handle_can(CAN_MESSAGE message) {
 			break;
 
 		default:
+#ifdef CONTROLLER_HAS_GAUGES
+			_note_gauge(message);
+#endif
 			break;
 	}
 }
@@ -719,6 +746,329 @@ void MODULE_CONTROLLER::_update_led(void) {
 #endif
 
 
+#ifdef CONTROLLER_HAS_GAUGES
+
+#if defined(MODULE_ARCH_AVR)
+
+static volatile uint8_t controller_soft_pin[CONTROLLER_GAUGE_COUNT];
+static volatile uint8_t controller_soft_duty[CONTROLLER_GAUGE_COUNT];
+static volatile uint8_t controller_soft_used = 0;
+
+ISR(TIMER2_OVF_vect) {
+
+	static uint8_t phase = 0;
+	phase++;
+
+	uint8_t n = controller_soft_used;
+	for (uint8_t i = 0; i < n; i++) {
+		if (phase < controller_soft_duty[i]) {
+			digitalWrite(controller_soft_pin[i], HIGH);
+		}
+		else {
+			digitalWrite(controller_soft_pin[i], LOW);
+		}
+	}
+}
+
+static void controller_soft_timer_on(void) {
+
+	static bool started = false;
+
+	if (!started) {
+		started = true;
+		TCCR2A = 0;
+		TCCR2B = (1 << CS22);
+		TCNT2 = 0;
+	}
+
+	TIMSK2 |= (1 << TOIE2);
+}
+
+static int8_t controller_soft_find(uint8_t pin) {
+
+	for (uint8_t i = 0; i < controller_soft_used; i++) {
+		if (controller_soft_pin[i] == pin) {
+			return (int8_t)i;
+		}
+	}
+
+	return -1;
+}
+
+static void controller_soft_clear(uint8_t pin) {
+
+	uint8_t saved = SREG;
+	cli();
+
+	int8_t idx = controller_soft_find(pin);
+	if (idx >= 0) {
+		for (uint8_t i = (uint8_t)idx; (uint8_t)(i + 1) < controller_soft_used; i++) {
+			controller_soft_pin[i] = controller_soft_pin[i + 1];
+			controller_soft_duty[i] = controller_soft_duty[i + 1];
+		}
+		controller_soft_used--;
+	}
+
+	if (controller_soft_used == 0) {
+		TIMSK2 &= (uint8_t)~(1 << TOIE2);
+	}
+
+	SREG = saved;
+	digitalWrite(pin, LOW);
+}
+
+static void controller_soft_set(uint8_t pin, uint8_t duty) {
+
+	pinMode(pin, OUTPUT);
+
+	uint8_t saved = SREG;
+	cli();
+
+	int8_t idx = controller_soft_find(pin);
+	if (idx < 0 && controller_soft_used < CONTROLLER_GAUGE_COUNT) {
+		idx = (int8_t)controller_soft_used;
+		controller_soft_pin[idx] = pin;
+		controller_soft_used++;
+	}
+
+	if (idx >= 0) {
+		controller_soft_duty[idx] = duty;
+	}
+
+	SREG = saved;
+	controller_soft_timer_on();
+}
+
+#endif
+
+static bool controller_gauge_pin_pwm(uint8_t pin) {
+
+#if defined(MODULE_ARCH_AVR)
+	switch (pin) {
+		case 3:
+		case 5:
+		case 6:
+		case 9:
+		case 10:
+		case 11:
+			return true;
+		default:
+			return false;
+	}
+#else
+	(void)pin;
+	return true;
+#endif
+}
+
+static void controller_gauge_analog(uint8_t pin, uint8_t duty) {
+
+	if (controller_gauge_pin_pwm(pin)) {
+#if defined(MODULE_ARCH_AVR)
+		controller_soft_clear(pin);
+#endif
+		pinMode(pin, OUTPUT);
+		analogWrite(pin, duty);
+		return;
+	}
+
+#if defined(MODULE_ARCH_AVR)
+	controller_soft_set(pin, duty);
+#else
+	pinMode(pin, OUTPUT);
+	analogWrite(pin, duty);
+#endif
+}
+
+#ifdef CONTROLLER_BATTERY_VOLTAGE_PORT
+static INTELLISERVO controller_gauge_batt_servo;
+#endif
+#ifdef CONTROLLER_MOTOR_VOLTAGE_PORT
+static INTELLISERVO controller_gauge_motor_v_servo;
+#endif
+#if defined(CONTROLLER_CURRENT_PORT) || defined(CONTROLLER_BATTERY_CURRENT_PORT)
+static INTELLISERVO controller_gauge_current_servo;
+#endif
+#ifdef CONTROLLER_MOTOR_CURRENT_PORT
+static INTELLISERVO controller_gauge_motor_i_servo;
+#endif
+
+static INTELLISERVO *controller_gauge_servo(uint8_t channel) {
+
+	switch (channel) {
+#ifdef CONTROLLER_BATTERY_VOLTAGE_PORT
+		case CONTROLLER_GAUGE_BATT_VOLTAGE:
+			return &controller_gauge_batt_servo;
+#endif
+#ifdef CONTROLLER_MOTOR_VOLTAGE_PORT
+		case CONTROLLER_GAUGE_MOTOR_VOLTAGE:
+			return &controller_gauge_motor_v_servo;
+#endif
+#if defined(CONTROLLER_CURRENT_PORT) || defined(CONTROLLER_BATTERY_CURRENT_PORT)
+		case CONTROLLER_GAUGE_CURRENT:
+			return &controller_gauge_current_servo;
+#endif
+#ifdef CONTROLLER_MOTOR_CURRENT_PORT
+		case CONTROLLER_GAUGE_MOTOR_CURRENT:
+			return &controller_gauge_motor_i_servo;
+#endif
+		default:
+			return 0;
+	}
+}
+
+int16_t MODULE_CONTROLLER::_gauge_port(uint8_t channel) {
+
+	switch (channel) {
+		case CONTROLLER_GAUGE_BATT_VOLTAGE:
+#ifdef CONTROLLER_BATTERY_VOLTAGE_PORT
+			return CONTROLLER_BATTERY_VOLTAGE_PORT;
+#else
+			return -1;
+#endif
+		case CONTROLLER_GAUGE_MOTOR_VOLTAGE:
+#ifdef CONTROLLER_MOTOR_VOLTAGE_PORT
+			return CONTROLLER_MOTOR_VOLTAGE_PORT;
+#else
+			return -1;
+#endif
+		case CONTROLLER_GAUGE_CURRENT:
+#if defined(CONTROLLER_CURRENT_PORT)
+			return CONTROLLER_CURRENT_PORT;
+#elif defined(CONTROLLER_BATTERY_CURRENT_PORT)
+			return CONTROLLER_BATTERY_CURRENT_PORT;
+#else
+			return -1;
+#endif
+		case CONTROLLER_GAUGE_MOTOR_CURRENT:
+#ifdef CONTROLLER_MOTOR_CURRENT_PORT
+			return CONTROLLER_MOTOR_CURRENT_PORT;
+#else
+			return -1;
+#endif
+		default:
+			return -1;
+	}
+}
+
+void MODULE_CONTROLLER::_note_gauge(CAN_MESSAGE message) {
+
+	uint8_t channel = controller_gauge_channel(message.id);
+	if (channel == CONTROLLER_GAUGE_NONE) {
+		return;
+	}
+
+	uint16_t percentage = 0;
+	uint16_t reference = 0;
+	uint8_t index = 0;
+	if (!controller_gauge_decode(message.data, message.size, percentage, reference, index)) {
+		return;
+	}
+
+	uint8_t row = controller_gauge_row(channel);
+	if (row == CONTROLLER_GAUGE_NONE) {
+		return;
+	}
+
+	(void)index;
+	controller_gauge_note(
+		_gauge_samples[row],
+		CONTROLLER_GAUGE_SLOTS,
+		message.uuid,
+		percentage,
+		reference,
+		(uint16_t)millis(),
+		(uint16_t)CONTROLLER_VEHICLE_TIMEOUT
+	);
+}
+
+void MODULE_CONTROLLER::_refresh_gauges(void) {
+
+	uint16_t now = (uint16_t)millis();
+
+	for (uint8_t channel = 0; channel < CONTROLLER_GAUGE_COUNT; channel++) {
+		int16_t port = _gauge_port(channel);
+		uint8_t row = controller_gauge_row(channel);
+		if (port < 0 || row == CONTROLLER_GAUGE_NONE) {
+			continue;
+		}
+
+		uint8_t pin = (uint8_t)port;
+		uint8_t mode = _params.bytes[controller_gauge_mode_index(channel)];
+		if (mode != CONTROLLER_GAUGE_MODE_SERVO) {
+			mode = CONTROLLER_GAUGE_MODE_ANALOG;
+		}
+
+		uint16_t full = CONTROLLER_GAUGE_ANALOG_FULL;
+		if (mode == CONTROLLER_GAUGE_MODE_SERVO) {
+			full = CONTROLLER_GAUGE_SERVO_FULL;
+		}
+
+		uint16_t percentage = 0;
+		uint16_t source_reference = 0;
+		bool live = controller_gauge_select(
+			_gauge_samples[row],
+			CONTROLLER_GAUGE_SLOTS,
+			controller_gauge_reduce(channel),
+			now,
+			(uint16_t)CONTROLLER_VEHICLE_TIMEOUT,
+			percentage,
+			source_reference
+		);
+
+		uint16_t duty = 0;
+		if (live) {
+			duty = controller_gauge_output(
+				percentage,
+				source_reference,
+				controller_params_get16(_params, controller_gauge_ref_index(channel)),
+				full
+			);
+		}
+
+		if (_gauge_mode[channel] != mode) {
+			INTELLISERVO *servo = controller_gauge_servo(channel);
+			if (mode == CONTROLLER_GAUGE_MODE_SERVO) {
+#if defined(MODULE_ARCH_AVR)
+				controller_soft_clear(pin);
+#else
+				digitalWrite(pin, LOW);
+#endif
+				if (servo != 0) {
+					servo->begin(pin);
+					servo->set_limits(0, CONTROLLER_GAUGE_SERVO_FULL);
+					servo->set_value_limits(0, CONTROLLER_GAUGE_SERVO_FULL);
+				}
+			}
+			else if (servo != 0) {
+				servo->end();
+			}
+
+			_gauge_mode[channel] = mode;
+			_gauge_duty[channel] = 0xFFFF;
+		}
+
+		if (_gauge_duty[channel] == duty) {
+			continue;
+		}
+
+		_gauge_duty[channel] = duty;
+
+		if (mode == CONTROLLER_GAUGE_MODE_SERVO) {
+			INTELLISERVO *servo = controller_gauge_servo(channel);
+			if (servo != 0) {
+				servo->set(duty);
+			}
+		}
+		else {
+			controller_gauge_analog(pin, (uint8_t)duty);
+		}
+	}
+}
+
+#endif
+
+
 void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 
 	if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
@@ -800,6 +1150,10 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 		_send_setup(true);
 		_setup_release = false;
 	}
+
+#ifdef CONTROLLER_HAS_GAUGES
+	_refresh_gauges();
+#endif
 
 	if (!controller_is_commanding(_status)) {
 		return;

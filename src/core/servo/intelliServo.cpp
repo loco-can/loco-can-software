@@ -20,6 +20,14 @@ void INTELLISERVO::begin(uint8_t port) {
 }
 
 
+void INTELLISERVO::end(void) {
+
+	if (_servo.attached()) {
+		_servo.detach();
+	}
+}
+
+
 // set motor limits
 void INTELLISERVO::set_limits(uint16_t min, uint16_t max) {
 	_min = min;
