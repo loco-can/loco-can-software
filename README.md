@@ -14,6 +14,7 @@ The project has the following file structure:
 
 	- loco-can-software
 		- doc
+		- host
 		- license
 		- src
 			- core
@@ -22,7 +23,9 @@ The project has the following file structure:
 			LocoCANcore.cpp
 			LocoCANcore.h
 		config.h
+		hardware.h
 		loco-can-software.ino
+		platformio.ini
 		README.md
 
 ### doc
@@ -113,3 +116,28 @@ A module is defined in the config.h header file.
 **config.h**
 
 	#define {module_name} "{path to module header file}"
+
+## PlatformIO
+
+The same tree builds in Arduino IDE and in [PlatformIO](https://platformio.org). IDs in `src/can_protocol.h` stay compatible with the [loco-can/LocoCAN](https://github.com/loco-can/LocoCAN) library so the programmer Platform UI and other host tools share one protocol.
+
+```bash
+pio run -e programmer_v3          # ESP32-S3 programmer + WiFi UI
+pio run -e programmer_v3 -t upload
+pio run -e programmer_v3 -t uploadfs   # LittleFS UI from src/module/programmer/data
+pio run -e controller_v21         # ATmega328 controller V2.1
+pio run -e protocol_host          # PC check of LocoCAN IDs (no hardware)
+```
+
+| Environment | Board | Module |
+| --- | --- | --- |
+| `programmer_v3` | ESP32-S3 | Programmer V3.0 (default) |
+| `controller_v3` | ESP32-S3 | Controller V3.0 |
+| `controller_v21` / `controller_v20` | ATmega328P Nano | Controller V2.x |
+| `electric_v21` | ATmega328P Nano | Motor module V2.1 |
+| `switch_v21` | ATmega328P Nano | Switch V2.1 |
+| `sensor_v21` | ATmega328P Nano | Sensor V2.1 |
+| `servo_v21` | ATmega328P Nano | Servo V2.1 |
+| `protocol_host` | host gcc | `can_protocol.h` only |
+
+PlatformIO sets `MODULE` and the version via build flags. Arduino IDE still uses the uncommented lines in `hardware.h`.

@@ -1,6 +1,16 @@
 #pragma once
 
+#include <soc/soc_caps.h>
+
 #define MAX_PWM_SERVOS             16
+
+#if !defined(SOC_LEDC_TIMER_BIT_WIDTH)
+	#if defined(SOC_LEDC_TIMER_BIT_WIDE_NUM)
+		#define SOC_LEDC_TIMER_BIT_WIDTH SOC_LEDC_TIMER_BIT_WIDE_NUM
+	#else
+		#define SOC_LEDC_TIMER_BIT_WIDTH 14
+	#endif
+#endif
 
 #define LEDC_MAX_BIT_WIDTH      SOC_LEDC_TIMER_BIT_WIDTH 
 

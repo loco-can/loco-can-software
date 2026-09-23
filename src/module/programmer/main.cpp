@@ -6,6 +6,10 @@
  * @lizence: GG0
  */
 
+#include "../../config.h"
+
+#ifdef MODULE_PROGRAMMER_CONFIG_H
+
 #include "main.h"
 #include <string.h>
 
@@ -60,8 +64,6 @@ static bool programmer_json_u32(const String &body, const char *key, uint32_t *o
 }
 #endif
 
-
-#ifdef MODULE_PROGRAMMER_CONFIG_H
 
 void MODULE_PROGRAMMER::begin(void) {
 

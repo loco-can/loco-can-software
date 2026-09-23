@@ -2,6 +2,10 @@
 //
 // CAN-communication
 //
+// IDs and flags stay aligned with the loco-can/LocoCAN Arduino library
+// (https://github.com/loco-can/LocoCAN) so host tools and the programmer
+// Platform UI share one protocol.
+//
 // =====================================
 #pragma once
 
