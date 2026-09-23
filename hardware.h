@@ -16,9 +16,13 @@
 /* ========================================================================
  * HARDWARE SELECTION
  *
- * Select the harware module and its version to compile the sofware.
- * Uncomment the corresponding line of the module and the used harware version. 
+ * Arduino IDE: uncomment the module and version below.
+ * PlatformIO:  `pio run -e <env>` sets MODULE and *_MODULE_VERSION via
+ *              build flags (see platformio.ini). Those flags win here so
+ *              one checkout can build every Loco-CAN module.
  */
+
+#if !defined(PIOENV)
 
 
 /* ========================================================================
@@ -138,6 +142,12 @@
 /* ===== MODULE VERSIONS ===== */
 // #define DRIVE_MODULE_VERSION V_2_0
 /* ===================================================================== */
+
+#endif /* !PIOENV */
+
+#if !defined(MODULE)
+	#error "Select a module in hardware.h or build a PlatformIO environment"
+#endif
 
 
 /* ====================================================================== */
