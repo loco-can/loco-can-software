@@ -7,6 +7,9 @@
  */
 
 #include "../../config.h"
+
+#ifdef MODULE_GAUGE_H
+
 #include "main.h"
 
 
@@ -63,3 +66,5 @@ void GAUGE::update(CAN_MESSAGE message) {
 
 	can_message = message;
 }
+
+#endif /* MODULE_GAUGE_H */
