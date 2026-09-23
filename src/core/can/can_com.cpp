@@ -31,6 +31,7 @@
  */
 CAN_COM::CAN_COM() {
 	create_uuid();
+	_alive = false;
 }
 
 
@@ -43,6 +44,7 @@ CAN_COM::CAN_COM(uint8_t CS, uint8_t INT) {
 
 	setPorts(CS, INT);
 	create_uuid();
+	_alive = false;
 }
 
 
@@ -193,6 +195,7 @@ long CAN_COM::uuid(void) {
  */
 void CAN_COM::set_alive(uint16_t alive_timeout) {
 	_alive_timeout.begin(alive_timeout);
+	_alive = false;
 }
 
 
@@ -253,9 +256,11 @@ uint16_t CAN_COM::read(CAN_MESSAGE &message) {
 		// add(message);
 	}
 
-	// assume no message > uuid=0
+	// no frame, or a frame that did not match a filter
 	else {
+		message.id = 0;
 		message.uuid = 0;
+		message.size = 0;
 	}
 
 	return filter;
@@ -341,14 +346,18 @@ bool CAN_COM::send(uint32_t id, uint8_t* data, uint8_t size) {
 bool CAN_COM::fetch(CAN_MESSAGE &message) {
 
 	uint8_t i;
-	uint8_t size;
 	uint32_t can_id;
 
 	_alive = !_alive_timeout.check();
 
-	size = _can_handler.parsePacket();
+	/*
+	 * A heartbeat is a valid frame with DLC 0. parsePacket() returns that
+	 * length, which is also what an empty mailbox used to look like.
+	 * packetId() < 0 is the empty mailbox (set by the platform driver).
+	 */
+	_can_handler.parsePacket();
 
-	if (!size) {
+	if (_can_handler.packetId() < 0) {
 		message.id = 0;
 		message.uuid = 0;
 		message.size = 0;

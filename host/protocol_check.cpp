@@ -77,5 +77,11 @@ int main(void) {
 
 	printf("LocoCAN protocol host check ok (drive=0x%03X wifi-now=%u)\n",
 		CAN_ID_DRIVE, WIFI_NOW_WIRE_SIZE);
+
+	int controller_logic_check(void);
+	if (controller_logic_check() != 0) {
+		return 1;
+	}
+
 	return 0;
 }

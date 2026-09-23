@@ -61,16 +61,24 @@ void LocoCANcore::begin(void) {
 
 void LocoCANcore::update(void) {
 
-	can_message.uuid = 0;
-
-//	can.read(can_message);
+	bool got = false;
 
 	/*
-	 * update registered functions
+	 * Drain the hardware mailbox. fetch() keeps DLC-0 heartbeats, which
+	 * read() would also filter. Each frame is handed to the module so a
+	 * controller can follow heartbeats and vehicle status. With a quiet
+	 * bus the module still runs once, to sample switches and send.
 	 */
+	while (can.fetch(can_message)) {
+		got = true;
+		_module.update(can_message);
+	}
 
-	// ==========================
-	// update module
-	_module.update(can_message);
+	if (!got) {
+		can_message.id = 0;
+		can_message.uuid = 0;
+		can_message.size = 0;
+		_module.update(can_message);
+	}
 
 }

@@ -17,58 +17,45 @@
 
 
 ANALOGSWITCH::ANALOGSWITCH(void) {
-	_port = false;
+	_port = 0;
+	_pos_count = 0;
 }
 
 
 // start at port number
 void ANALOGSWITCH::begin(uint8_t port) {
 	_port = port;
+	_pos_count = 0;
 
 	pinMode(_port, INPUT);
 }
 
 
 // get switch position
+// 0 is the learned point with the lowest voltage
 uint8_t ANALOGSWITCH::get(void) {
 
-	uint8_t i = 0;
-
-	// get analog value
 	uint16_t analogval = get_analog();
 
-	// calculate switch position
-	// iterate positions
-	while (i < _pos_count) {
-
-		// first entry
-		if (i == 0) {
-
-			if (analogval < ((_positions[i] + _positions[i + 1]) / 2)) {
-				return i;
-			}
-		}
-
-		// last entry
-		else if (i == _pos_count) {
-
-			if (analogval >= ((_positions[i - 1] + _positions[i]) / 2) && analogval < ((_positions[i] + _positions[i + 1]) / 2)) {
-				return i;
-			}
-		}
-
-		// entry between
-		else {
-
-			if (analogval >= ((_positions[i - 1] + _positions[i]) / 2) && analogval <= PLATFORM_ANALOG_RESOLUTION) {
-				return i;
-			}
-		}
-
-		i++;
+	if (_pos_count == 0) {
+		return 0;
 	}
 
-	return i;
+	uint8_t nearest = 0;
+	uint16_t best = 0xFFFF;
+
+	for (uint8_t i = 0; i < _pos_count; i++) {
+		uint16_t pos = _positions[i];
+		uint16_t dist = (analogval > pos) ? (uint16_t)(analogval - pos) : (uint16_t)(pos - analogval);
+
+		if (dist < best) {
+			best = dist;
+			nearest = i;
+		}
+	}
+
+	// _positions is sorted descending, so flip the index
+	return (uint8_t)((_pos_count - 1) - nearest);
 }
 
 
@@ -132,7 +119,16 @@ void ANALOGSWITCH::_sort(void) {
 }
 
 int ANALOGSWITCH::_compare(const void *a, const void *b) {
-    return (*(int *)b - *(int *)a);
+	uint16_t va = *(const uint16_t *)a;
+	uint16_t vb = *(const uint16_t *)b;
+
+	if (va < vb) {
+		return 1;
+	}
+	if (va > vb) {
+		return -1;
+	}
+	return 0;
 }
 
 
