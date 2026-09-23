@@ -59,6 +59,10 @@
 		CanFrame frame = { 0 };
 
 		if (!ESP32Can.readFrame(frame, 0)) {
+			_rxId = -1;
+			_rxExtended = false;
+			_rxLength = 0;
+			_rxIndex = 0;
 			return 0;
 		}
 

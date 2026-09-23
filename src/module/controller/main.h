@@ -96,7 +96,8 @@ status
 	off
 	locked
 	standby
-	not nulled
+	nulled
+	on
 	ready
 	moving
 	setup
@@ -115,15 +116,6 @@ buttons
 
 #ifndef MODULE_CONTROLLER_H
 #define MODULE_CONTROLLER_H
-
-
-#define CONTROLLER_STATUS_OFF 0
-#define CONTROLLER_STATUS_LOCKED 1
-#define CONTROLLER_STATUS_STANDBY 2
-#define CONTROLLER_STATUS_NULLED 3
-#define CONTROLLER_STATUS_READY 4
-#define CONTROLLER_STATUS_MOVING 5
-#define CONTROLLER_STATUS_SETUP 6
 
 
 /* PARAMETERS
@@ -178,9 +170,13 @@ buttons
 /* CORE COMPONENTS */
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
+#include "../../core/led/intelliLed.h"
 #include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
 #include "../../core/flags/flags.h"
+
+#include "status.h"
+#include "params.h"
 
 
 /* local classes */
@@ -208,16 +204,66 @@ class MODULE_CONTROLLER {
 
 	private:
 
+		void _read_controls(void);
+		void _handle_can(CAN_MESSAGE message);
+		void _note_vehicle(uint16_t uuid, uint8_t status);
+		void _refresh_vehicles(void);
+		void _step_setup(uint8_t previous);
+		void _send_drive(bool fault);
+		void _send_signal(void);
+		void _send_light(void);
+		void _send_setup(bool disable);
+		void _apply_instrument(uint8_t light);
+		uint16_t _main_loco(void);
+		void _load_params(void);
+		void _save_params(void);
+		void _apply_params(void);
+		void _handle_setup(CAN_MESSAGE message);
+
 		CAN_MESSAGE _message;
 
 		// the controller status
 		uint8_t _status;
+		bool _nulled;
+		bool _system_error;
+		bool _horn_emergency;
+		bool _can_emergency;
+		bool _vehicle_error;
+		bool _bus_moving;
+		bool _foreign;
+		bool _fault_frame;
+		bool _setup_release;
+		bool _setup_ignore_release;
+
+		uint8_t _mains;
+		uint8_t _dir;
+		uint8_t _dir_latched;
+		bool _horn;
+		bool _horn2;
+		uint8_t _horn_event;
+		uint8_t _horn2_event;
+		uint8_t _light_pos;
+		uint8_t _light2_pos;
+		uint16_t _drive_value;
+		uint16_t _break_value;
+		uint16_t _power_value;
+		uint8_t _vehicle_count;
+		uint8_t _setup_index;
+
+		struct {
+			uint16_t uuid;
+			uint8_t status;
+			uint32_t seen;
+		} _vehicles[CONTROLLER_MAX_VEHICLES];
 
 		// additional flags
 		FLAGS _controller_flags;
 
 		INTELLITIMEOUT _heartbeat_time;
 		INTELLITIMEOUT _drive_time;
+		INTELLITIMEOUT _foreign_timeout;
+
+		CONTROLLER_PARAMS _params;
 
 		ANALOGSWITCH _mains_switch;
 		ANALOGSWITCH _dir_switch;
@@ -225,8 +271,14 @@ class MODULE_CONTROLLER {
 		INTELLIBUTTON _horn2_switch;
 
 		ANALOGSWITCH _light_switch;
-		INTELLIBUTTON _light2_switch;
-		INTELLIBUTTON _instrument_switch;
+		ANALOGSWITCH _light2_switch;
+
+#if defined(CONTROLLER_STATUS_RED_PORT) && defined(CONTROLLER_STATUS_GREEN_PORT)
+		void _update_led(void);
+
+		INTELLILED _status_led;
+		uint8_t _led_mode;
+#endif
 };
 
 #endif

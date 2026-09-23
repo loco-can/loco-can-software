@@ -220,7 +220,9 @@ int ESP32SJA1000Class::endPacket()
 int ESP32SJA1000Class::parsePacket()
 {
   if ((readRegister(REG_SR) & 0x01) != 0x01) {
-    // no packet
+    // no packet — packetId() < 0 tells callers the mailbox is empty,
+    // including when a real frame has DLC 0
+    _rxId = -1;
     return 0;
   }
 
