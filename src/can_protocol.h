@@ -24,10 +24,9 @@
 #define CAN_ID_EMERGENCY 0x000
 
 // high priority values
-#define CAN_ID_CURRENT 0x100
+#define CAN_ID_MODULE_CURRENT 0x100
 #define CAN_ID_MOTOR_CURRENT 0x110
 #define CAN_ID_BATT_CURRENT 0x120
-#define CAN_ID_LIGHT_CURRENT 0x130
 
 // mid priority values 
 #define CAN_ID_SPEED 0x200
