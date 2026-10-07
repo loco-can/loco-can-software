@@ -64,8 +64,9 @@
 
 	// ======================================
 	// CONTROL FUNCTION PARAMETERS
-	// digital intput/output
-	// not used
+	// digital outputs, mapped to a CAN bit (see function.h)
+	// defaults: light_low_front, light_low_back,
+	// light_back_front, light_back_back, horn_low, horn_high
 	#define SWITCH_PORT_COUNT 6
 
 	#define LIGHT1 2
@@ -115,8 +116,9 @@
 
 	// ======================================
 	// CONTROL FUNCTION PARAMETERS
-	// digital intput/output
-	// not used
+	// digital outputs, mapped to a CAN bit (see function.h)
+	// defaults: light_low_front, light_low_back,
+	// light_back_front, light_back_back, horn_low, horn_high
 	#define SWITCH_PORT_COUNT 6
 
 	#define LIGHT1 2
@@ -165,8 +167,9 @@
 
 	// ======================================
 	// CONTROL FUNCTION PARAMETERS
-	// digital intput/output
-	// not used
+	// digital outputs, mapped to a CAN bit (see function.h)
+	// defaults: light_low_front, light_low_back,
+	// light_back_front, light_back_back, horn_low, horn_high
 	#define SWITCH_PORT_COUNT 6
 
 	#define LIGHT1 2
