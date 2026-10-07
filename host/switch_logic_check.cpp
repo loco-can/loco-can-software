@@ -81,14 +81,13 @@ int switch_logic_check(void) {
 	expect_true("above limit trips", switch_current_over(20001, 20000));
 
 	uint8_t packed[SWITCH_CURRENT_FRAME];
-	switch_current_pack(10000, 20000, packed);
-	expect_u8("half percent high", packed[0], 0x01);
-	expect_u8("half percent low", packed[1], 0xF4);
-	expect_u8("limit high", packed[2], 0x4E);
-	expect_u8("limit low", packed[3], 0x20);
-	expect_u16("unpack half", switch_current_unpack(packed), 10000);
-	switch_current_pack(60000, 1000, packed);
-	expect_u16("percent saturates", (uint16_t)(((packed[0] & 0x07) << 8) | packed[1]), SWITCH_CURRENT_PERCENT_MAX);
+	switch_current_pack(10000, 30000, packed);
+	expect_u8("current low", packed[0], 0x10);
+	expect_u8("current high", packed[1], 0x27);
+	expect_u8("scale low", packed[2], 0x30);
+	expect_u8("scale high", packed[3], 0x75);
+	expect_u16("unpack current", switch_current_unpack(packed), 10000);
+	expect_u16("current id", (uint16_t)SWITCH_CURRENT_ID, (uint16_t)CAN_ID_MODULE_CURRENT);
 
 	SWITCH_BUS bus;
 	switch_bus_clear(bus);

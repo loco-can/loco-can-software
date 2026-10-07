@@ -26,29 +26,16 @@ bool switch_current_over(uint16_t milliamp, uint16_t max_milliamp) {
 }
 
 
-void switch_current_pack(uint16_t milliamp, uint16_t max_milliamp, uint8_t out[SWITCH_CURRENT_FRAME]) {
+void switch_current_pack(uint16_t milliamp, uint16_t full_scale_ma, uint8_t out[SWITCH_CURRENT_FRAME]) {
 
-	uint16_t percentage = 0;
-
-	if (max_milliamp > 0) {
-		uint32_t scaled = ((uint32_t)milliamp * SWITCH_CURRENT_PERCENT_FULL) / max_milliamp;
-		if (scaled > SWITCH_CURRENT_PERCENT_MAX) {
-			scaled = SWITCH_CURRENT_PERCENT_MAX;
-		}
-		percentage = (uint16_t)scaled;
-	}
-
-	out[0] = (uint8_t)((percentage >> 8) & 0x07);
-	out[1] = (uint8_t)(percentage & 0xFF);
-	out[2] = (uint8_t)((max_milliamp >> 8) & 0xFF);
-	out[3] = (uint8_t)(max_milliamp & 0xFF);
+	out[0] = (uint8_t)(milliamp & 0xFF);
+	out[1] = (uint8_t)((milliamp >> 8) & 0xFF);
+	out[2] = (uint8_t)(full_scale_ma & 0xFF);
+	out[3] = (uint8_t)((full_scale_ma >> 8) & 0xFF);
 }
 
 
 uint16_t switch_current_unpack(const uint8_t data[SWITCH_CURRENT_FRAME]) {
 
-	uint16_t percentage = (uint16_t)(((uint16_t)(data[0] & 0x07) << 8) | data[1]);
-	uint16_t reference = (uint16_t)(((uint16_t)data[2] << 8) | data[3]);
-
-	return (uint16_t)(((uint32_t)percentage * reference) / SWITCH_CURRENT_PERCENT_FULL);
+	return (uint16_t)data[0] | ((uint16_t)data[1] << 8);
 }

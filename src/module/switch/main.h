@@ -24,14 +24,14 @@
 	trailing end.
 
 	The module current is read on the analog current input and sent
-	as CAN_ID_LIGHT_CURRENT. max_current (milliamps) is stored in
+	as CAN_ID_MODULE_CURRENT. max_current (milliamps) is stored in
 	EEPROM. A higher reading shuts every output off until the current
 	has stayed at or below the limit for one second.
  */
 
 /* PARAMETERS
 	SWITCH_PORT_COUNT
-	LIGHT1 .. LIGHT6    output pins, index 0 = LIGHT1
+	SWITCH1 .. SWITCH6  output pins, index 0 = SWITCH1
 	SWITCH_CURRENT_PORT analog current input
  */
 #pragma once

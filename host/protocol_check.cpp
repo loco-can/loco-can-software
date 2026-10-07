@@ -85,6 +85,9 @@ int main(void) {
 
 	int electric_logic_check(void);
 	if (electric_logic_check() != 0) {
+		return 1;
+	}
+
 	int switch_logic_check(void);
 	if (switch_logic_check() != 0) {
 		return 1;

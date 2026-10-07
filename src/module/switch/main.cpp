@@ -21,12 +21,12 @@ extern CAN_COM can;
 #endif
 
 static const uint8_t SWITCH_OUTPUT_PORT[SWITCH_OUTPUT_COUNT] = {
-	LIGHT1,
-	LIGHT2,
-	LIGHT3,
-	LIGHT4,
-	LIGHT5,
-	LIGHT6
+	SWITCH1,
+	SWITCH2,
+	SWITCH3,
+	SWITCH4,
+	SWITCH5,
+	SWITCH6
 };
 
 
@@ -160,7 +160,7 @@ void MODULE_SWITCH::_send_current(void) {
 	for (uint8_t i = 0; i < 8; i++) {
 		message.data[i] = 0;
 	}
-	switch_current_pack(_milliamp, switch_params_max_current(_params), message.data);
+	switch_current_pack(_milliamp, SWITCH_CURRENT_FULL_SCALE_MA, message.data);
 	can.send(message);
 }
 
