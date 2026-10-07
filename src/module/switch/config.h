@@ -69,12 +69,12 @@
 	// light_back_front, light_back_back, horn_low, horn_high
 	#define SWITCH_PORT_COUNT 6
 
-	#define LIGHT1 2
-	#define LIGHT2 3
-	#define LIGHT3 4
-	#define LIGHT4 5
-	#define LIGHT5 6
-	#define LIGHT6 7
+	#define SWITCH1 2
+	#define SWITCH2 3
+	#define SWITCH3 4
+	#define SWITCH4 5
+	#define SWITCH5 6
+	#define SWITCH6 7
 
 	// analog input
 	// module current, full-scale ADC = milliamps
@@ -123,12 +123,12 @@
 	// light_back_front, light_back_back, horn_low, horn_high
 	#define SWITCH_PORT_COUNT 6
 
-	#define LIGHT1 2
-	#define LIGHT2 3
-	#define LIGHT3 4
-	#define LIGHT4 5
-	#define LIGHT5 6
-	#define LIGHT6 7
+	#define SWITCH1 2
+	#define SWITCH2 3
+	#define SWITCH3 4
+	#define SWITCH4 5
+	#define SWITCH5 6
+	#define SWITCH6 7
 
 	// analog input
 	// module current, full-scale ADC = milliamps
@@ -176,12 +176,12 @@
 	// light_back_front, light_back_back, horn_low, horn_high
 	#define SWITCH_PORT_COUNT 6
 
-	#define LIGHT1 2
-	#define LIGHT2 3
-	#define LIGHT3 4
-	#define LIGHT4 5
-	#define LIGHT5 6
-	#define LIGHT6 7
+	#define SWITCH1 2
+	#define SWITCH2 3
+	#define SWITCH3 4
+	#define SWITCH4 5
+	#define SWITCH5 6
+	#define SWITCH6 7
 
 	// analog input
 	// module current, full-scale ADC = milliamps
