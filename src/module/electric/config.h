@@ -89,6 +89,20 @@
 #endif
 
 /*
+ * Battery voltage inputs. The EEPROM battery count selects how many of
+ * these are measured and published, up to ELECTRIC_BATT_MAX.
+ */
+#define ELECTRIC_BATT_0 A0
+#define ELECTRIC_BATT_1 A2
+#define ELECTRIC_BATT_2 A6
+
+/*
+ * Optional relay in the motor power line. The direct plugin opens it
+ * before a direction change. Comment the define out when it is not fitted.
+ */
+#define DRIVE_POWER 6
+
+/*
  * INCLUDE CLASS
  */
 #include "main.h"
