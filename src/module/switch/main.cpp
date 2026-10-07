@@ -21,12 +21,12 @@ extern CAN_COM can;
 #endif
 
 static const uint8_t SWITCH_OUTPUT_PORT[SWITCH_OUTPUT_COUNT] = {
-	LIGHT1,
-	LIGHT2,
-	LIGHT3,
-	LIGHT4,
-	LIGHT5,
-	LIGHT6
+	SWITCH1,
+	SWITCH2,
+	SWITCH3,
+	SWITCH4,
+	SWITCH5,
+	SWITCH6
 };
 
 
@@ -123,9 +123,65 @@ void MODULE_SWITCH::_handle_setup(CAN_MESSAGE message) {
 }
 
 
+void MODULE_SWITCH::_sample_current(void) {
+
+	uint16_t raw = analogRead(SWITCH_CURRENT_PORT);
+	uint16_t limit = switch_params_max_current(_params);
+
+	_milliamp = switch_current_from_adc(raw, PLATFORM_ANALOG_RESOLUTION, SWITCH_CURRENT_FULL_SCALE_MA);
+
+	if (switch_current_over(_milliamp, limit)) {
+		if (!_overcurrent) {
+			_overcurrent = true;
+			#ifdef DEBUG
+				Serial.print("> switch overcurrent mA ");
+				Serial.println(_milliamp);
+			#endif
+			_send_emergency();
+			_send_current();
+		}
+		_overcurrent_hold.retrigger();
+	}
+	else if (_overcurrent && _overcurrent_hold.check()) {
+		_overcurrent = false;
+	}
+}
+
+
+void MODULE_SWITCH::_send_current(void) {
+
+	CAN_MESSAGE message;
+
+	_current_time.retrigger();
+
+	message.id = SWITCH_CURRENT_ID;
+	message.uuid = 0;
+	message.size = SWITCH_CURRENT_FRAME;
+	for (uint8_t i = 0; i < 8; i++) {
+		message.data[i] = 0;
+	}
+	switch_current_pack(_milliamp, SWITCH_CURRENT_FULL_SCALE_MA, message.data);
+	can.send(message);
+}
+
+
+void MODULE_SWITCH::_send_emergency(void) {
+
+	CAN_MESSAGE message;
+
+	message.id = CAN_ID_EMERGENCY;
+	message.uuid = 0;
+	message.size = 0;
+	for (uint8_t i = 0; i < 8; i++) {
+		message.data[i] = 0;
+	}
+	can.send(message);
+}
+
+
 void MODULE_SWITCH::_write_outputs(void) {
 
-	bool enable = _bus.alive && !_bus_timeout.check();
+	bool enable = !_overcurrent && _bus.alive && !_bus_timeout.check();
 
 	for (uint8_t i = 0; i < SWITCH_OUTPUT_COUNT; i++) {
 		bool on = enable && switch_output_level(switch_params_map(_params, i), _bus);
@@ -143,11 +199,17 @@ void MODULE_SWITCH::begin(void) {
 
 	switch_bus_clear(_bus);
 	_bus_timeout.begin(CAN_ALIVE_TIMEOUT);
+	_current_time.begin(SWITCH_CURRENT_PERIOD_MS);
+	_overcurrent_hold.begin(SWITCH_OVERCURRENT_HOLD_MS);
+	_milliamp = 0;
+	_overcurrent = false;
 
 	for (uint8_t i = 0; i < SWITCH_OUTPUT_COUNT; i++) {
 		pinMode(SWITCH_OUTPUT_PORT[i], OUTPUT);
 		digitalWrite(SWITCH_OUTPUT_PORT[i], LOW);
 	}
+
+	pinMode(SWITCH_CURRENT_PORT, INPUT);
 
 	can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
 	can.register_filter(CAN_ID_MASK, CAN_ID_SIGNAL);
@@ -189,6 +251,12 @@ void MODULE_SWITCH::update(CAN_MESSAGE message) {
 				_bus_timeout.retrigger();
 			}
 		}
+	}
+
+	_sample_current();
+
+	if (_current_time.check()) {
+		_send_current();
 	}
 
 	_write_outputs();

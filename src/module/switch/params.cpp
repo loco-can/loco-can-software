@@ -37,6 +37,7 @@ void switch_params_defaults(SWITCH_PARAMS &params, uint8_t module_version) {
 		params.bytes[SWITCH_PARAM_MAP + i] = SWITCH_DEFAULT_FUNCTION[i];
 	}
 
+	switch_params_set_max_current(params, SWITCH_CURRENT_MAX_DEFAULT_MA);
 	switch_params_copy_name(params, "SWITCH");
 }
 
@@ -48,6 +49,20 @@ uint8_t switch_params_map(const SWITCH_PARAMS &params, uint8_t output) {
 	}
 
 	return params.bytes[SWITCH_PARAM_MAP + output];
+}
+
+
+uint16_t switch_params_max_current(const SWITCH_PARAMS &params) {
+
+	return (uint16_t)params.bytes[SWITCH_PARAM_MAX_CURRENT]
+		| ((uint16_t)params.bytes[SWITCH_PARAM_MAX_CURRENT + 1] << 8);
+}
+
+
+void switch_params_set_max_current(SWITCH_PARAMS &params, uint16_t milliamp) {
+
+	params.bytes[SWITCH_PARAM_MAX_CURRENT] = (uint8_t)(milliamp & 0xFF);
+	params.bytes[SWITCH_PARAM_MAX_CURRENT + 1] = (uint8_t)((milliamp >> 8) & 0xFF);
 }
 
 
@@ -214,7 +229,7 @@ SWITCH_PARAM_RESULT switch_params_on_can(
 		if (at == SWITCH_PARAM_VERSION && message.data[2 + i] != module_version) {
 			return result;
 		}
-		if (at != SWITCH_PARAM_VERSION && !switch_map_valid(message.data[2 + i])) {
+		if (at >= SWITCH_PARAM_MAP && at < SWITCH_PARAM_MAX_CURRENT && !switch_map_valid(message.data[2 + i])) {
 			return result;
 		}
 	}
