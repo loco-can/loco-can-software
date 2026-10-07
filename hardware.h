@@ -91,7 +91,9 @@
  * to a bit of a CAN message. The mapping is a CAN setting stored in
  * EEPROM. Defaults are light_low_front, light_low_back,
  * light_back_front, light_back_back, horn_low and horn_high.
- * Front and back follow the drive direction. 
+ * Front and back follow the drive direction. The module current is
+ * sent on the bus, and every output switches off when it exceeds
+ * the max_current value stored in EEPROM. 
  */
 // #define MODULE SWITCH_MODULE
 

@@ -77,8 +77,10 @@
 	#define LIGHT6 7
 
 	// analog input
-	// CURRENT
+	// module current, full-scale ADC = milliamps
 	#define C1 A0
+	#define SWITCH_CURRENT_PORT C1
+	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
 
 #elif SWITCH_MODULE_VERSION == V_2_0
@@ -129,8 +131,10 @@
 	#define LIGHT6 7
 
 	// analog input
-	// CURRENT
+	// module current, full-scale ADC = milliamps
 	#define C1 A0
+	#define SWITCH_CURRENT_PORT C1
+	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
 #elif SWITCH_MODULE_VERSION == V_2_1
 
@@ -180,8 +184,10 @@
 	#define LIGHT6 7
 
 	// analog input
-	// CURRENT
+	// module current, full-scale ADC = milliamps
 	#define C1 A0
+	#define SWITCH_CURRENT_PORT C1
+	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
 #else
 	#error "No valid board version selected"

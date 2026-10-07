@@ -2,6 +2,7 @@
  * Host checks for switch output functions and CAN settings.
  */
 
+#include "module/switch/current.h"
 #include "module/switch/function.h"
 #include "module/switch/params.h"
 
@@ -11,6 +12,13 @@
 static int g_fails = 0;
 
 static void expect_u8(const char *name, uint8_t got, uint8_t want) {
+	if (got != want) {
+		fprintf(stderr, "FAIL %s: %u, want %u\n", name, got, want);
+		g_fails++;
+	}
+}
+
+static void expect_u16(const char *name, uint16_t got, uint16_t want) {
 	if (got != want) {
 		fprintf(stderr, "FAIL %s: %u, want %u\n", name, got, want);
 		g_fails++;
@@ -64,7 +72,23 @@ int switch_logic_check(void) {
 	expect_u8("out4", switch_params_map(params, 3), SWITCH_FUNC_LIGHT_BACK_BACK);
 	expect_u8("out5", switch_params_map(params, 4), SWITCH_FUNC_HORN_LOW);
 	expect_u8("out6", switch_params_map(params, 5), SWITCH_FUNC_HORN_HIGH);
+	expect_u16("default max current", switch_params_max_current(params), SWITCH_CURRENT_MAX_DEFAULT_MA);
 	expect_true("default name", params.name[0] == 'S' && params.name[5] == 'H' && params.name[6] == 0);
+
+	expect_u16("adc zero", switch_current_from_adc(0, 1024, 30000), 0);
+	expect_u16("adc full", switch_current_from_adc(1023, 1024, 30000), 30000);
+	expect_true("at limit stays on", !switch_current_over(20000, 20000));
+	expect_true("above limit trips", switch_current_over(20001, 20000));
+
+	uint8_t packed[SWITCH_CURRENT_FRAME];
+	switch_current_pack(10000, 20000, packed);
+	expect_u8("half percent high", packed[0], 0x01);
+	expect_u8("half percent low", packed[1], 0xF4);
+	expect_u8("limit high", packed[2], 0x4E);
+	expect_u8("limit low", packed[3], 0x20);
+	expect_u16("unpack half", switch_current_unpack(packed), 10000);
+	switch_current_pack(60000, 1000, packed);
+	expect_u16("percent saturates", (uint16_t)(((packed[0] & 0x07) << 8) | packed[1]), SWITCH_CURRENT_PERCENT_MAX);
 
 	SWITCH_BUS bus;
 	switch_bus_clear(bus);
@@ -153,6 +177,17 @@ int switch_logic_check(void) {
 	request.data[7] = 0;
 	SWITCH_PARAM_RESULT named = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
 	expect_true("name stored", named.changed && params.name[0] == 'L' && params.name[3] == 'P' && params.name[4] == 0);
+
+	request.id = (uint32_t)(CAN_ID_SETUP | SWITCH_PARAM_MAX_CURRENT);
+	request.size = 4;
+	request.data[0] = 0x12;
+	request.data[1] = 0x34;
+	request.data[2] = 0x88;
+	request.data[3] = 0x13;
+	SWITCH_PARAM_RESULT limit = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	expect_true("max current stored", limit.changed);
+	expect_u16("max current value", switch_params_max_current(params), 5000);
+	expect_u8("map survives limit write", switch_params_map(params, 0), SWITCH_FUNC_HORN_HIGH);
 
 	if (g_fails == 0) {
 		printf("switch function and settings check ok\n");

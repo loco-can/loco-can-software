@@ -22,11 +22,17 @@
 	Direction is CONTROL_DIR_FLAG in the drive frame (0 = forward).
 	Headlamps light on the leading end. Tail lamps light on the
 	trailing end.
+
+	The module current is read on the analog current input and sent
+	as CAN_ID_LIGHT_CURRENT. max_current (milliamps) is stored in
+	EEPROM. A higher reading shuts every output off until the current
+	has stayed at or below the limit for one second.
  */
 
 /* PARAMETERS
 	SWITCH_PORT_COUNT
 	LIGHT1 .. LIGHT6    output pins, index 0 = LIGHT1
+	SWITCH_CURRENT_PORT analog current input
  */
 #pragma once
 
@@ -42,6 +48,7 @@
 #include "../../core/can/can_com.h"
 #include "../../core/timeout/intellitimeout.h"
 
+#include "current.h"
 #include "params.h"
 
 
@@ -59,11 +66,18 @@ class MODULE_SWITCH {
 		void _load_params(void);
 		void _save_params(void);
 		void _handle_setup(CAN_MESSAGE message);
+		void _sample_current(void);
+		void _send_current(void);
+		void _send_emergency(void);
 		void _write_outputs(void);
 
 		SWITCH_PARAMS _params;
 		SWITCH_BUS _bus;
 		INTELLITIMEOUT _bus_timeout;
+		INTELLITIMEOUT _current_time;
+		INTELLITIMEOUT _overcurrent_hold;
+		uint16_t _milliamp;
+		bool _overcurrent;
 
 };
 
