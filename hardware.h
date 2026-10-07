@@ -87,9 +87,11 @@
 /* ========================================================================
  * SWITCH MODULE
  *
- * The switch module offers six 5 Ampere outputs. The outputs can be mapped
- * to all switching operations, that are defined in the CAN protocol.
- * The default mapping is for switching lights. 
+ * The switch module offers six 5 Ampere outputs. Each output is mapped
+ * to a bit of a CAN message. The mapping is a CAN setting stored in
+ * EEPROM. Defaults are light_low_front, light_low_back,
+ * light_back_front, light_back_back, horn_low and horn_high.
+ * Front and back follow the drive direction. 
  */
 // #define MODULE SWITCH_MODULE
 

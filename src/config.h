@@ -79,7 +79,7 @@ Versions:
 
 
 /* ========================================================================
-MOTOR MODULE
+ELECTRIC MOTOR MODULE
 	The motor module is the interface to control an external power driver
 	to the Loco-CAN system.
 
