@@ -2,3 +2,6 @@ libraries
 .pio
 /data
 *.ino.cpp
+node_modules
+/src/module/programmer/data/**
+!/src/module/programmer/data/README.md

@@ -122,6 +122,7 @@ A module is defined in the config.h header file.
 The same tree builds in Arduino IDE and in [PlatformIO](https://platformio.org). IDs in `src/can_protocol.h` stay compatible with the [loco-can/LocoCAN](https://github.com/loco-can/LocoCAN) library so the programmer Platform UI and other host tools share one protocol.
 
 ```bash
+npm run firmware                  # pack Next.js UI into LittleFS data/ (needs ../programmer)
 pio run -e programmer_v3          # ESP32-S3 programmer + WiFi UI
 pio run -e programmer_v3 -t upload
 pio run -e programmer_v3 -t uploadfs   # LittleFS UI from src/module/programmer/data

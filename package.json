@@ -1,0 +1,11 @@
+{
+  "name": "loco-can-software",
+  "private": true,
+  "description": "Loco-CAN module firmware",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "firmware": "node scripts/pack-firmware.mjs"
+  }
+}

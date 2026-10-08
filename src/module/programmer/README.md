@@ -59,13 +59,13 @@ pio run -e programmer_v3 -t uploadfs
 
 ## Pack and upload the webservice
 
-From the repository root:
+The Next.js UI is not in this firmware tree. Clone it next to this repository as `../programmer` (or set `LOCO_CAN_PROGRAMMER_UI`), then from **this** repository root:
 
 ```bash
 npm run firmware
 ```
 
-That writes a gzipped static export to `firmware/module/programmer/data/`. For Arduino IDE, copy that folder to `data/` next to `loco-can-software.ino` (Arduino LittleFS looks next to the sketch, not inside the module). Then upload the filesystem:
+That builds the UI, gzip-packs it, and copies the LittleFS image to `src/module/programmer/data/` (PlatformIO) and `data/` next to `loco-can-software.ino` (Arduino IDE). Then upload the filesystem:
 
 - Arduino IDE: **Tools → ESP32 Sketch Data Upload** (LittleFS)
 - PlatformIO: `pio run -e programmer_v3 -t uploadfs`
