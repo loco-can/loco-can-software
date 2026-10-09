@@ -1,11 +1,10 @@
 #pragma once
 
-#ifndef EEPROM_H
-#define EEPROM_H
+#ifndef EEPROM_SETUP_H
+#define EEPROM_SETUP_H
 
 
 #include <Arduino.h>
-#include <EEPROM.h>
 
 class EEPROM_SETUP {
 

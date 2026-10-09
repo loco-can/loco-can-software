@@ -1,4 +1,5 @@
 #include "eeprom_setup.h"
+#include <EEPROM.h>
 
 EEPROM_SETUP::EEPROM_SETUP(void) {}
 

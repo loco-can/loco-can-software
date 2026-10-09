@@ -226,7 +226,7 @@ void MODULE_CONTROLLER::begin(void) {
 		Serial.println("start function/controller");
 	#endif
 
-	can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT_CURRENT);
+	can.register_filter(CAN_ID_MASK, CAN_ID_MODULE_CURRENT);
 	can.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
 	can.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_HEARTBEAT);
 	can.register_filter(CAN_ID_MASK, CAN_ID_VEHICLE_STATUS);

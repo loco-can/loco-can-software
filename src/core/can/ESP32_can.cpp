@@ -108,7 +108,8 @@
 			frame.data[i] = message.data[i];
 		}
 
-		return ESP32Can.writeFrame(frame);
+		/* 0 = non-blocking: a silent bus must not stall the HTTP server */
+		return ESP32Can.writeFrame(frame, 0);
 	}
 
 

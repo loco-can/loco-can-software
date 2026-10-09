@@ -35,8 +35,8 @@ static const char PROGRAMMER_FALLBACK_HTML[] PROGMEM =
 	"</body></html>";
 
 static const char *programmer_mime(const String &path) {
-	if (path.endsWith(".html")) return "text/html";
-	if (path.endsWith(".js")) return "application/javascript";
+	if (path.endsWith(".html")) return "text/html; charset=utf-8";
+	if (path.endsWith(".js")) return "text/javascript";
 	if (path.endsWith(".css")) return "text/css";
 	if (path.endsWith(".woff2")) return "font/woff2";
 	if (path.endsWith(".woff")) return "font/woff";
@@ -247,6 +247,7 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 
 	WiFi.persistent(false);
 	WiFi.mode(WIFI_AP);
+	WiFi.setSleep(false);
 	WiFi.softAPConfig(
 		IPAddress(192, 168, 4, 1),
 		IPAddress(192, 168, 4, 1),
@@ -256,7 +257,8 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 
 	_dns.start(53, "*", WiFi.softAPIP());
 
-	_fs_ok = LittleFS.begin(true);
+	/* format-on-fail would wipe a freshly uploaded LittleFS image */
+	_fs_ok = LittleFS.begin(false);
 
 	_http.on("/api/status", HTTP_GET, []() {
 		if (programmer_web) programmer_web->_http_status();
@@ -270,6 +272,9 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 	_http.onNotFound([]() {
 		if (programmer_web) programmer_web->_http_static();
 	});
+	static const char *header_keys[] = { "Accept-Encoding" };
+	_http.collectHeaders(header_keys, 1);
+	_http.enableCORS(true);
 	_http.begin();
 
 	#ifdef DEBUG
@@ -472,12 +477,17 @@ bool MODULE_PROGRAMMER::_http_send_file(const String &uri) {
 	String gz = path + ".gz";
 	String open_path;
 	bool gzip = false;
+	const String accept = _http.header("Accept-Encoding");
+	const bool want_gzip = accept.indexOf("gzip") >= 0;
 
-	if (LittleFS.exists(gz)) {
+	if (want_gzip && LittleFS.exists(gz)) {
 		open_path = gz;
 		gzip = true;
 	} else if (LittleFS.exists(path)) {
 		open_path = path;
+	} else if (LittleFS.exists(gz)) {
+		open_path = gz;
+		gzip = true;
 	} else {
 		return false;
 	}
@@ -487,6 +497,7 @@ bool MODULE_PROGRAMMER::_http_send_file(const String &uri) {
 		return false;
 	}
 
+	const size_t len = file.size();
 	if (gzip) {
 		_http.sendHeader("Content-Encoding", "gzip");
 	}
@@ -495,7 +506,23 @@ bool MODULE_PROGRAMMER::_http_send_file(const String &uri) {
 	} else {
 		_http.sendHeader("Cache-Control", "no-cache");
 	}
-	_http.streamFile(file, programmer_mime(path));
+	_http.setContentLength(len);
+	_http.send(200, programmer_mime(path), "");
+
+	uint8_t buf[1024];
+	size_t sent = 0;
+	while (sent < len) {
+		size_t chunk = len - sent;
+		if (chunk > sizeof(buf)) {
+			chunk = sizeof(buf);
+		}
+		int n = file.read(buf, chunk);
+		if (n <= 0) {
+			break;
+		}
+		_http.client().write(buf, (size_t) n);
+		sent += (size_t) n;
+	}
 	file.close();
 	return true;
 }
