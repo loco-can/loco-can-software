@@ -28,11 +28,17 @@ void LocoCANcore::begin(void) {
 	#endif
 
 	/*
-	 * create CAN class
-	 * CAN_TX, CAN_TX and CAN_STATUS_LED are defined in the module settings h file
-	 * CAN_BUS_SPEED is set in the can_protocol.h
+	 * AVR: CAN_SS (MCP2515 chip select) and optional CAN_INT.
+	 * ESP32: CAN_RX / CAN_TX are the TWAI data pins.
+	 * CAN_BUS_SPEED is set in can_protocol.h.
 	 */
-	can.setPorts(CAN_RX, CAN_TX);
+	#ifdef MODULE_ARCH_ESP32
+		can.setPorts(CAN_RX, CAN_TX);
+	#elif defined(CAN_INT)
+		can.setPorts(CAN_SS, CAN_INT);
+	#else
+		can.setPorts(CAN_SS);
+	#endif
 	can.set_alive(CAN_ALIVE_TIMEOUT);
 	can.begin(CAN_BUS_SPEED, CAN_STATUS_LED); // start with one CAN LED
 

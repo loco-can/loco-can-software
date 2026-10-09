@@ -15,12 +15,15 @@
 	#include "arduino_can/CAN.h"
 
 
-	bool CAN_HANDLER::begin(long speed, uint16_t can_cs, uint16_t can_int) {
+	bool CAN_HANDLER::begin(long speed, uint16_t can_ss, int can_int) {
 
-		CAN.setPins(can_cs, can_int);
-		CAN.begin(speed);
-
-		return true;
+		if (can_int < 0) {
+			CAN.setPins(can_ss);
+		}
+		else {
+			CAN.setPins(can_ss, can_int);
+		}
+		return CAN.begin(speed) == 1;
 	}
 
 

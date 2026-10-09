@@ -48,6 +48,8 @@ extern CAN_MESSAGE can_message;
 
 
 #define CAN_ALIVE_TIMEOUT 500
+#define CAN_BEGIN_TRIES 10
+#define CAN_ERROR_FLASHES 5
 
 // #define CAN_COM_CS_DEFAULT 10
 // #define CAN_COM_INT_DEFAULT 2
@@ -59,10 +61,11 @@ extern CAN_MESSAGE can_message;
 class CAN_COM {
 
   public:
-    CAN_COM(void); // construct with default CS and INT port
-    CAN_COM(uint8_t CS, uint8_t INT); // user CS and INT ports
+    CAN_COM(void);
+    CAN_COM(uint8_t ss, uint8_t irq); // MCP2515 SS and INT, or ESP32 RX and TX
 
-    void setPorts(uint8_t CS, uint8_t INT); // set user CS and INT ports
+    void setPorts(uint8_t ss); // MCP2515 SS, interrupt pin not connected
+    void setPorts(uint8_t ss, uint8_t irq); // MCP2515 SS and INT, or ESP32 RX and TX
 
     bool begin(long speed, uint8_t led_port); // start communication with speed setting and status LED
     bool begin(long speed, uint8_t led_port1, uint8_t led_port2); // start communication with speed setting and r/w status LEDs
@@ -88,6 +91,7 @@ class CAN_COM {
 
     void create_uuid(void);
     bool _begin(long speed);
+    void _flash_can_led(void);
     uint16_t _read(CAN_MESSAGE &message); // receive data > true if no filter or filter match
 
     CAN_MESSAGE data2message(uint32_t id, uint16_t uuid, uint8_t* data, uint8_t size);
@@ -97,7 +101,7 @@ class CAN_COM {
     long _uuid;
 
     uint8_t _cs;
-    uint8_t _int;
+    int _int; // AVR INT pin, or -1 if not connected; ESP32 TX pin
     
     uint16_t _masks[CAN_MAX_FILTER];
     uint16_t _filters[CAN_MAX_FILTER];

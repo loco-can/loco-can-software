@@ -20,8 +20,8 @@
 class CAN_HANDLER {
 
 	public:
-		// start can communication with tx, rx ports
-		bool begin(long speed, uint16_t rx, uint16_t tx);
+		// start MCP2515; irq < 0 means INT is not connected
+		bool begin(long speed, uint16_t ss, int irq);
 		bool available(void);
 		uint16_t parsePacket(void);
 		bool packetExtended(void);

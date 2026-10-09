@@ -115,8 +115,8 @@ SETUP
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_RX 10
-	#define CAN_TX 2
+	#define CAN_SS 10
+	#define CAN_INT 2
 	#define CAN_STATUS_LED 5
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
@@ -173,8 +173,8 @@ SETUP
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_RX 10
-	#define CAN_TX 2
+	#define CAN_SS 10
+	#define CAN_INT 2
 	#define CAN_STATUS_LED 5
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
@@ -230,8 +230,8 @@ SETUP
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_RX 10
-	#define CAN_TX 2
+	#define CAN_SS 10
+	#define CAN_INT 2
 	#define CAN_STATUS_LED 5
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8

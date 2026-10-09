@@ -92,8 +92,8 @@ There is a definition block for each hardware version, which may differ in terms
 		#define MODULE_PLATFORM_ATMEGA
 		#define PLATFORM_ANALOG_RESOLUTION 1024
 
-		#define CAN_RX 10
-		#define CAN_TX 2
+		#define CAN_SS 10
+		#define CAN_INT 2
 		#define CAN_STATUS_LED 5
 		#define CAN_MAX_FILTER 8
 		#define CAN_BUFFER_SIZE 8

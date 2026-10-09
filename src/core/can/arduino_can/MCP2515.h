@@ -47,7 +47,7 @@ public:
   virtual int sleep();
   virtual int wakeup();
 
-  void setPins(int cs = MCP2515_DEFAULT_CS_PIN, int irq = MCP2515_DEFAULT_INT_PIN);
+  void setPins(int cs, int irq = -1);
   void setSPIFrequency(uint32_t frequency);
   void setClockFrequency(long clockFrequency);
 

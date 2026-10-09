@@ -32,28 +32,32 @@
 CAN_COM::CAN_COM() {
 	create_uuid();
 	_alive = false;
+	_int = -1;
 }
 
 
 /*
  * create CAN communication
- * Arduino set CS and INT ports MCP2515
- * ESP32 set RX and TX pins
+ * Arduino: MCP2515 SS and INT
+ * ESP32: RX and TX pins
  */
-CAN_COM::CAN_COM(uint8_t CS, uint8_t INT) {
+CAN_COM::CAN_COM(uint8_t ss, uint8_t irq) {
 
-	setPorts(CS, INT);
+	setPorts(ss, irq);
 	create_uuid();
 	_alive = false;
 }
 
 
-/*
- * set CS and INT for can class
- */
-void CAN_COM::setPorts(uint8_t CS, uint8_t INT) {
-	_cs = CS;
-	_int = INT;
+void CAN_COM::setPorts(uint8_t ss) {
+	_cs = ss;
+	_int = -1;
+}
+
+
+void CAN_COM::setPorts(uint8_t ss, uint8_t irq) {
+	_cs = ss;
+	_int = irq;
 }
 
 
@@ -102,38 +106,60 @@ bool CAN_COM::_begin(long speed) {
 	Serial.println(" bps");
 
 	#ifdef MODULE_ARCH_ESP32
-		Serial.print("  > using SJA1000 RX ");
+		Serial.print("  > using TWAI RX ");
 		Serial.print(_cs);
 		Serial.print(" - TX ");
 		Serial.println(_int);
 	#else
-		Serial.print("  > using MCP2551 CS ");
+		Serial.print("  > using MCP2515 SS ");
 		Serial.print(_cs);
-		Serial.print(" - INT ");
-		Serial.println(_int);
+		if (_int >= 0) {
+			Serial.print(" - INT ");
+			Serial.println(_int);
+		}
+		else {
+			Serial.println(" - INT not connected");
+		}
 	#endif
 	#endif
 	
+	uint8_t tries = 0;
+
 	while (!_can_handler.begin(speed, _cs, _int)) {
 
+		tries++;
+
 		#ifdef DEBUG
-			Serial.println("*** Starting CAN failed!");
+			#ifdef MODULE_ARCH_ESP32
+				Serial.print("*** CAN controller not answering (TWAI RX ");
+				Serial.print(_cs);
+				Serial.print(" TX ");
+				Serial.print(_int);
+			#else
+				Serial.print("*** CAN controller not answering (MCP2515 SS ");
+				Serial.print(_cs);
+				if (_int >= 0) {
+					Serial.print(" INT ");
+					Serial.print(_int);
+				}
+			#endif
+			Serial.print(") try ");
+			Serial.print(tries);
+			Serial.print('/');
+			Serial.println(CAN_BEGIN_TRIES);
 		#endif
 
-		// flash status light[s]
-		_led_r.on();
-		if (_led_w.available()) {
-			_led_w.on();
-		}
-		
-		delay(250);
+		_flash_can_led();
 
-		_led_r.off();
-		if (_led_w.available()) {
-			_led_w.off();
-		}
+		if (tries >= CAN_BEGIN_TRIES) {
+			#ifdef DEBUG
+				Serial.println("*** CAN controller failed, aborting");
+			#endif
 
-		delay(1000);
+			for (;;) {
+				_flash_can_led();
+			}
+		}
 	}
 
 
@@ -177,6 +203,24 @@ bool CAN_COM::_begin(long speed) {
 	#endif
 
 	return true;
+}
+
+
+void CAN_COM::_flash_can_led(void) {
+
+	for (uint8_t i = 0; i < CAN_ERROR_FLASHES; i++) {
+		_led_r.on();
+		if (_led_w.available()) {
+			_led_w.on();
+		}
+		delay(100);
+
+		_led_r.off();
+		if (_led_w.available()) {
+			_led_w.off();
+		}
+		delay(100);
+	}
 }
 
 

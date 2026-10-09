@@ -33,8 +33,8 @@
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
  	
-	#define CAN_RX 17
-	#define CAN_TX 18
+	#define CAN_SS 17
+	#define CAN_INT 18
 	#define CAN_STATUS_LED 46
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8

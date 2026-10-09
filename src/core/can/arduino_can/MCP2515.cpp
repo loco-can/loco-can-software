@@ -282,6 +282,10 @@ void MCP2515Class::onReceive(void(*callback)(int))
 {
   CANControllerClass::onReceive(callback);
 
+  if (_intPin < 0) {
+    return;
+  }
+
   pinMode(_intPin, INPUT);
 
   if (callback) {
