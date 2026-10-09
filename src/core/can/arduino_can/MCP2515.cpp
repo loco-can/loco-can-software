@@ -16,8 +16,12 @@
 #define REG_CNF2                   0x29
 #define REG_CNF1                   0x2a
 
+#define REG_TEC                    0x1c
+#define REG_REC                    0x1d
 #define REG_CANINTE                0x2b
 #define REG_CANINTF                0x2c
+#define REG_EFLG                   0x2d
+#define FLAG_EFLG_TXBO             0x20
 
 #define FLAG_RXnIE(n)              (0x01 << n)
 #define FLAG_RXnIF(n)              (0x01 << n)
@@ -170,6 +174,23 @@ int MCP2515Class::endPacket()
   }
 
   int n = 0;
+  uint32_t start = millis();
+
+  /*
+   * TXERR (ctrl 0x10) is set on a missing ACK or a bit error. The
+   * controller retries on its own. Aborting on that bit cancelled the
+   * heartbeat before any retry, so a slow or busy bus always looked like
+   * send() failure.
+   */
+  while (readRegister(REG_TXBnCTRL(n)) & 0x08) {
+    if ((millis() - start) > MCP2515_TX_TIMEOUT_MS) {
+      return 0;
+    }
+    if (readRegister(REG_EFLG) & FLAG_EFLG_TXBO) {
+      writeRegister(REG_CANCTRL, 0x00);
+    }
+    yield();
+  }
 
   if (_txExtended) {
     writeRegister(REG_TXBnSIDH(n), _txId >> 21);
@@ -195,39 +216,29 @@ int MCP2515Class::endPacket()
 
   writeRegister(REG_TXBnCTRL(n), 0x08);
 
-  bool aborted = false;
-  uint32_t start = millis();
+  start = millis();
 
   while (readRegister(REG_TXBnCTRL(n)) & 0x08) {
     if ((millis() - start) > MCP2515_TX_TIMEOUT_MS) {
-      aborted = true;
-      modifyRegister(REG_CANCTRL, 0x10, 0x10);
-      break;
+      #ifdef DEBUG
+        Serial.print("> CAN TX timeout ctrl=0x");
+        Serial.print(readRegister(REG_TXBnCTRL(n)), HEX);
+        Serial.print(" eflg=0x");
+        Serial.print(readRegister(REG_EFLG), HEX);
+        Serial.print(" tec=");
+        Serial.println(readRegister(REG_TEC));
+      #endif
+      /* Leave TXREQ set so the frame is still retried until a node ACKs. */
+      return 0;
     }
-
-    if (readRegister(REG_TXBnCTRL(n)) & 0x10) {
-      aborted = true;
-      modifyRegister(REG_CANCTRL, 0x10, 0x10);
+    if (readRegister(REG_EFLG) & FLAG_EFLG_TXBO) {
+      writeRegister(REG_CANCTRL, 0x00);
     }
-
     yield();
   }
 
-  if (aborted) {
-    modifyRegister(REG_CANCTRL, 0x10, 0x00);
-
-    start = millis();
-    while ((readRegister(REG_TXBnCTRL(n)) & 0x08) && ((millis() - start) < MCP2515_TX_TIMEOUT_MS)) {
-      yield();
-    }
-
-    modifyRegister(REG_CANINTF, FLAG_TXnIF(n), 0x00);
-    return 0;
-  }
-
   modifyRegister(REG_CANINTF, FLAG_TXnIF(n), 0x00);
-
-  return (readRegister(REG_TXBnCTRL(n)) & 0x70) ? 0 : 1;
+  return 1;
 }
 
 int MCP2515Class::parsePacket()

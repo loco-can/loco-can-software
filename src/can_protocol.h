@@ -51,7 +51,10 @@
 #define CAN_ID_VEHICLE_STATUS 0x500
 
 // message heartbeat
-#define CAN_ID_MODULE_HEARTBEAT 0x510 // heartbeat sent from modules
+// Every module sends this every MODULE_HEARTBEAT_TIMEOUT ms.
+//   data[0]  module type (*_TYPE_ID)
+//   data[1]  module version (V_x_y as 10*x+y, e.g. 21)
+#define CAN_ID_MODULE_HEARTBEAT 0x510
 
 #define MODULE_HEARTBEAT_TIMEOUT 1000
 

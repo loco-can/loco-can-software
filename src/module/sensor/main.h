@@ -27,6 +27,10 @@
 #include "../../core/can/can_com.h"
 #include "../../can_protocol.h"
 
+#define SENSOR_TYPE_ID 0x30
+#define LOCO_MODULE_TYPE SENSOR_TYPE_ID
+#define LOCO_MODULE_VERSION SENSOR_MODULE_VERSION
+
 
 extern CAN_COM can;
 extern CAN_MESSAGE can_message;

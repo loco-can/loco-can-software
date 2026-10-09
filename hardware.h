@@ -171,6 +171,26 @@
 /* ====================================================================== */
 // INCLUDE MODULE CLASS
 /* ====================================================================== */
-#include MODULE
+/*
+ * Literal includes so a pin change in the module config rebuilds the
+ * firmware. `#include MODULE` is only the Arduino IDE fallback.
+ */
+#if defined(SWITCH_MODULE_VERSION)
+	#include "src/module/switch/config.h"
+#elif defined(ELECTRIC_MODULE_VERSION)
+	#include "src/module/electric/config.h"
+#elif defined(CONTROLLER_MODULE_VERSION)
+	#include "src/module/controller/config.h"
+#elif defined(SERVO_MODULE_VERSION)
+	#include "src/module/servo/config.h"
+#elif defined(SENSOR_MODULE_VERSION)
+	#include "src/module/sensor/config.h"
+#elif defined(PROGRAMMER_MODULE_VERSION)
+	#include "src/module/programmer/config.h"
+#elif defined(WIFI_MODULE_VERSION)
+	#include "src/module/wifi/config.h"
+#else
+	#include MODULE
+#endif
 
 #endif

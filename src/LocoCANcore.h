@@ -26,6 +26,9 @@ class LocoCANcore {
 
 	private:
 
+		void _send_module_heartbeat(void);
+		INTELLITIMEOUT _module_heartbeat;
+
 		/*
 		 * define all functions that are included in the module/{module_name}.h file
 		 */

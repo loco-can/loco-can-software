@@ -94,7 +94,6 @@ void MODULE_WIFI::begin(void) {
 #endif
 
 	_hello_time.begin(WIFI_NOW_HELLO_MS);
-	_heartbeat_time.begin(MODULE_HEARTBEAT_TIMEOUT);
 }
 
 
@@ -127,10 +126,6 @@ void MODULE_WIFI::update(CAN_MESSAGE message) {
 
 	if (_hello_time.update()) {
 		_send_hello();
-	}
-
-	if (_heartbeat_time.update()) {
-		_send_module_heartbeat();
 	}
 }
 
@@ -243,18 +238,6 @@ void MODULE_WIFI::_send_hello(void) {
 		esp_now_send(_peer_mac, wire, WIFI_NOW_WIRE_SIZE);
 	}
 #endif
-}
-
-
-void MODULE_WIFI::_send_module_heartbeat(void) {
-
-	CAN_MESSAGE heartbeat;
-	memset(&heartbeat, 0, sizeof(heartbeat));
-	heartbeat.id = CAN_ID_MODULE_HEARTBEAT;
-	heartbeat.size = 2;
-	heartbeat.data[0] = WIFI_MODULE_TYPE;
-	heartbeat.data[1] = WIFI_MODULE_VERSION;
-	can.send(heartbeat);
 }
 
 

@@ -50,6 +50,9 @@
 #include "sensors.h"
 #include "settings.h"
 
+#define LOCO_MODULE_TYPE ELECTRIC_TYPE_ID
+#define LOCO_MODULE_VERSION ELECTRIC_MODULE_VERSION
+
 
 extern CAN_COM can;
 extern CAN_MESSAGE can_message;
@@ -71,7 +74,6 @@ class MODULE_ELECTRIC {
 		void _write_outputs(const ELECTRIC_OUTPUT &output);
 		void _send_status(const ELECTRIC_STATUS_BITS &bits);
 		void _send_sensors(void);
-		void _send_module_heartbeat(void);
 
 		ELECTRIC_SETTINGS _settings;
 		ELECTRIC_PLUGIN_STATE _plugin_state;
@@ -98,7 +100,6 @@ class MODULE_ELECTRIC {
 		INTELLITIMEOUT _setup_timeout;
 		INTELLITIMEOUT _status_time;
 		INTELLITIMEOUT _sensor_time;
-		INTELLITIMEOUT _module_heartbeat;
 
 		CAN_MESSAGE _tx;
 };

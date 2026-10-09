@@ -57,7 +57,7 @@
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_SS 14
+	#define CAN_SS 10
 	// #define CAN_INT 18
 	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
@@ -111,7 +111,7 @@
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_SS 14
+	#define CAN_SS 10
 	// #define CAN_INT 18
 	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
@@ -164,7 +164,7 @@
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_SS 14
+	#define CAN_SS 10
 	// #define CAN_INT 18
 	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8

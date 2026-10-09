@@ -18,7 +18,6 @@
 #define ELECTRIC_DIRECTION_GAP 30
 #define ELECTRIC_SETUP_TIMEOUT 500
 #define ELECTRIC_SENSOR_PERIOD 200
-#define ELECTRIC_MODULE_HEARTBEAT_PERIOD (MODULE_HEARTBEAT_TIMEOUT / 2)
 
 #define ELECTRIC_SETUP_DIRECTION 0
 #define ELECTRIC_SETUP_DISABLE 1
@@ -304,23 +303,11 @@ void MODULE_ELECTRIC::_send_sensors(void) {
 }
 
 
-void MODULE_ELECTRIC::_send_module_heartbeat(void) {
-
-	if (!_module_heartbeat.update()) {
-		return;
-	}
-
-	_tx.id = CAN_ID_MODULE_HEARTBEAT;
-	_tx.size = 0;
-	can.send(_tx);
-}
-
-
 void MODULE_ELECTRIC::begin(void) {
 
 	#ifdef DEBUG
 		Serial.println("********************");
-		Serial.println("start function/motor");
+		Serial.println("start electric module");
 	#endif
 
 	_drive_timeout.begin(ELECTRIC_DRIVE_TIMEOUT);
@@ -328,7 +315,6 @@ void MODULE_ELECTRIC::begin(void) {
 	_setup_timeout.begin(ELECTRIC_SETUP_TIMEOUT);
 	_status_time.begin(CAN_ID_DRIVE_TIME);
 	_sensor_time.begin(ELECTRIC_SENSOR_PERIOD);
-	_module_heartbeat.begin(ELECTRIC_MODULE_HEARTBEAT_PERIOD);
 
 	electric_plugin_reset(_plugin_state);
 	_command.present = false;
@@ -468,7 +454,6 @@ void MODULE_ELECTRIC::update(CAN_MESSAGE message) {
 
 	_send_status(bits);
 	_send_sensors();
-	_send_module_heartbeat();
 }
 
 #endif

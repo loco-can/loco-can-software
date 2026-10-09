@@ -165,6 +165,7 @@ void MODULE_PROGRAMMER::_ingest(CAN_MESSAGE message) {
 				_nodes[i].used = true;
 				_nodes[i].uuid = message.uuid;
 				_nodes[i].type = message.size > 0 ? message.data[0] : 0;
+				_nodes[i].version_maj = message.size > 1 ? message.data[1] : 0;
 				_nodes[i].name[0] = 0;
 				break;
 			}

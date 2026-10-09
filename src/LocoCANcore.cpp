@@ -34,10 +34,15 @@ void LocoCANcore::begin(void) {
 	 */
 	#ifdef MODULE_ARCH_ESP32
 		can.setPorts(CAN_RX, CAN_TX);
-	#elif defined(CAN_INT)
-		can.setPorts(CAN_SS, CAN_INT);
 	#else
-		can.setPorts(CAN_SS);
+		#ifndef CAN_SS
+			#error "CAN_SS must be defined in the module config (MCP2515 chip select)"
+		#endif
+		#ifdef CAN_INT
+			can.setPorts(CAN_SS, CAN_INT);
+		#else
+			can.setPorts(CAN_SS);
+		#endif
 	#endif
 	can.set_alive(CAN_ALIVE_TIMEOUT);
 	can.begin(CAN_BUS_SPEED, CAN_STATUS_LED); // start with one CAN LED
@@ -55,6 +60,9 @@ void LocoCANcore::begin(void) {
 	// start module
 	_module.begin();
 
+	_module_heartbeat.begin(MODULE_HEARTBEAT_TIMEOUT);
+	_send_module_heartbeat();
+
 	#ifdef DEBUG
 		Serial.println();
 		Serial.println("*****************************");
@@ -67,16 +75,21 @@ void LocoCANcore::begin(void) {
 
 void LocoCANcore::update(void) {
 
+	if (_module_heartbeat.update()) {
+		_send_module_heartbeat();
+	}
+
 	bool got = false;
+	uint8_t n = 0;
 
 	/*
-	 * Drain the hardware mailbox. fetch() keeps DLC-0 heartbeats, which
-	 * read() would also filter. Each frame is handed to the module so a
-	 * controller can follow heartbeats and vehicle status. With a quiet
-	 * bus the module still runs once, to sample switches and send.
+	 * Drain a bounded number of frames so a busy bus cannot starve the
+	 * module heartbeat. fetch() keeps DLC-0 heartbeats, which read()
+	 * would filter. With a quiet bus the module still runs once.
 	 */
-	while (can.fetch(can_message)) {
+	while (n < 8 && can.fetch(can_message)) {
 		got = true;
+		n++;
 		_module.update(can_message);
 	}
 
@@ -87,4 +100,29 @@ void LocoCANcore::update(void) {
 		_module.update(can_message);
 	}
 
+}
+
+
+void LocoCANcore::_send_module_heartbeat(void) {
+
+	#ifndef LOCO_MODULE_TYPE
+		#error "LOCO_MODULE_TYPE must be defined by the selected module"
+	#endif
+
+	CAN_MESSAGE heartbeat;
+	heartbeat.id = CAN_ID_MODULE_HEARTBEAT;
+	heartbeat.uuid = 0;
+	heartbeat.size = 2;
+	heartbeat.data[0] = (uint8_t)LOCO_MODULE_TYPE;
+	heartbeat.data[1] = (uint8_t)LOCO_MODULE_VERSION;
+
+	/* #ifdef DEBUG
+		Serial.print("> module heartbeat type 0x");
+		Serial.print((uint8_t)LOCO_MODULE_TYPE, HEX);
+		Serial.print(" ver ");
+		Serial.print((uint8_t)LOCO_MODULE_VERSION);
+		Serial.println(can.send(heartbeat) ? " ok" : " fail");
+	#else */
+		can.send(heartbeat);
+	/* #endif */
 }

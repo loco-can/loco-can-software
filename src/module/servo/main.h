@@ -44,6 +44,9 @@
 
 #include "params.h"
 
+#define LOCO_MODULE_TYPE SERVO_TYPE_ID
+#define LOCO_MODULE_VERSION SERVO_MODULE_VERSION
+
 
 extern CAN_COM can;
 extern CAN_MESSAGE can_message;

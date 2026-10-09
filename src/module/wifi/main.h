@@ -24,6 +24,9 @@
 #include "../../core/timeout/intellitimeout.h"
 #include "now_packet.h"
 
+#define LOCO_MODULE_TYPE WIFI_MODULE_TYPE
+#define LOCO_MODULE_VERSION WIFI_MODULE_VERSION
+
 #ifdef MODULE_ARCH_ESP32
 	#include <WiFi.h>
 	#include <esp_now.h>
@@ -61,7 +64,6 @@ class MODULE_WIFI {
 		uint8_t _seq;
 
 		INTELLITIMEOUT _hello_time;
-		INTELLITIMEOUT _heartbeat_time;
 
 #ifdef MODULE_ARCH_ESP32
 		WIFI_NOW_PACKET _rx_pkt[WIFI_NOW_QUEUE];
@@ -77,7 +79,6 @@ class MODULE_WIFI {
 		void _handle_can(CAN_MESSAGE message);
 		void _poll_now(void);
 		void _send_hello(void);
-		void _send_module_heartbeat(void);
 		void _handle_hello(const uint8_t *mac, const WIFI_NOW_PACKET &pkt);
 		void _handle_now_can(const WIFI_NOW_PACKET &pkt);
 		void _send_now_can(const CAN_MESSAGE &message);

@@ -726,10 +726,10 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 		_handle_setup(message);
 	}
 	else if (message.uuid != 0) {
-		#ifdef DEVEL
+		/* #ifdef DEVEL
 			Serial.print("got message ");
 			can.print_message(message);
-		#endif
+		#endif */
 		_handle_can(message);
 	}
 

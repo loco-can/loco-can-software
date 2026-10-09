@@ -34,9 +34,9 @@
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_SS 17
-	#define CAN_INT 18
-	#define CAN_STATUS_LED 9
+	#define CAN_SS 10
+	// #define CAN_INT 18
+	#define CAN_STATUS_LED 5
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -52,8 +52,8 @@
 	#define DRIVE_REV 2
 
 	// SENSORS
-	#define DRIVE_MOTOR_VOLTAGE_PLUS 4
-	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
+	#define DRIVE_MOTOR_VOLTAGE_PLUS A0
+	#define DRIVE_MOTOR_VOLTAGE_MINUS A1
 
 #elif defined(ELECTRIC_MODULE_VERSION) && ELECTRIC_MODULE_VERSION == V_2_1
 
@@ -65,9 +65,9 @@
 	#define PLATFORM_ANALOG_RESOLUTION 1024
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_SS 17
-	#define CAN_INT 18
-	#define CAN_STATUS_LED 9
+	#define CAN_SS 10
+	// #define CAN_INT 18
+	#define CAN_STATUS_LED 5
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -83,8 +83,8 @@
 	#define DRIVE_REV 2
 
 	// SENSORS
-	#define DRIVE_MOTOR_VOLTAGE_PLUS 4
-	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
+	#define DRIVE_MOTOR_VOLTAGE_PLUS A0
+	#define DRIVE_MOTOR_VOLTAGE_MINUS A1
 
 #elif defined(ELECTRIC_MODULE_VERSION)
 	#error "No valid board version selected"
