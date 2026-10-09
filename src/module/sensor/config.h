@@ -19,10 +19,11 @@
 
 
 /* ******************************************
- * The module version is set in the config.h file
+ * The module version is set in the config.h file.
+ * Skip the pin map when another module is selected.
  */
 
-#if SENSOR_MODULE_VERSION == V_2_0 || SENSOR_MODULE_VERSION == V_2_1
+#if defined(SENSOR_MODULE_VERSION) && (SENSOR_MODULE_VERSION == V_2_0 || SENSOR_MODULE_VERSION == V_2_1)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -82,13 +83,15 @@
 	// #define SENSOR_BREAK_PORT A1
 	// #define SENSOR_POWER_PORT A2
 
-#else
+#elif defined(SENSOR_MODULE_VERSION)
 	#error "No valid board version selected"
 #endif
 
+#if defined(SENSOR_MODULE_VERSION)
 /*
  * INCLUDE CLASS
  */
 #include "main.h"
+#endif
 
 #endif

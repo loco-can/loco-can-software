@@ -19,10 +19,12 @@
 
 
 /* ******************************************
- * The module version is set in the hardware.h file
+ * The module version is set in the hardware.h file.
+ * Skip the pin map when another module is selected so those
+ * boards keep their own CAN_STATUS_LED and filter sizes.
  */
 
-#if ELECTRIC_MODULE_VERSION == V_2_0
+#if defined(ELECTRIC_MODULE_VERSION) && ELECTRIC_MODULE_VERSION == V_2_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -34,7 +36,7 @@
 
 	#define CAN_RX 17
 	#define CAN_TX 18
-	#define CAN_STATUS_LED 46
+	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -53,7 +55,7 @@
 	#define DRIVE_MOTOR_VOLTAGE_PLUS 4
 	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
 
-#elif ELECTRIC_MODULE_VERSION == V_2_1
+#elif defined(ELECTRIC_MODULE_VERSION) && ELECTRIC_MODULE_VERSION == V_2_1
 
 	// ======================================
 	// BASIC SETTINGS
@@ -65,7 +67,7 @@
 
 	#define CAN_RX 17
 	#define CAN_TX 18
-	#define CAN_STATUS_LED 46
+	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -84,10 +86,11 @@
 	#define DRIVE_MOTOR_VOLTAGE_PLUS 4
 	#define DRIVE_MOTOR_VOLTAGE_MINUS 5
 
-#else
+#elif defined(ELECTRIC_MODULE_VERSION)
 	#error "No valid board version selected"
 #endif
 
+#if defined(ELECTRIC_MODULE_VERSION)
 /*
  * Battery voltage inputs. The EEPROM battery count selects how many of
  * these are measured and published, up to ELECTRIC_BATT_MAX.
@@ -106,5 +109,6 @@
  * INCLUDE CLASS
  */
 #include "main.h"
+#endif
 
 #endif

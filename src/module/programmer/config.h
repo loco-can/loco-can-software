@@ -16,7 +16,7 @@
 #define MODULE_PROGRAMMER_CONFIG_H
 
 
-#if PROGRAMMER_MODULE_VERSION == V_3_0
+#if defined(PROGRAMMER_MODULE_VERSION) && PROGRAMMER_MODULE_VERSION == V_3_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -55,10 +55,12 @@
 	#define PROGRAMMER_GROUP_MAX 48
 	#define PROGRAMMER_OLED_ROWS 6
 
-#else
+#elif defined(PROGRAMMER_MODULE_VERSION)
 	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_3_0)"
 #endif
 
+#if defined(PROGRAMMER_MODULE_VERSION)
 #include "main.h"
+#endif
 
 #endif

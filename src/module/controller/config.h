@@ -105,7 +105,7 @@ SETUP
 
 // #pragma message "module controller config.h"
 
-#if CONTROLLER_MODULE_VERSION == V_1_0
+#if defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_1_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -163,7 +163,7 @@ SETUP
  * CONTROLLER ADAPTER with universal module V2.0
  * (has wrong ICP pinout)
  */
-#elif CONTROLLER_MODULE_VERSION == V_2_0
+#elif defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_2_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -220,7 +220,7 @@ SETUP
 /*
  * CONTROLLER ADAPTER with universal module V2.1
  */
- #elif CONTROLLER_MODULE_VERSION == V_2_1
+#elif defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_2_1
 
 	// ======================================
 	// BASIC SETTINGS
@@ -280,7 +280,7 @@ SETUP
  * ESP32S3 based version
  * not yet implemented, only for debugging use
  */
-#elif CONTROLLER_MODULE_VERSION == V_3_0
+#elif defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_3_0
 
 	#define MODULE_ARCH_ESP32
 
@@ -301,14 +301,16 @@ SETUP
 
 	// CAN LED
 
-#else
+#elif defined(CONTROLLER_MODULE_VERSION)
 	#error "Set CONTROLLER_MODULE_VERSION in hardware.h (V_1_0, V_2_0, V_2_1, or V_3_0)"
 
 #endif
 
+#if defined(CONTROLLER_MODULE_VERSION)
 /*
  * INCLUDE CLASS
  */
 #include "main.h"
+#endif
 
 #endif

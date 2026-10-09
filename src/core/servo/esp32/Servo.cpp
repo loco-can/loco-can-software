@@ -1,7 +1,8 @@
-#if defined(MODULE_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32)
+
+#include "../Servo.h"
 
 #include <Arduino.h>
-#include "../Servo.h"
 
 #if defined __has_include
 #  if __has_include ("pinDefinitions.h")

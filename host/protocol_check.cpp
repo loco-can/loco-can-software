@@ -93,5 +93,10 @@ int main(void) {
 		return 1;
 	}
 
+	int servo_logic_check(void);
+	if (servo_logic_check() != 0) {
+		return 1;
+	}
+
 	return 0;
 }

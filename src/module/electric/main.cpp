@@ -8,9 +8,9 @@
 
 #include "main.h"
 
-#include <EEPROM.h>
-
 #ifdef MODULE_ELECTRIC_CONFIG_H
+
+#include <EEPROM.h>
 
 
 #define ELECTRIC_EEPROM_BYTES 64

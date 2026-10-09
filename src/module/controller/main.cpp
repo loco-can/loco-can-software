@@ -9,7 +9,6 @@
 #include "../../config.h"
 #include "main.h"
 #include "drive_codec.h"
-#include <EEPROM.h>
 
 
 extern CAN_COM can;
@@ -23,6 +22,8 @@ extern CAN_COM can;
 
 
 #ifdef MODULE_CONTROLLER_CONFIG_H
+
+#include <EEPROM.h>
 
 static uint8_t light_from_position(uint8_t pos) {
 

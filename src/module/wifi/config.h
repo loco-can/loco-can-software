@@ -16,7 +16,7 @@
 #define MODULE_WIFI_CONFIG_H
 
 
-#if WIFI_MODULE_VERSION == V_3_0
+#if defined(WIFI_MODULE_VERSION) && WIFI_MODULE_VERSION == V_3_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -46,10 +46,12 @@
 	#define WIFI_NOW_QUEUE 16
 	#define WIFI_RECENT_MAX 24
 
-#else
+#elif defined(WIFI_MODULE_VERSION)
 	#error "Set WIFI_MODULE_VERSION in hardware.h (V_3_0)"
 #endif
 
+#if defined(WIFI_MODULE_VERSION)
 #include "main.h"
+#endif
 
 #endif

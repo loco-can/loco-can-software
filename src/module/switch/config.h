@@ -22,10 +22,11 @@
 
 
 /* ******************************************
- * The module version is set in the config.h file
+ * The module version is set in the config.h file.
+ * Skip the pin map when another module is selected.
  */
 
-#if SWITCH_MODULE_VERSION == V_1_0
+#if defined(SWITCH_MODULE_VERSION) && SWITCH_MODULE_VERSION == V_1_0
 
 	// BOARD VERSION 1.0
 	//
@@ -58,7 +59,7 @@
 
 	#define CAN_RX 17
 	#define CAN_TX 18
-	#define CAN_STATUS_LED 46
+	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -83,7 +84,7 @@
 	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
 
-#elif SWITCH_MODULE_VERSION == V_2_0
+#elif defined(SWITCH_MODULE_VERSION) && SWITCH_MODULE_VERSION == V_2_0
 
 	// Print V1.2 extension bus
 	// 8x2 pins
@@ -112,7 +113,7 @@
 
 	#define CAN_RX 17
 	#define CAN_TX 18
-	#define CAN_STATUS_LED 46
+	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -136,7 +137,7 @@
 	#define SWITCH_CURRENT_PORT C1
 	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
-#elif SWITCH_MODULE_VERSION == V_2_1
+#elif defined(SWITCH_MODULE_VERSION) && SWITCH_MODULE_VERSION == V_2_1
 
 	// Print V1.2 extension bus
 	// 8x2 pins
@@ -165,7 +166,7 @@
 
 	#define CAN_RX 17
 	#define CAN_TX 18
-	#define CAN_STATUS_LED 46
+	#define CAN_STATUS_LED 9
 	#define CAN_MAX_FILTER 8
 	#define CAN_BUFFER_SIZE 8
 
@@ -189,13 +190,15 @@
 	#define SWITCH_CURRENT_PORT C1
 	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
-#else
+#elif defined(SWITCH_MODULE_VERSION)
 	#error "No valid board version selected"
 #endif
 
+#if defined(SWITCH_MODULE_VERSION)
 /*
  * INCLUDE CLASS
  */
 #include "main.h"
+#endif
 
 #endif

@@ -19,10 +19,11 @@
 
 
 /* ******************************************
- * The module version is set in the config.h file
+ * The module version is set in the config.h file.
+ * Skip the pin map when another module is selected.
  */
 
-#if SERVO_MODULE_VERSION == V_2_0 || SERVO_MODULE_VERSION == V_2_1
+#if defined(SERVO_MODULE_VERSION) && (SERVO_MODULE_VERSION == V_2_0 || SERVO_MODULE_VERSION == V_2_1)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -58,13 +59,15 @@
 	#define V3 A3
 	#define V4 A4
 
-#else
+#elif defined(SERVO_MODULE_VERSION)
 	#error "No valid board version selected"
 #endif
 
+#if defined(SERVO_MODULE_VERSION)
 /*
  * INCLUDE CLASS
  */
 #include "main.h"
+#endif
 
 #endif
