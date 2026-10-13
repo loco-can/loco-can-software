@@ -31,8 +31,8 @@
 #define MODULE CONTROLLER_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define CONTROLLER_MODULE_VERSION V_2_0
-#define CONTROLLER_MODULE_VERSION V_2_1
+// #define CONTROLLER_MODULE_VERSION V_2_0_0
+#define CONTROLLER_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -49,7 +49,7 @@
 // #define MODULE DRIVE_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define DRIVE_MODULE_VERSION V_2_0
+// #define DRIVE_MODULE_VERSION V_2_0_0
 /* ===================================================================== */
 
 
@@ -63,8 +63,8 @@
 // #define MODULE ELECTRIC_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define ELECTRIC_MODULE_VERSION V_2_0
-// #define ELECTRIC_MODULE_VERSION V_2_1
+// #define ELECTRIC_MODULE_VERSION V_2_0_0
+// #define ELECTRIC_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -77,8 +77,8 @@
 // #define MODULE SENSOR_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define SENSOR_MODULE_VERSION V_2_0
-// #define SENSOR_MODULE_VERSION V_2_1
+// #define SENSOR_MODULE_VERSION V_2_0_0
+// #define SENSOR_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -90,8 +90,8 @@
 // #define MODULE SERVO_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define SERVO_MODULE_VERSION V_2_0
-// #define SERVO_MODULE_VERSION V_2_1
+// #define SERVO_MODULE_VERSION V_2_0_0
+// #define SERVO_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -105,8 +105,8 @@
 // #define MODULE SWITCH_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define SWITCH_MODULE_VERSION V_2_0
-// #define SWITCH_MODULE_VERSION V_2_1
+// #define SWITCH_MODULE_VERSION V_2_0_0
+// #define SWITCH_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 /* ====================================================================== */

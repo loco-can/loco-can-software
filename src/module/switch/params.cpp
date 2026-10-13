@@ -25,13 +25,13 @@ static void switch_params_copy_name(SWITCH_PARAMS &params, const char *name) {
 }
 
 
-void switch_params_defaults(SWITCH_PARAMS &params, uint8_t module_version) {
+void switch_params_defaults(SWITCH_PARAMS &params, uint32_t module_version) {
 
 	for (uint8_t i = 0; i < SWITCH_PARAM_BYTES; i++) {
 		params.bytes[i] = 0;
 	}
 
-	params.bytes[SWITCH_PARAM_VERSION] = module_version;
+	params.bytes[SWITCH_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 
 	for (uint8_t i = 0; i < SWITCH_OUTPUT_COUNT; i++) {
 		params.bytes[SWITCH_PARAM_MAP + i] = SWITCH_DEFAULT_FUNCTION[i];
@@ -89,17 +89,19 @@ static bool switch_params_uuid_match(const CAN_MESSAGE &message, uint16_t self_u
 }
 
 
-static void switch_params_info(SWITCH_PARAM_RESULT &result, const SWITCH_PARAMS &params, uint8_t module_version, uint8_t module_type) {
+static void switch_params_info(SWITCH_PARAM_RESULT &result, const SWITCH_PARAMS &params, uint32_t module_version, uint8_t module_type) {
 
 	CAN_MESSAGE &info = result.reply[0];
 	switch_params_clear(info);
 	info.id = CAN_ID_REPLY;
-	info.size = 5;
+	info.size = 7;
 	info.data[0] = (uint8_t)(SWITCH_PARAM_BYTES - 1);
 	info.data[1] = 0x20;
 	info.data[2] = 0;
-	info.data[3] = module_version;
-	info.data[4] = module_type;
+	info.data[3] = (uint8_t)LOCO_VERSION_MAJOR(module_version);
+	info.data[4] = (uint8_t)LOCO_VERSION_MINOR(module_version);
+	info.data[5] = (uint8_t)LOCO_VERSION_PATCH(module_version);
+	info.data[6] = module_type;
 
 	CAN_MESSAGE &name = result.reply[1];
 	switch_params_clear(name);
@@ -150,7 +152,7 @@ SWITCH_PARAM_RESULT switch_params_on_can(
 	SWITCH_PARAMS &params,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 ) {
 
@@ -226,7 +228,7 @@ SWITCH_PARAM_RESULT switch_params_on_can(
 
 	for (uint8_t i = 0; i < length; i++) {
 		uint8_t at = (uint8_t)(index + i);
-		if (at == SWITCH_PARAM_VERSION && message.data[2 + i] != module_version) {
+		if (at == SWITCH_PARAM_VERSION && message.data[2 + i] != (uint8_t)LOCO_VERSION_CODE(module_version)) {
 			return result;
 		}
 		if (at >= SWITCH_PARAM_MAP && at < SWITCH_PARAM_MAX_CURRENT && !switch_map_valid(message.data[2 + i])) {
@@ -238,7 +240,7 @@ SWITCH_PARAM_RESULT switch_params_on_can(
 		params.bytes[index + i] = message.data[2 + i];
 	}
 
-	params.bytes[SWITCH_PARAM_VERSION] = module_version;
+	params.bytes[SWITCH_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 	result.changed = true;
 	return result;
 }

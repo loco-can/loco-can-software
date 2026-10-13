@@ -45,7 +45,7 @@ In `hardware.h` select:
 
 ```c
 #define MODULE WIFI_MODULE
-#define WIFI_MODULE_VERSION V_3_0
+#define WIFI_MODULE_VERSION V_3_0_0
 ```
 
 Board: ESP32-S3. The core includes the module when `MODULE_WIFI_H` is

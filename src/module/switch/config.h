@@ -26,7 +26,7 @@
  * Skip the pin map when another module is selected.
  */
 
-#if defined(SWITCH_MODULE_VERSION) && SWITCH_MODULE_VERSION == V_1_0
+#if defined(SWITCH_MODULE_VERSION) && LOCO_VERSION_IS(SWITCH_MODULE_VERSION, 1, 0)
 
 	// BOARD VERSION 1.0
 	//
@@ -84,7 +84,7 @@
 	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
 
-#elif defined(SWITCH_MODULE_VERSION) && SWITCH_MODULE_VERSION == V_2_0
+#elif defined(SWITCH_MODULE_VERSION) && LOCO_VERSION_IS(SWITCH_MODULE_VERSION, 2, 0)
 
 	// Print V1.2 extension bus
 	// 8x2 pins
@@ -137,7 +137,7 @@
 	#define SWITCH_CURRENT_PORT C1
 	#define SWITCH_CURRENT_FULL_SCALE_MA 30000
 
-#elif defined(SWITCH_MODULE_VERSION) && SWITCH_MODULE_VERSION == V_2_1
+#elif defined(SWITCH_MODULE_VERSION) && LOCO_VERSION_IS(SWITCH_MODULE_VERSION, 2, 1)
 
 	// Print V1.2 extension bus
 	// 8x2 pins

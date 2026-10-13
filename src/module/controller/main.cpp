@@ -85,13 +85,13 @@ void MODULE_CONTROLLER::_load_params(void) {
 		dual = true;
 	#endif
 
-	uint8_t version = (uint8_t)CONTROLLER_MODULE_VERSION;
+	uint8_t version = (uint8_t)LOCO_VERSION_CODE(CONTROLLER_MODULE_VERSION);
 	uint8_t magic = EEPROM.read(0);
 	uint8_t schema = EEPROM.read(1);
 	uint8_t stored_version = EEPROM.read(2);
 
 	if (magic != CONTROLLER_PARAM_MAGIC || schema != CONTROLLER_PARAM_SCHEMA || stored_version != version) {
-		controller_params_defaults(_params, PLATFORM_ANALOG_RESOLUTION, dual, version);
+		controller_params_defaults(_params, PLATFORM_ANALOG_RESOLUTION, dual, CONTROLLER_MODULE_VERSION);
 		_save_params();
 		return;
 	}
@@ -166,7 +166,7 @@ void MODULE_CONTROLLER::_handle_setup(CAN_MESSAGE message) {
 		_params,
 		message,
 		(uint16_t)can.uuid(),
-		(uint8_t)CONTROLLER_MODULE_VERSION,
+		CONTROLLER_MODULE_VERSION,
 		CONTROLLER_TYPE_ID
 	);
 

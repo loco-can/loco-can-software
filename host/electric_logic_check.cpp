@@ -2,6 +2,7 @@
  * Host checks for the electric-module plugins, sensors and settings.
  */
 
+#include "can_protocol.h"
 #include "module/controller/drive_codec.h"
 #include "module/electric/plugin.h"
 #include "module/electric/sensors.h"
@@ -257,7 +258,7 @@ int electric_logic_check(void) {
 	expect_off("unknown plugin", out);
 
 	ELECTRIC_SETTINGS settings;
-	electric_settings_defaults(settings, 21);
+	electric_settings_defaults(settings, LOCO_VERSION(2, 1, 0));
 	expect_u8("default plugin", electric_settings_plugin(settings), ELECTRIC_PLUGIN_DIRECT);
 	expect_u8("default batteries", electric_settings_battery_count(settings), 1);
 	expect_u8("default pwm", electric_settings_pwm_mode(settings), ELECTRIC_PWM_DRIVE_BRAKE);
@@ -270,11 +271,13 @@ int electric_logic_check(void) {
 	request.uuid = 1;
 	request.size = 1;
 	request.data[0] = 0xFF;
-	ELECTRIC_SETTINGS_RESULT info = electric_settings_on_can(settings, request, 0x1234, 21, ELECTRIC_TYPE_ID);
+	ELECTRIC_SETTINGS_RESULT info = electric_settings_on_can(settings, request, 0x1234, LOCO_VERSION(2, 1, 0), ELECTRIC_TYPE_ID);
 	expect_u8("info packets", info.reply_count, 2);
 	expect_u8("info max", info.reply[0].data[0], (uint8_t)(ELECTRIC_PARAM_BYTES - 1));
-	expect_u8("info version", info.reply[0].data[3], 21);
-	expect_u8("info type", info.reply[0].data[4], ELECTRIC_TYPE_ID);
+	expect_u8("info major", info.reply[0].data[3], 2);
+	expect_u8("info minor", info.reply[0].data[4], 1);
+	expect_u8("info patch", info.reply[0].data[5], 0);
+	expect_u8("info type", info.reply[0].data[6], ELECTRIC_TYPE_ID);
 
 	request.id = (uint32_t)(CAN_ID_SETUP | ELECTRIC_PARAM_PLUGIN);
 	request.size = 5;
@@ -283,7 +286,7 @@ int electric_logic_check(void) {
 	request.data[2] = ELECTRIC_PLUGIN_CURTIS;
 	request.data[3] = 9;
 	request.data[4] = 5;
-	ELECTRIC_SETTINGS_RESULT written = electric_settings_on_can(settings, request, 0x1234, 21, ELECTRIC_TYPE_ID);
+	ELECTRIC_SETTINGS_RESULT written = electric_settings_on_can(settings, request, 0x1234, LOCO_VERSION(2, 1, 0), ELECTRIC_TYPE_ID);
 	expect_true("settings stored", written.changed);
 	expect_u8("plugin curtis", electric_settings_plugin(settings), ELECTRIC_PLUGIN_CURTIS);
 	expect_u8("battery count clamped", electric_settings_battery_count(settings), ELECTRIC_BATT_MAX);
@@ -292,7 +295,7 @@ int electric_logic_check(void) {
 	request.data[0] = 0x00;
 	request.data[1] = 0x01;
 	request.data[2] = ELECTRIC_PLUGIN_4QD;
-	ELECTRIC_SETTINGS_RESULT foreign = electric_settings_on_can(settings, request, 0x1234, 21, ELECTRIC_TYPE_ID);
+	ELECTRIC_SETTINGS_RESULT foreign = electric_settings_on_can(settings, request, 0x1234, LOCO_VERSION(2, 1, 0), ELECTRIC_TYPE_ID);
 	expect_true("foreign uuid ignored", !foreign.changed);
 	expect_u8("plugin unchanged", electric_settings_plugin(settings), ELECTRIC_PLUGIN_CURTIS);
 
@@ -300,7 +303,7 @@ int electric_logic_check(void) {
 	request.data[1] = 0x34;
 	request.data[2] = 9;
 	request.size = 3;
-	written = electric_settings_on_can(settings, request, 0x1234, 21, ELECTRIC_TYPE_ID);
+	written = electric_settings_on_can(settings, request, 0x1234, LOCO_VERSION(2, 1, 0), ELECTRIC_TYPE_ID);
 	expect_true("invalid plugin write accepted as no change of id", written.changed);
 	expect_u8("invalid plugin kept", settings.bytes[ELECTRIC_PARAM_PLUGIN], ELECTRIC_PLUGIN_CURTIS);
 
@@ -308,7 +311,7 @@ int electric_logic_check(void) {
 	request.size = 4;
 	request.data[2] = 0;
 	request.data[3] = 'L';
-	ELECTRIC_SETTINGS_RESULT named = electric_settings_on_can(settings, request, 0x1234, 21, ELECTRIC_TYPE_ID);
+	ELECTRIC_SETTINGS_RESULT named = electric_settings_on_can(settings, request, 0x1234, LOCO_VERSION(2, 1, 0), ELECTRIC_TYPE_ID);
 	expect_true("name stored", named.changed && settings.name[0] == 'L' && settings.name[1] == 0);
 	expect_u8("version stays", settings.bytes[ELECTRIC_PARAM_VERSION], 21);
 
@@ -318,7 +321,7 @@ int electric_logic_check(void) {
 	request.data[1] = 0x34;
 	request.data[2] = ELECTRIC_PARAM_PWM_MODE;
 	request.data[3] = 1;
-	ELECTRIC_SETTINGS_RESULT value = electric_settings_on_can(settings, request, 0x1234, 21, ELECTRIC_TYPE_ID);
+	ELECTRIC_SETTINGS_RESULT value = electric_settings_on_can(settings, request, 0x1234, LOCO_VERSION(2, 1, 0), ELECTRIC_TYPE_ID);
 	expect_u8("pwm readback", value.reply[0].data[0], ELECTRIC_PWM_DRIVE);
 	expect_u8("pwm readback id", (uint8_t)(value.reply[0].id & 0x7F), ELECTRIC_PARAM_PWM_MODE);
 

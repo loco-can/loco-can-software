@@ -16,7 +16,7 @@
 #define MODULE_WIFI_CONFIG_H
 
 
-#if defined(WIFI_MODULE_VERSION) && WIFI_MODULE_VERSION == V_3_0
+#if defined(WIFI_MODULE_VERSION) && LOCO_VERSION_IS(WIFI_MODULE_VERSION, 3, 0)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -47,7 +47,7 @@
 	#define WIFI_RECENT_MAX 24
 
 #elif defined(WIFI_MODULE_VERSION)
-	#error "Set WIFI_MODULE_VERSION in hardware.h (V_3_0)"
+	#error "Set WIFI_MODULE_VERSION in hardware.h (V_3_0_0)"
 #endif
 
 #if defined(WIFI_MODULE_VERSION)

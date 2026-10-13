@@ -25,13 +25,13 @@ static void servo_params_copy_name(SERVO_PARAMS &params, const char *name) {
 }
 
 
-void servo_params_defaults(SERVO_PARAMS &params, uint8_t module_version) {
+void servo_params_defaults(SERVO_PARAMS &params, uint32_t module_version) {
 
 	for (uint8_t i = 0; i < SERVO_PARAM_BYTES; i++) {
 		params.bytes[i] = 0;
 	}
 
-	params.bytes[SERVO_PARAM_VERSION] = module_version;
+	params.bytes[SERVO_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 
 	for (uint8_t i = 0; i < SERVO_OUTPUT_COUNT; i++) {
 		params.bytes[SERVO_PARAM_MAP + i] = SERVO_DEFAULT_MAP[i];
@@ -74,17 +74,19 @@ static bool servo_params_uuid_match(const CAN_MESSAGE &message, uint16_t self_uu
 }
 
 
-static void servo_params_info(SERVO_PARAM_RESULT &result, const SERVO_PARAMS &params, uint8_t module_version, uint8_t module_type) {
+static void servo_params_info(SERVO_PARAM_RESULT &result, const SERVO_PARAMS &params, uint32_t module_version, uint8_t module_type) {
 
 	CAN_MESSAGE &info = result.reply[0];
 	servo_params_clear(info);
 	info.id = CAN_ID_REPLY;
-	info.size = 5;
+	info.size = 7;
 	info.data[0] = (uint8_t)(SERVO_PARAM_BYTES - 1);
 	info.data[1] = 0x20;
 	info.data[2] = 0;
-	info.data[3] = module_version;
-	info.data[4] = module_type;
+	info.data[3] = (uint8_t)LOCO_VERSION_MAJOR(module_version);
+	info.data[4] = (uint8_t)LOCO_VERSION_MINOR(module_version);
+	info.data[5] = (uint8_t)LOCO_VERSION_PATCH(module_version);
+	info.data[6] = module_type;
 
 	CAN_MESSAGE &name = result.reply[1];
 	servo_params_clear(name);
@@ -135,7 +137,7 @@ SERVO_PARAM_RESULT servo_params_on_can(
 	SERVO_PARAMS &params,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 ) {
 
@@ -211,7 +213,7 @@ SERVO_PARAM_RESULT servo_params_on_can(
 
 	for (uint8_t i = 0; i < length; i++) {
 		uint8_t at = (uint8_t)(index + i);
-		if (at == SERVO_PARAM_VERSION && message.data[2 + i] != module_version) {
+		if (at == SERVO_PARAM_VERSION && message.data[2 + i] != (uint8_t)LOCO_VERSION_CODE(module_version)) {
 			return result;
 		}
 		if (at >= SERVO_PARAM_MAP && at < SERVO_PARAM_BYTES && !servo_map_valid(message.data[2 + i])) {
@@ -223,7 +225,7 @@ SERVO_PARAM_RESULT servo_params_on_can(
 		params.bytes[index + i] = message.data[2 + i];
 	}
 
-	params.bytes[SERVO_PARAM_VERSION] = module_version;
+	params.bytes[SERVO_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 	result.changed = true;
 	return result;
 }

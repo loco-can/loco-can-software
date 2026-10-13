@@ -48,7 +48,7 @@ PROGRAMMER MODULE
 	The programmer module is the interface to program the Loco-CAN system.
 
 Versions:
-	V_3_0
+	V_3_0_0
 ======================================================================== */
 #define PROGRAMMER_MODULE "src/module/programmer/config.h"
 
@@ -60,8 +60,8 @@ UNIVERSAL MODULE
 	all module software can be used as hardware setting.
 
 Versions:
-	V_2_0
-	V_2_1
+	V_2_0_0
+	V_2_1_0
 ======================================================================== */
 
 
@@ -71,9 +71,9 @@ CONTROLLER MODULE
 	switches, status lights, OLED displays and gauges are connected to it.
 
 Versions:
-	V_2_0
-	V_2_1
-	V_3_0
+	V_2_0_0
+	V_2_1_0
+	V_3_0_0
 ======================================================================== */
 #define CONTROLLER_MODULE "src/module/controller/config.h"
 
@@ -84,8 +84,8 @@ ELECTRIC MOTOR MODULE
 	to the Loco-CAN system.
 
 Versions:
-	V_2_0
-	V_2_1
+	V_2_0_0
+	V_2_1_0
 ======================================================================== */
 #define ELECTRIC_MODULE "src/module/electric/config.h"
 
@@ -96,8 +96,8 @@ SWITCH MODULE
 	and 30 Volts per pin.
 
 Versions:
-	V_2_0
-	V_2_1
+	V_2_0_0
+	V_2_1_0
 ======================================================================== */
 #define SWITCH_MODULE "src/module/switch/config.h"
 
@@ -108,7 +108,8 @@ SENSOR MODULE
 	a pulse input.
 
 Versions:
-	V_2_0
+	V_2_0_0
+	V_2_1_0
 ======================================================================== */
 #define SENSOR_MODULE "src/module/sensor/config.h"
 
@@ -118,8 +119,8 @@ SERVO MODULE
 	Up to four RC model servo motors can be controlled by this module.
 
 Versions:
-	V_2_0
-	V_2_1
+	V_2_0_0
+	V_2_1_0
 ======================================================================== */
 #define SERVO_MODULE "src/module/servo/config.h"
 
@@ -131,7 +132,7 @@ WIFI MODULE
 	is connected.
 
 Versions:
-	V_3_0
+	V_3_0_0
 ======================================================================== */
 #define WIFI_MODULE "src/module/wifi/config.h"
 
@@ -141,7 +142,7 @@ LED MODULE
 	A module with LED drivers.
 
 Versions:
-	V_2_0
+	V_2_0_0
 ======================================================================== */
 //#define LED_MODULE "src/module/led/config.h"
 
@@ -151,19 +152,23 @@ DRIVE MODULE
 	A 4Q motor driver.
 
 Versions:
-	V_3_0
-	V_3_1
+	V_3_0_0
+	V_3_1_0
 ======================================================================== */
 //#define DRIVE_MODULE "src/module/drive/config.h"
 
 
 /* ===================================================================== */
 // VERSIONS
-#define V_1_0 10
-#define V_2_0 20
-#define V_2_1 21
-#define V_3_0 30
-#define V_3_1 31
+#include "can_protocol.h"
+
+// major.minor.patch, for example V_2_1_12 is firmware 2.1.12.
+// A new patch keeps the hardware block of the same major.minor.
+#define V_1_0_0 LOCO_VERSION(1, 0, 0)
+#define V_2_0_0 LOCO_VERSION(2, 0, 0)
+#define V_2_1_0 LOCO_VERSION(2, 1, 0)
+#define V_3_0_0 LOCO_VERSION(3, 0, 0)
+#define V_3_1_0 LOCO_VERSION(3, 1, 0)
 
 
 /* ===================================================================== */

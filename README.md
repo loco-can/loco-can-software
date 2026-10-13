@@ -145,4 +145,4 @@ pio run -e protocol_host          # PC check of LocoCAN IDs (no hardware)
 
 PlatformIO sets `MODULE` and the version via build flags. Arduino IDE still uses the uncommented lines in `hardware.h`.
 
-The firmware image is named from those flags: `.pio/build/<env>/<module>_v<major>_<minor>.bin` on ESP32 and `.hex` on AVR. `programmer_v3` writes `programmer_v3_0.bin`; `controller_v21` writes `controller_v2_1.hex`.
+The firmware image is named from those flags: `.pio/build/<env>/<module>_v<major>_<minor>_<patch>.bin` on ESP32 and `.hex` on AVR. `programmer_v3` writes `programmer_v3_0_0.bin`; `controller_v21` writes `controller_v2_1_0.hex`. A later patch such as 2.1.12 is `controller_v2_1_12.hex` and still builds the 2.1 hardware.

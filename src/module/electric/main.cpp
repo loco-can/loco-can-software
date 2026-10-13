@@ -53,13 +53,13 @@ void MODULE_ELECTRIC::_load_settings(void) {
 
 	electric_eeprom_begin();
 
-	uint8_t version = (uint8_t)ELECTRIC_MODULE_VERSION;
+	uint8_t version = (uint8_t)LOCO_VERSION_CODE(ELECTRIC_MODULE_VERSION);
 	uint8_t magic = EEPROM.read(0);
 	uint8_t schema = EEPROM.read(1);
 	uint8_t stored_version = EEPROM.read(2);
 
 	if (magic != ELECTRIC_SETTINGS_MAGIC || schema != ELECTRIC_SETTINGS_SCHEMA || stored_version != version) {
-		electric_settings_defaults(_settings, version);
+		electric_settings_defaults(_settings, ELECTRIC_MODULE_VERSION);
 		_save_settings();
 		return;
 	}
@@ -104,7 +104,7 @@ void MODULE_ELECTRIC::_handle_settings(CAN_MESSAGE message) {
 		_settings,
 		message,
 		(uint16_t)can.uuid(),
-		(uint8_t)ELECTRIC_MODULE_VERSION,
+		ELECTRIC_MODULE_VERSION,
 		ELECTRIC_TYPE_ID
 	);
 
