@@ -1,0 +1,280 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"os/signal"
+	"strings"
+	"time"
+)
+
+const usageText = `loco-flash downloads Loco-CAN firmware from GitHub releases and writes it
+through an FTDI adapter. ATmega328P modules use Optiboot: 115200 baud,
+DTR resets the board (usually via 100 nF). If that does not answer,
+57600 is tried once for the old Nano bootloader.
+
+  loco-flash ports
+  loco-flash ls
+  loco-flash write -module controller -hardware 2.1 -port /dev/ttyUSB0
+  loco-flash write -module switch -hardware 2.1 -all-ftdi
+  loco-flash write -file controller_v2_1_0.hex -port COM3
+  loco-flash manifest -dir dist -out dist/manifest.json
+
+The newest release that contains a matching .hex is used, including
+pre-releases. -hardware 2.1 takes the highest patch (2.1.12). -hardware
+2.1.12 selects that patch. -stable skips pre-releases.
+
+ESP32 .bin images are not written over FTDI.
+`
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Fprint(os.Stderr, usageText)
+		os.Exit(2)
+	}
+	if os.Args[1] == "-h" || os.Args[1] == "--help" || os.Args[1] == "help" {
+		fmt.Fprint(os.Stdout, usageText)
+		return
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	var err error
+	switch os.Args[1] {
+	case "ports":
+		err = cmdPorts()
+	case "ls":
+		err = cmdLS(ctx, os.Args[2:])
+	case "write":
+		err = cmdWrite(ctx, os.Args[2:])
+	case "manifest":
+		err = cmdManifest(os.Args[2:])
+	default:
+		fmt.Fprintf(os.Stderr, "unknown command %q\n\n%s", os.Args[1], usageText)
+		os.Exit(2)
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func cmdPorts() error {
+	ports, err := listPorts()
+	if err != nil {
+		return err
+	}
+	if len(ports) == 0 {
+		fmt.Println("no FTDI adapters found")
+		return nil
+	}
+	for _, port := range ports {
+		fmt.Println(port)
+	}
+	return nil
+}
+
+type releaseFlags struct {
+	repo   string
+	tag    string
+	token  string
+	stable bool
+}
+
+func (f *releaseFlags) add(fs *flag.FlagSet) {
+	fs.StringVar(&f.repo, "repo", defaultRepo, "GitHub repository (owner/name)")
+	fs.StringVar(&f.tag, "tag", "", "release tag (default: newest release with firmware)")
+	fs.StringVar(&f.token, "token", os.Getenv("GITHUB_TOKEN"), "GitHub token (or GITHUB_TOKEN)")
+	fs.BoolVar(&f.stable, "stable", false, "ignore pre-releases")
+}
+
+func (f releaseFlags) client() *Client {
+	return &Client{Repo: f.repo, Token: f.token}
+}
+
+func cmdLS(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("ls", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	var rel releaseFlags
+	rel.add(fs)
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprint(os.Stderr, usageText)
+		return err
+	}
+	releases, err := rel.client().Releases(ctx, rel.tag, rel.stable)
+	if err != nil {
+		return err
+	}
+	show := releases[0]
+	when := show.PublishedAt.Format("2006-01-02")
+	kind := "release"
+	if show.Prerelease {
+		kind = "pre-release"
+	}
+	title := show.Tag
+	if show.Name != "" {
+		title = show.Name
+	}
+	fmt.Printf("%s  %s  %s  %s\n", title, show.Tag, kind, when)
+	for _, img := range show.Images {
+		fmt.Printf("  %s  %s  %s\n", img.Module, img.Version, img.File)
+	}
+	return nil
+}
+
+func cmdManifest(args []string) error {
+	fs := flag.NewFlagSet("manifest", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	dir := fs.String("dir", ".", "directory of .hex files")
+	out := fs.String("out", "", "manifest path (default: stdout)")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprint(os.Stderr, usageText)
+		return err
+	}
+	images, err := manifestFromDir(*dir)
+	if err != nil {
+		return err
+	}
+	var w io.Writer = os.Stdout
+	var file *os.File
+	if *out != "" {
+		file, err = os.Create(*out)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		w = file
+	}
+	return writeManifest(w, images)
+}
+
+func cmdWrite(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("write", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	var rel releaseFlags
+	rel.add(fs)
+	module := fs.String("module", "", "module name, for example controller")
+	hardware := fs.String("hardware", "", "hardware major.minor or exact major.minor.patch")
+	file := fs.String("file", "", "local .hex file (skips the GitHub release)")
+	portName := fs.String("port", "", "serial port of one FTDI adapter")
+	all := fs.Bool("all-ftdi", false, "write the same file to every FTDI adapter")
+	baud := fs.Int("baud", 115200, "bootloader baud rate")
+	avrdude := fs.String("avrdude", "", "path to avrdude")
+	dry := fs.Bool("dry-run", false, "download and print the avrdude command, do not write")
+	timeout := fs.Duration("timeout", 45*time.Second, "time limit for one avrdude attempt")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprint(os.Stderr, usageText)
+		return err
+	}
+	if *portName != "" && *all {
+		return fmt.Errorf("pass either -port or -all-ftdi")
+	}
+	if *portName == "" && !*all {
+		return fmt.Errorf("pass -port or -all-ftdi")
+	}
+
+	img, tag, err := resolveImage(ctx, rel, *module, *hardware, *file)
+	if err != nil {
+		return err
+	}
+	if err := img.flashable(); err != nil {
+		return err
+	}
+
+	hexPath := *file
+	if hexPath == "" {
+		dest, err := cachePath(rel.repo, tag, img.File)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "download %s\n", img.File)
+		if err := rel.client().Download(ctx, img, dest); err != nil {
+			return err
+		}
+		hexPath = dest
+	}
+
+	var ports []Port
+	if *all {
+		ports, err = listPorts()
+		if err != nil {
+			return err
+		}
+		if len(ports) == 0 {
+			return fmt.Errorf("no FTDI adapters found")
+		}
+	} else {
+		ports = []Port{{Name: *portName, Desc: "serial"}}
+	}
+
+	baudSet := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "baud" {
+			baudSet = true
+		}
+	})
+	bauds := baudAttempts(*baud, baudSet)
+
+	if *dry {
+		tool := "avrdude"
+		if *avrdude != "" {
+			tool = *avrdude
+		}
+		fmt.Printf("%s %s  %s\n", img.Module, img.Version, img.File)
+		for _, port := range ports {
+			fmt.Printf("%s\n", port.Name)
+			fmt.Println(tool + " " + joinArgs(avrdudeArgs(avrdudeConf(tool), img.MCU, port.Name, hexPath, bauds[0])))
+		}
+		if len(bauds) > 1 {
+			fmt.Printf("if the bootloader does not answer, baud %d is tried\n", bauds[1])
+		}
+		return nil
+	}
+
+	tool, err := findAvrdude(*avrdude)
+	if err != nil {
+		return err
+	}
+	var failed []string
+	for _, port := range ports {
+		fmt.Fprintf(os.Stderr, "write %s %s to %s\n", img.Module, img.Version, port.Name)
+		err := flashHex(ctx, execRunner{}, tool, img.MCU, port.Name, hexPath, bauds, *timeout)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			failed = append(failed, port.Name)
+		}
+	}
+	if len(failed) > 0 {
+		return fmt.Errorf("failed on %s", strings.Join(failed, ", "))
+	}
+	return nil
+}
+
+func resolveImage(ctx context.Context, rel releaseFlags, module, hardware, file string) (Image, string, error) {
+	if file != "" {
+		img, ok := parseFirmwareName(file)
+		if !ok {
+			img = Image{Module: module, File: file, MCU: "atmega328p", Protocol: "arduino", Baud: 115200}
+		}
+		if module != "" {
+			img.Module = strings.ToLower(module)
+		}
+		return img, "local", nil
+	}
+	if module == "" || hardware == "" {
+		return Image{}, "", fmt.Errorf("pass -module and -hardware, or -file")
+	}
+	releases, err := rel.client().Releases(ctx, rel.tag, rel.stable)
+	if err != nil {
+		return Image{}, "", err
+	}
+	chosen, img, err := Choose(releases, module, hardware)
+	if err != nil {
+		return Image{}, "", err
+	}
+	fmt.Fprintf(os.Stderr, "release %s  %s %s  %s\n", chosen.Tag, img.Module, img.Version, img.File)
+	return img, chosen.Tag, nil
+}
