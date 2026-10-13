@@ -1,0 +1,24 @@
+Loco-CAN Firmware schreiben
+
+Windows: LocoFlash.exe doppelklicken.
+Linux und macOS: ./LocoFlash
+
+Es öffnet sich ein Fenster im Browser. Es ist nichts zu installieren.
+Der Programmer für ATmega328P (Optiboot, DTR-Reset) steckt in der Datei.
+avrdude, Treiberpakete und PlatformIO werden nicht gebraucht.
+
+1. Modul und Version wählen.
+2. FTDI-Adapter wählen. Suchen aktualisiert die Liste.
+3. Schreiben.
+
+Der Adapter muss DTR über einen Kondensator von etwa 100 nF an RESET führen.
+Einen seriellen Monitor auf derselben Schnittstelle vorher schließen.
+Antwortet der Bootloader bei 115200 nicht, wird einmal 57600 versucht.
+
+ESP32-Dateien (.bin) werden angezeigt und nicht geschrieben.
+
+Das Programm läuft weiter, wenn das Browserfenster geschlossen wird.
+Ein erneuter Start öffnet die Seite wieder. Beenden stoppt das Programm.
+
+Quelltext und Lizenz: https://github.com/loco-can/loco-can-software
+GNU GPL Version 3. Der Text liegt in LICENSE.

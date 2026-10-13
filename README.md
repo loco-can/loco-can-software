@@ -146,3 +146,14 @@ pio run -e protocol_host          # PC check of LocoCAN IDs (no hardware)
 PlatformIO sets `MODULE` and the version via build flags. Arduino IDE still uses the uncommented lines in `hardware.h`.
 
 The firmware image is named from those flags: `.pio/build/<env>/<module>_v<major>_<minor>_<patch>.bin` on ESP32 and `.hex` on AVR. `programmer_v3` writes `programmer_v3_0_0.bin`; `controller_v21` writes `controller_v2_1_0.hex`. A later patch such as 2.1.12 is `controller_v2_1_12.hex` and still builds the 2.1 hardware.
+
+## Update a module
+
+[`tools/loco-flash`](tools/loco-flash/README.md) downloads a `.hex` from GitHub Releases and writes it through an FTDI adapter. The Optiboot programmer is built in, so the workshop PC does not need avrdude or PlatformIO. `./tools/loco-flash/package.sh` builds a standalone program for Windows, Linux, and macOS. With no arguments it opens a small window in the browser.
+
+```bash
+go run ./tools/loco-flash
+go run ./tools/loco-flash ports
+go run ./tools/loco-flash ls
+go run ./tools/loco-flash write -module controller -hardware 2.1 -port /dev/ttyUSB0
+```
