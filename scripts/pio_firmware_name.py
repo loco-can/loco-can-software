@@ -3,10 +3,11 @@
 build_flags select the module, for example::
 
     -D MODULE=PROGRAMMER_MODULE
-    -D PROGRAMMER_MODULE_VERSION=V_3_0
+    -D PROGRAMMER_MODULE_VERSION=V_3_0_0
 
-This pre-script turns that pair into PROGNAME ``programmer_v3_0``.
-ESP32 then links ``programmer_v3_0.bin`` and AVR links ``programmer_v3_0.hex``.
+This pre-script turns that pair into PROGNAME ``programmer_v3_0_0``.
+``V_2_1_12`` becomes ``controller_v2_1_12``. ESP32 links a ``.bin`` and AVR
+links a ``.hex``.
 
 Dots are avoided on purpose: SCons treats the last ``.`` in PROGNAME as a
 suffix and would otherwise emit ``programmer_v3.hex``.
@@ -24,7 +25,7 @@ except NameError:
     env = None
 
 _DEFINE = re.compile(r"(?:^|\s)-D\s*([A-Za-z_][A-Za-z0-9_]*)(?:=(\S+))?")
-_VERSION = re.compile(r"V_(\d+)_(\d+)")
+_VERSION = re.compile(r"V_(\d+)_(\d+)_(\d+)")
 
 
 def defines_from_flags(flags):
@@ -39,7 +40,7 @@ def defines_from_flags(flags):
 
 
 def firmware_progname(flags):
-    """Return ``<module>_v<major>_<minor>`` or None when flags are incomplete."""
+    """Return ``<module>_v<major>_<minor>_<patch>`` or None when flags are incomplete."""
     defines = defines_from_flags(flags)
     module = defines.get("MODULE")
     if not module:
@@ -52,7 +53,9 @@ def firmware_progname(flags):
     match = _VERSION.fullmatch(version)
     if match is None:
         return None
-    return "{0}_v{1}_{2}".format(short.lower(), match.group(1), match.group(2))
+    return "{0}_v{1}_{2}_{3}".format(
+        short.lower(), match.group(1), match.group(2), match.group(3)
+    )
 
 
 def image_extension(platform):

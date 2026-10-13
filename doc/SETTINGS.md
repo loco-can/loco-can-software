@@ -63,13 +63,17 @@ The global reply message consists of three bytes with metadata about the module 
 
 The counter value 0 allways holds the version of the module software.
 
-	CAN-ID 	byte-0	byte-1	byte-2	byte-3 ...
-	 0x780	 max 	 0x0m	version	 type	module software version and type
+	CAN-ID 	byte-0	byte-1	byte-2	byte-3	byte-4	byte-5	byte-6
+	 0x780	 max 	 0x0m	 0	major	minor	patch	type
 	 0x780	 0xnm 	 name 	  ...	module name (15 bytes)
 
 Version string
 
 	x.y.z
+
+For example 2.1.12 is major 2, minor 1, patch 12. The settings image
+still stores major*10+minor in byte 0 (2.1.12 and 2.1.0 are both 21),
+so a patch release keeps the saved parameters.
 
 #### Value Reply
 

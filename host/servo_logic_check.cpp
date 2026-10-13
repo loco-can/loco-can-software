@@ -3,6 +3,7 @@
  */
 
 #include "module/servo/mapping.h"
+#include "can_protocol.h"
 #include "module/servo/params.h"
 
 #include <stdio.h>
@@ -94,7 +95,7 @@ int servo_logic_check(void) {
 	expect_u16("estop drive", bus.drive, 0);
 
 	SERVO_PARAMS params;
-	servo_params_defaults(params, 21);
+	servo_params_defaults(params, LOCO_VERSION(2, 1, 0));
 	expect_u8("version", params.bytes[SERVO_PARAM_VERSION], 21);
 	expect_u8("out1", servo_params_map(params, 0), SERVO_FUNC_DRIVE);
 	expect_u8("out2", servo_params_map(params, 1), SERVO_FUNC_BRAKE);
@@ -107,11 +108,13 @@ int servo_logic_check(void) {
 	request.id = CAN_ID_REQUEST;
 	request.size = 1;
 	request.data[0] = 0xFF;
-	SERVO_PARAM_RESULT info = servo_params_on_can(params, request, 0x1234, 21, SERVO_TYPE_ID);
+	SERVO_PARAM_RESULT info = servo_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SERVO_TYPE_ID);
 	expect_u8("info packets", info.reply_count, 2);
 	expect_u8("info max", info.reply[0].data[0], (uint8_t)(SERVO_PARAM_BYTES - 1));
-	expect_u8("info version", info.reply[0].data[3], 21);
-	expect_u8("info type", info.reply[0].data[4], SERVO_TYPE_ID);
+	expect_u8("info major", info.reply[0].data[3], 2);
+	expect_u8("info minor", info.reply[0].data[4], 1);
+	expect_u8("info patch", info.reply[0].data[5], 0);
+	expect_u8("info type", info.reply[0].data[6], SERVO_TYPE_ID);
 
 	request.id = (uint32_t)(CAN_ID_SETUP | SERVO_PARAM_MAP);
 	request.size = 6;
@@ -121,7 +124,7 @@ int servo_logic_check(void) {
 	request.data[3] = servo_map_make(SERVO_SRC_SPEED, true);
 	request.data[4] = SERVO_FUNC_NONE;
 	request.data[5] = servo_map_make(SERVO_SRC_MOTOR_CURRENT, false);
-	SERVO_PARAM_RESULT written = servo_params_on_can(params, request, 0x1234, 21, SERVO_TYPE_ID);
+	SERVO_PARAM_RESULT written = servo_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SERVO_TYPE_ID);
 	expect_true("maps stored", written.changed);
 	expect_u8("map0 voltage", servo_map_source(servo_params_map(params, 0)), SERVO_SRC_VOLTAGE);
 	expect_true("map1 invert", servo_map_invert(servo_params_map(params, 1)));
@@ -129,7 +132,7 @@ int servo_logic_check(void) {
 	expect_u8("map3 motor I", servo_map_source(servo_params_map(params, 3)), SERVO_SRC_MOTOR_CURRENT);
 
 	request.data[2] = 13;
-	SERVO_PARAM_RESULT rejected = servo_params_on_can(params, request, 0x1234, 21, SERVO_TYPE_ID);
+	SERVO_PARAM_RESULT rejected = servo_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SERVO_TYPE_ID);
 	expect_true("invalid map rejected", !rejected.changed);
 
 	if (g_fails != 0) {

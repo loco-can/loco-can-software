@@ -47,13 +47,13 @@ void MODULE_SERVO::_load_params(void) {
 
 	servo_eeprom_begin();
 
-	uint8_t version = (uint8_t)SERVO_MODULE_VERSION;
+	uint8_t version = (uint8_t)LOCO_VERSION_CODE(SERVO_MODULE_VERSION);
 	uint8_t magic = EEPROM.read(0);
 	uint8_t schema = EEPROM.read(1);
 	uint8_t stored_version = EEPROM.read(2);
 
 	if (magic != SERVO_PARAM_MAGIC || schema != SERVO_PARAM_SCHEMA || stored_version != version) {
-		servo_params_defaults(_params, version);
+		servo_params_defaults(_params, SERVO_MODULE_VERSION);
 		_save_params();
 		return;
 	}
@@ -70,7 +70,7 @@ void MODULE_SERVO::_load_params(void) {
 
 	for (uint8_t i = 0; i < SERVO_OUTPUT_COUNT; i++) {
 		if (!servo_map_valid(_params.bytes[SERVO_PARAM_MAP + i])) {
-			servo_params_defaults(_params, version);
+			servo_params_defaults(_params, SERVO_MODULE_VERSION);
 			_save_params();
 			return;
 		}
@@ -106,7 +106,7 @@ void MODULE_SERVO::_handle_setup(CAN_MESSAGE message) {
 		_params,
 		message,
 		(uint16_t)can.uuid(),
-		(uint8_t)SERVO_MODULE_VERSION,
+		SERVO_MODULE_VERSION,
 		SERVO_TYPE_ID
 	);
 

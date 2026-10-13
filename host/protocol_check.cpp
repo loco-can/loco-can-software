@@ -40,6 +40,12 @@ int main(void) {
 	REQUIRE(LIGHT_POSIT == 0, "LIGHT_POSIT");
 	REQUIRE(LIGHT_MAIN == 7, "LIGHT_MAIN");
 	REQUIRE(CAN_ID_MASK == 0x770, "CAN_ID_MASK");
+	REQUIRE(LOCO_VERSION_MAJOR(LOCO_VERSION(2, 1, 12)) == 2, "version major");
+	REQUIRE(LOCO_VERSION_MINOR(LOCO_VERSION(2, 1, 12)) == 1, "version minor");
+	REQUIRE(LOCO_VERSION_PATCH(LOCO_VERSION(2, 1, 12)) == 12, "version patch");
+	REQUIRE(LOCO_VERSION_CODE(LOCO_VERSION(2, 1, 12)) == 21, "version settings code");
+	REQUIRE(LOCO_VERSION_IS(LOCO_VERSION(2, 1, 12), 2, 1), "patch keeps hardware");
+	REQUIRE(!LOCO_VERSION_IS(LOCO_VERSION(2, 1, 12), 2, 0), "minor still selects hardware");
 
 	WIFI_NOW_PACKET pkt;
 	memset(&pkt, 0, sizeof(pkt));

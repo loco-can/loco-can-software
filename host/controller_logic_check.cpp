@@ -2,6 +2,7 @@
  * Host checks for the controller status machine and drive-frame layout.
  */
 
+#include "can_protocol.h"
 #include "module/controller/drive_codec.h"
 #include "module/controller/params.h"
 #include "module/controller/status.h"
@@ -190,7 +191,7 @@ int controller_logic_check(void) {
 	expect_u16("full brake", brake_val, 1023);
 
 	CONTROLLER_PARAMS params;
-	controller_params_defaults(params, 1024, false, 21);
+	controller_params_defaults(params, 1024, false, LOCO_VERSION(2, 1, 0));
 	expect_u8("mains count", params.bytes[CONTROLLER_PARAM_MAINS_COUNT], 3);
 	expect_u16("mains low", controller_params_get16(params, CONTROLLER_PARAM_MAINS_POINT), 0);
 	expect_u16("mains mid", controller_params_get16(params, (uint8_t)(CONTROLLER_PARAM_MAINS_POINT + 2)), 511);
@@ -198,7 +199,7 @@ int controller_logic_check(void) {
 	expect_u16("single drive zero", controller_params_get16(params, CONTROLLER_PARAM_DRIVE_ZERO), 511);
 	expect_u16("single brake full", controller_params_get16(params, CONTROLLER_PARAM_BRAKE_FULL), 0);
 
-	controller_params_defaults(params, 1024, true, 21);
+	controller_params_defaults(params, 1024, true, LOCO_VERSION(2, 1, 0));
 	expect_u16("dual drive zero", controller_params_get16(params, CONTROLLER_PARAM_DRIVE_ZERO), 0);
 	expect_u16("dual brake full", controller_params_get16(params, CONTROLLER_PARAM_BRAKE_FULL), 1023);
 
@@ -221,11 +222,13 @@ int controller_logic_check(void) {
 	request.size = 1;
 	request.data[0] = 0xFF;
 	for (uint8_t i = 1; i < 8; i++) request.data[i] = 0;
-	CONTROLLER_PARAM_RESULT info = controller_params_on_can(params, request, 0x1234, 21, CONTROLLER_TYPE_ID);
+	CONTROLLER_PARAM_RESULT info = controller_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), CONTROLLER_TYPE_ID);
 	expect_u8("info packets", info.reply_count, 2);
 	expect_u8("info max", info.reply[0].data[0], (uint8_t)(CONTROLLER_PARAM_BYTES - 1));
-	expect_u8("info version", info.reply[0].data[3], 21);
-	expect_u8("info type", info.reply[0].data[4], CONTROLLER_TYPE_ID);
+	expect_u8("info major", info.reply[0].data[3], 2);
+	expect_u8("info minor", info.reply[0].data[4], 1);
+	expect_u8("info patch", info.reply[0].data[5], 0);
+	expect_u8("info type", info.reply[0].data[6], CONTROLLER_TYPE_ID);
 	expect_u8("info name id", (uint8_t)info.reply[1].id, (uint8_t)CAN_ID_REPLY);
 
 	request.size = 4;
@@ -233,7 +236,7 @@ int controller_logic_check(void) {
 	request.data[1] = 0x34;
 	request.data[2] = CONTROLLER_PARAM_DRIVE_FULL;
 	request.data[3] = 2;
-	CONTROLLER_PARAM_RESULT value = controller_params_on_can(params, request, 0x1234, 21, CONTROLLER_TYPE_ID);
+	CONTROLLER_PARAM_RESULT value = controller_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), CONTROLLER_TYPE_ID);
 	expect_u8("value size", value.reply[0].size, 2);
 	expect_u8("value id low", (uint8_t)(value.reply[0].id & 0x7F), CONTROLLER_PARAM_DRIVE_FULL);
 	expect_u16("value drive full", (uint16_t)(value.reply[0].data[0] | (value.reply[0].data[1] << 8)), 1023);
@@ -244,7 +247,7 @@ int controller_logic_check(void) {
 	request.data[1] = 0x01;
 	request.data[2] = 0x10;
 	request.data[3] = 0x00;
-	CONTROLLER_PARAM_RESULT rejected = controller_params_on_can(params, request, 0x1234, 21, CONTROLLER_TYPE_ID);
+	CONTROLLER_PARAM_RESULT rejected = controller_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), CONTROLLER_TYPE_ID);
 	if (rejected.changed) {
 		fprintf(stderr, "FAIL foreign uuid must not change parameters\n");
 		g_fails++;
@@ -254,7 +257,7 @@ int controller_logic_check(void) {
 	request.data[1] = 0x34;
 	request.data[2] = 0x00;
 	request.data[3] = 0x02;
-	CONTROLLER_PARAM_RESULT written = controller_params_on_can(params, request, 0x1234, 21, CONTROLLER_TYPE_ID);
+	CONTROLLER_PARAM_RESULT written = controller_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), CONTROLLER_TYPE_ID);
 	if (!written.changed) {
 		fprintf(stderr, "FAIL own uuid write was ignored\n");
 		g_fails++;
@@ -268,12 +271,28 @@ int controller_logic_check(void) {
 	request.data[4] = 'O';
 	request.data[5] = 'C';
 	request.data[6] = 'O';
-	CONTROLLER_PARAM_RESULT named = controller_params_on_can(params, request, 0x1234, 21, CONTROLLER_TYPE_ID);
+	CONTROLLER_PARAM_RESULT named = controller_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), CONTROLLER_TYPE_ID);
 	if (!named.changed || params.name[0] != 'L' || params.name[3] != 'O' || params.name[4] != 0) {
 		fprintf(stderr, "FAIL module name was not stored\n");
 		g_fails++;
 	}
 	expect_u8("version stays", params.bytes[CONTROLLER_PARAM_VERSION], 21);
+
+	CONTROLLER_PARAMS patched;
+	controller_params_defaults(patched, 1024, false, LOCO_VERSION(2, 1, 12));
+	expect_u8("2.1.12 settings code", patched.bytes[CONTROLLER_PARAM_VERSION], 21);
+	CAN_MESSAGE patch_request;
+	patch_request.id = CAN_ID_REQUEST;
+	patch_request.uuid = 1;
+	patch_request.size = 1;
+	patch_request.data[0] = 0xFF;
+	for (uint8_t i = 1; i < 8; i++) patch_request.data[i] = 0;
+	CONTROLLER_PARAM_RESULT patch_info = controller_params_on_can(
+		patched, patch_request, 0x1234, LOCO_VERSION(2, 1, 12), CONTROLLER_TYPE_ID);
+	expect_u8("2.1.12 major", patch_info.reply[0].data[3], 2);
+	expect_u8("2.1.12 minor", patch_info.reply[0].data[4], 1);
+	expect_u8("2.1.12 patch", patch_info.reply[0].data[5], 12);
+	expect_u8("2.1.12 type", patch_info.reply[0].data[6], CONTROLLER_TYPE_ID);
 
 	if (g_fails == 0) {
 		printf("controller status and drive frame check ok\n");

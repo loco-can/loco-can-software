@@ -112,15 +112,21 @@ void LocoCANcore::_send_module_heartbeat(void) {
 	CAN_MESSAGE heartbeat;
 	heartbeat.id = CAN_ID_MODULE_HEARTBEAT;
 	heartbeat.uuid = 0;
-	heartbeat.size = 2;
+	heartbeat.size = 4;
 	heartbeat.data[0] = (uint8_t)LOCO_MODULE_TYPE;
-	heartbeat.data[1] = (uint8_t)LOCO_MODULE_VERSION;
+	heartbeat.data[1] = (uint8_t)LOCO_VERSION_MAJOR(LOCO_MODULE_VERSION);
+	heartbeat.data[2] = (uint8_t)LOCO_VERSION_MINOR(LOCO_MODULE_VERSION);
+	heartbeat.data[3] = (uint8_t)LOCO_VERSION_PATCH(LOCO_MODULE_VERSION);
 
 	/* #ifdef DEBUG
 		Serial.print("> module heartbeat type 0x");
 		Serial.print((uint8_t)LOCO_MODULE_TYPE, HEX);
 		Serial.print(" ver ");
-		Serial.print((uint8_t)LOCO_MODULE_VERSION);
+		Serial.print((uint8_t)LOCO_VERSION_MAJOR(LOCO_MODULE_VERSION));
+		Serial.print(".");
+		Serial.print((uint8_t)LOCO_VERSION_MINOR(LOCO_MODULE_VERSION));
+		Serial.print(".");
+		Serial.print((uint8_t)LOCO_VERSION_PATCH(LOCO_MODULE_VERSION));
 		Serial.println(can.send(heartbeat) ? " ok" : " fail");
 	#else */
 		can.send(heartbeat);

@@ -158,17 +158,29 @@ void MODULE_PROGRAMMER::_ingest(CAN_MESSAGE message) {
 	/* learn module presence from heartbeat and info replies */
 	if (message.id == CAN_ID_MODULE_HEARTBEAT || message.id == CAN_ID_REPLY) {
 		for (uint8_t i = 0; i < 16; i++) {
-			if (_nodes[i].used && _nodes[i].uuid == message.uuid) {
-				break;
+			bool known = _nodes[i].used && _nodes[i].uuid == message.uuid;
+			if (!known && _nodes[i].used) {
+				continue;
 			}
-			if (!_nodes[i].used) {
+			if (!known) {
 				_nodes[i].used = true;
 				_nodes[i].uuid = message.uuid;
+				_nodes[i].name[0] = 0;
+				_nodes[i].type = 0;
+				_nodes[i].version_maj = 0;
+				_nodes[i].version_min = 0;
+				_nodes[i].version_patch = 0;
+			}
+			if (message.id == CAN_ID_MODULE_HEARTBEAT) {
 				_nodes[i].type = message.size > 0 ? message.data[0] : 0;
 				_nodes[i].version_maj = message.size > 1 ? message.data[1] : 0;
-				_nodes[i].name[0] = 0;
-				break;
+				_nodes[i].version_min = message.size > 2 ? message.data[2] : 0;
+				_nodes[i].version_patch = message.size > 3 ? message.data[3] : 0;
+			} else if (!known) {
+				_nodes[i].type = message.size > 0 ? message.data[0] : 0;
+				_nodes[i].version_maj = message.size > 1 ? message.data[1] : 0;
 			}
+			break;
 		}
 	}
 }

@@ -23,7 +23,7 @@
  * Skip the pin map when another module is selected.
  */
 
-#if defined(SERVO_MODULE_VERSION) && (SERVO_MODULE_VERSION == V_2_0 || SERVO_MODULE_VERSION == V_2_1)
+#if defined(SERVO_MODULE_VERSION) && (LOCO_VERSION_IS(SERVO_MODULE_VERSION, 2, 0) || LOCO_VERSION_IS(SERVO_MODULE_VERSION, 2, 1))
 
 	// ======================================
 	// BASIC SETTINGS

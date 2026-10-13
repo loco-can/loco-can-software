@@ -24,7 +24,7 @@
  * boards keep their own CAN_STATUS_LED and filter sizes.
  */
 
-#if defined(ELECTRIC_MODULE_VERSION) && ELECTRIC_MODULE_VERSION == V_2_0
+#if defined(ELECTRIC_MODULE_VERSION) && LOCO_VERSION_IS(ELECTRIC_MODULE_VERSION, 2, 0)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -55,7 +55,7 @@
 	#define DRIVE_MOTOR_VOLTAGE_PLUS A0
 	#define DRIVE_MOTOR_VOLTAGE_MINUS A1
 
-#elif defined(ELECTRIC_MODULE_VERSION) && ELECTRIC_MODULE_VERSION == V_2_1
+#elif defined(ELECTRIC_MODULE_VERSION) && LOCO_VERSION_IS(ELECTRIC_MODULE_VERSION, 2, 1)
 
 	// ======================================
 	// BASIC SETTINGS
