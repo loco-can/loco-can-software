@@ -12,10 +12,11 @@ import (
 )
 
 const usageText = `loco-flash downloads Loco-CAN firmware from GitHub releases and writes it
-through an FTDI adapter. ATmega328P modules use Optiboot: 115200 baud,
+through an FTDI adapter. The Optiboot programmer is built in: 115200 baud,
 DTR resets the board (usually via 100 nF). If that does not answer,
-57600 is tried once for the old Nano bootloader.
+57600 is tried once for the old Nano bootloader. No install is required.
 
+  loco-flash
   loco-flash ports
   loco-flash ls
   loco-flash write -module controller -hardware 2.1 -port /dev/ttyUSB0
@@ -23,24 +24,31 @@ DTR resets the board (usually via 100 nF). If that does not answer,
   loco-flash write -file controller_v2_1_0.hex -port COM3
   loco-flash manifest -dir dist -out dist/manifest.json
 
-The newest release that contains a matching .hex is used, including
-pre-releases. -hardware 2.1 takes the highest patch (2.1.12). -hardware
-2.1.12 selects that patch. -stable skips pre-releases.
+With no arguments, loco-flash opens the workshop window. The newest
+release that contains a matching .hex is used, including pre-releases.
+-hardware 2.1 takes the highest patch (2.1.12). -hardware 2.1.12 selects
+that patch. -stable skips pre-releases. -avrdude uses an external avrdude
+instead of the built-in programmer.
 
 ESP32 .bin images are not written over FTDI.
 `
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	if len(os.Args) < 2 {
-		fmt.Fprint(os.Stderr, usageText)
-		os.Exit(2)
+		if err := cmdGUI(ctx, nil); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			notify("Loco-CAN", err.Error())
+			os.Exit(1)
+		}
+		return
 	}
 	if os.Args[1] == "-h" || os.Args[1] == "--help" || os.Args[1] == "help" {
 		fmt.Fprint(os.Stdout, usageText)
 		return
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
 
 	var err error
 	switch os.Args[1] {
@@ -50,6 +58,8 @@ func main() {
 		err = cmdLS(ctx, os.Args[2:])
 	case "write":
 		err = cmdWrite(ctx, os.Args[2:])
+	case "gui":
+		err = cmdGUI(ctx, os.Args[2:])
 	case "manifest":
 		err = cmdManifest(os.Args[2:])
 	default:
@@ -58,6 +68,9 @@ func main() {
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		if os.Args[1] == "gui" {
+			notify("Loco-CAN", err.Error())
+		}
 		os.Exit(1)
 	}
 }
@@ -163,8 +176,8 @@ func cmdWrite(ctx context.Context, args []string) error {
 	all := fs.Bool("all-ftdi", false, "write the same file to every FTDI adapter")
 	baud := fs.Int("baud", 115200, "bootloader baud rate")
 	avrdude := fs.String("avrdude", "", "path to avrdude")
-	dry := fs.Bool("dry-run", false, "download and print the avrdude command, do not write")
-	timeout := fs.Duration("timeout", 45*time.Second, "time limit for one avrdude attempt")
+	dry := fs.Bool("dry-run", false, "download and print the write step, do not write")
+	timeout := fs.Duration("timeout", 45*time.Second, "time limit for one write attempt")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprint(os.Stderr, usageText)
 		return err
@@ -218,15 +231,23 @@ func cmdWrite(ctx context.Context, args []string) error {
 	})
 	bauds := baudAttempts(*baud, baudSet)
 
-	if *dry {
-		tool := "avrdude"
-		if *avrdude != "" {
-			tool = *avrdude
+	var hexData []byte
+	if *avrdude == "" {
+		hexData, err = os.ReadFile(hexPath)
+		if err != nil {
+			return err
 		}
+	}
+
+	if *dry {
 		fmt.Printf("%s %s  %s\n", img.Module, img.Version, img.File)
 		for _, port := range ports {
 			fmt.Printf("%s\n", port.Name)
-			fmt.Println(tool + " " + joinArgs(avrdudeArgs(avrdudeConf(tool), img.MCU, port.Name, hexPath, bauds[0])))
+			if *avrdude != "" {
+				fmt.Println(*avrdude + " " + joinArgs(avrdudeArgs(avrdudeConf(*avrdude), img.MCU, port.Name, hexPath, bauds[0])))
+			} else {
+				fmt.Printf("optiboot %d %s %s\n", bauds[0], port.Name, hexPath)
+			}
 		}
 		if len(bauds) > 1 {
 			fmt.Printf("if the bootloader does not answer, baud %d is tried\n", bauds[1])
@@ -234,14 +255,26 @@ func cmdWrite(ctx context.Context, args []string) error {
 		return nil
 	}
 
-	tool, err := findAvrdude(*avrdude)
-	if err != nil {
-		return err
-	}
 	var failed []string
 	for _, port := range ports {
 		fmt.Fprintf(os.Stderr, "write %s %s to %s\n", img.Module, img.Version, port.Name)
-		err := flashHex(ctx, execRunner{}, tool, img.MCU, port.Name, hexPath, bauds, *timeout)
+		attempt, cancel := context.WithTimeout(ctx, *timeout)
+		var err error
+		if *avrdude != "" {
+			tool, findErr := findAvrdude(*avrdude)
+			if findErr != nil {
+				cancel()
+				return findErr
+			}
+			err = flashHex(attempt, execRunner{}, tool, img.MCU, port.Name, hexPath, bauds, *timeout)
+		} else {
+			err = programHex(attempt, port.Name, hexData, bauds, func(msg string, _, _ int) {
+				if msg != "" {
+					fmt.Fprintln(os.Stderr, msg)
+				}
+			})
+		}
+		cancel()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			failed = append(failed, port.Name)

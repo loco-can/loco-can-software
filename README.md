@@ -149,9 +149,10 @@ The firmware image is named from those flags: `.pio/build/<env>/<module>_v<major
 
 ## Update a module
 
-[`tools/loco-flash`](tools/loco-flash/README.md) downloads a `.hex` from GitHub Releases and writes it with `avrdude` through an FTDI adapter (Optiboot, DTR reset).
+[`tools/loco-flash`](tools/loco-flash/README.md) downloads a `.hex` from GitHub Releases and writes it through an FTDI adapter. The Optiboot programmer is built in, so the workshop PC does not need avrdude or PlatformIO. `./tools/loco-flash/package.sh` builds a standalone program for Windows, Linux, and macOS. With no arguments it opens a small window in the browser.
 
 ```bash
+go run ./tools/loco-flash
 go run ./tools/loco-flash ports
 go run ./tools/loco-flash ls
 go run ./tools/loco-flash write -module controller -hardware 2.1 -port /dev/ttyUSB0
