@@ -48,6 +48,16 @@ func (v parsedVersion) String() string {
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
+func (v parsedVersion) less(o parsedVersion) bool {
+	if v.Major != o.Major {
+		return v.Major < o.Major
+	}
+	if v.Minor != o.Minor {
+		return v.Minor < o.Minor
+	}
+	return v.Patch < o.Patch
+}
+
 var firmwareName = regexp.MustCompile(`(?i)^([a-z0-9]+)_v([0-9]+)_([0-9]+)_([0-9]+)\.(hex|bin)$`)
 
 func parseFirmwareName(name string) (Image, bool) {
@@ -143,6 +153,56 @@ func Select(images []Image, module, hardware string) (Image, error) {
 		return vi.Patch > vj.Patch
 	})
 	return match[0], nil
+}
+
+func matchProbedImage(images []Image, info ModuleInfo) (Image, bool) {
+	_, img, ok := matchProbedRelease([]Release{{Images: images}}, info)
+	return img, ok
+}
+
+// matchProbedRelease picks the newest flashable image of the probed module
+// that is the same version or newer. Older images are skipped. Releases
+// should be newest-first so equal versions keep the later GitHub release.
+func matchProbedRelease(releases []Release, info ModuleInfo) (int, Image, bool) {
+	if info.Module == "" {
+		return -1, Image{}, false
+	}
+	var want parsedVersion
+	haveWant := false
+	if info.Version != "" {
+		v, err := parseVersion(info.Version)
+		if err != nil {
+			return -1, Image{}, false
+		}
+		want = v
+		haveWant = true
+	}
+	bestIdx := -1
+	var bestImg Image
+	var bestVer parsedVersion
+	for i, rel := range releases {
+		for _, img := range rel.Images {
+			if img.Module != info.Module || img.flashable() != nil {
+				continue
+			}
+			got, err := img.version()
+			if err != nil {
+				continue
+			}
+			if haveWant && got.less(want) {
+				continue
+			}
+			if bestIdx < 0 || bestVer.less(got) {
+				bestIdx = i
+				bestImg = img
+				bestVer = got
+			}
+		}
+	}
+	if bestIdx < 0 {
+		return -1, Image{}, false
+	}
+	return bestIdx, bestImg, true
 }
 
 func (img Image) flashable() error {

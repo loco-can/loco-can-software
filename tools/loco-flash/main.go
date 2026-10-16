@@ -18,6 +18,7 @@ DTR resets the board (usually via 100 nF). If that does not answer,
 
   loco-flash
   loco-flash ports
+  loco-flash identify -port /dev/ttyUSB0
   loco-flash ls
   loco-flash write -module controller -hardware 2.1 -port /dev/ttyUSB0
   loco-flash write -module switch -hardware 2.1 -all-ftdi
@@ -54,6 +55,8 @@ func main() {
 	switch os.Args[1] {
 	case "ports":
 		err = cmdPorts()
+	case "identify":
+		err = cmdIdentify(ctx, os.Args[2:])
 	case "ls":
 		err = cmdLS(ctx, os.Args[2:])
 	case "write":
@@ -73,6 +76,42 @@ func main() {
 		}
 		os.Exit(1)
 	}
+}
+
+func cmdIdentify(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("identify", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	portName := fs.String("port", "", "serial port of one FTDI adapter")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprint(os.Stderr, usageText)
+		return err
+	}
+	if *portName == "" {
+		return fmt.Errorf("pass -port")
+	}
+	info, err := probeModule(ctx, *portName)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s", info.Module)
+	if info.Version != "" {
+		fmt.Printf(" %s", info.Version)
+	}
+	if info.TypeID != 0 {
+		fmt.Printf(" id=0x%02x", info.TypeID)
+	}
+	if info.CAN != nil {
+		if *info.CAN {
+			fmt.Print(" can=1")
+		} else {
+			fmt.Print(" can=0")
+		}
+	}
+	fmt.Println()
+	if info.Raw != "" {
+		fmt.Println(info.Raw)
+	}
+	return nil
 }
 
 func cmdPorts() error {

@@ -28,8 +28,8 @@ func TestOptibootProgramsAndVerifies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(port.dtr) < 3 || port.dtr[0] || !port.dtr[1] || port.dtr[2] {
-		t.Fatalf("DTR pulse %v", port.dtr)
+	if len(port.dtr) < 2 || port.dtr[0] || !port.dtr[1] {
+		t.Fatalf("DTR pulse %v, want off then held on", port.dtr)
 	}
 }
 
@@ -58,6 +58,23 @@ func TestOptibootVerifyFailure(t *testing.T) {
 	err = fastOptiboot().program(context.Background(), &pipePort{c: host}, img, nil)
 	if err == nil || !strings.Contains(err.Error(), "Prüfung") {
 		t.Fatal(err)
+	}
+}
+
+func TestSyncSkipsSketchBanner(t *testing.T) {
+	port := &scriptedPort{reads: []byte{
+		'*', '*', '*', stkInsync, stkOK,
+	}}
+	ob := fastOptiboot()
+	if err := ob.sync(context.Background(), port); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAvrdudeResetPulseIsLongEnoughForUSB(t *testing.T) {
+	ob := standardOptiboot()
+	if ob.pulse < 50*time.Millisecond {
+		t.Fatalf("DTR pulse %s is shorter than avrdude -c arduino (50ms)", ob.pulse)
 	}
 }
 
@@ -114,6 +131,24 @@ func (p *pipePort) ResetInputBuffer() error {
 	}
 	return p.c.SetReadDeadline(time.Time{})
 }
+
+type scriptedPort struct {
+	reads []byte
+}
+
+func (p *scriptedPort) Read(b []byte) (int, error) {
+	if len(p.reads) == 0 || len(b) == 0 {
+		return 0, nil
+	}
+	b[0] = p.reads[0]
+	p.reads = p.reads[1:]
+	return 1, nil
+}
+func (p *scriptedPort) Write(b []byte) (int, error)        { return len(b), nil }
+func (p *scriptedPort) SetDTR(bool) error                  { return nil }
+func (p *scriptedPort) SetRTS(bool) error                  { return nil }
+func (p *scriptedPort) SetReadTimeout(time.Duration) error { return nil }
+func (p *scriptedPort) ResetInputBuffer() error            { return nil }
 
 type timeoutPort struct{}
 

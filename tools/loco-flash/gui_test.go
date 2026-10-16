@@ -44,12 +44,22 @@ func TestWorkshopWindow(t *testing.T) {
 	application.ports = func() ([]Port, error) {
 		return []Port{{Name: "/dev/ttyUSB0", USB: "0403:6001", Desc: "FTDI FT232R"}}, nil
 	}
+	application.identify = func(ctx context.Context, port string) (ModuleInfo, error) {
+		if port != "/dev/ttyUSB0" {
+			t.Fatalf("port %s", port)
+		}
+		on := true
+		return ModuleInfo{Module: "controller", Version: "2.1.0", TypeID: 0x10, CAN: &on, Raw: "LOCO type=controller ver=2.1.0 id=0x10 can=1"}, nil
+	}
 	srv := httptest.NewServer(application.handler())
 	defer srv.Close()
 
 	page := getString(t, srv.URL+"/", "")
-	if !strings.Contains(page, "Loco-CAN") || !strings.Contains(page, "test-token") {
-		t.Fatalf("page missing title or token: %.200s", page)
+	if !strings.Contains(page, "Loco-CAN") || !strings.Contains(page, "test-token") || !strings.Contains(page, "Abfragen") {
+		t.Fatalf("page missing title, token or probe: %.200s", page)
+	}
+	if i, j := strings.Index(page, `id="probe"`), strings.Index(page, `id="release"`); i < 0 || j < 0 || i > j {
+		t.Fatalf("probe control must sit above the release list")
 	}
 
 	res, err := http.Get(srv.URL + "/api/ports")
@@ -83,6 +93,16 @@ func TestWorkshopWindow(t *testing.T) {
 	getJSON(t, srv.URL+"/api/ports", "test-token", &ports)
 	if len(ports.Ports) != 1 || ports.Ports[0].Name != "/dev/ttyUSB0" {
 		t.Fatalf("ports %+v", ports.Ports)
+	}
+
+	var probed struct {
+		OK      bool   `json:"ok"`
+		Module  string `json:"module"`
+		Version string `json:"version"`
+	}
+	getJSON(t, srv.URL+"/api/probe?port=/dev/ttyUSB0", "test-token", &probed)
+	if !probed.OK || probed.Module != "controller" || probed.Version != "2.1.0" {
+		t.Fatalf("probe %+v", probed)
 	}
 
 	binRes := postJSON(t, srv.URL+"/api/flash", "test-token", map[string]any{

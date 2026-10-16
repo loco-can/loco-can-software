@@ -13,8 +13,9 @@ LocoCANcore core;
 
 void setup() {
 
+	Serial.begin(115200);
+
 	#ifdef DEBUG
-		Serial.begin(115200);
 
 		Serial.println("***********************");
 		Serial.println("* Welcome to Loco-Can *");
@@ -26,6 +27,7 @@ void setup() {
 		Serial.println();
 	#endif
 
+	core.identify();
 	core.begin();
 }
 

@@ -1,3 +1,5 @@
+//go:build !linux
+
 package main
 
 import (
@@ -16,6 +18,7 @@ func openSerial(portName string, baud int) (*serialWire, error) {
 	if baud == 0 {
 		baud = 115200
 	}
+	prepareSerial(portName)
 	mode := &serial.Mode{
 		BaudRate: baud,
 		DataBits: 8,
@@ -44,4 +47,5 @@ func (s *serialWire) SetReadTimeout(d time.Duration) error {
 	return s.port.SetReadTimeout(d)
 }
 func (s *serialWire) ResetInputBuffer() error { return s.port.ResetInputBuffer() }
+func (s *serialWire) Drain() error            { return s.port.Drain() }
 func (s *serialWire) Close() error            { return s.port.Close() }

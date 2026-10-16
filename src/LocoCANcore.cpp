@@ -79,11 +79,15 @@ void LocoCANcore::begin(void) {
 		Serial.println("Loco-CAN started successfully");
 		Serial.println("*****************************");
 	#endif
+
+	identify();
 	/* ***************************************************** */
 }
 
 
 void LocoCANcore::update(void) {
+
+	_serial_poll();
 
 	#ifndef PROGRAMMER_MODULE_VERSION
 		if (_module_heartbeat.update()) {
@@ -143,4 +147,46 @@ void LocoCANcore::_send_module_heartbeat(void) {
 	#else */
 		can.send(heartbeat);
 	/* #endif */
+}
+
+
+void LocoCANcore::_serial_poll(void) {
+
+	while (Serial.available() > 0) {
+		const int c = Serial.read();
+		if (c == '?' || c == 'I' || c == 'i') {
+			identify();
+		}
+	}
+}
+
+
+void LocoCANcore::identify(void) {
+
+	#ifndef LOCO_MODULE_TYPE
+		#error "LOCO_MODULE_TYPE must be defined by the selected module"
+	#endif
+	#ifndef LOCO_MODULE_NAME
+		#error "LOCO_MODULE_NAME must be defined by the selected module"
+	#endif
+	#ifndef LOCO_MODULE_VERSION
+		#error "LOCO_MODULE_VERSION must be defined by the selected module"
+	#endif
+
+	Serial.print(F("LOCO type="));
+	Serial.print(LOCO_MODULE_NAME);
+	Serial.print(F(" ver="));
+	Serial.print((unsigned)LOCO_VERSION_MAJOR(LOCO_MODULE_VERSION));
+	Serial.print('.');
+	Serial.print((unsigned)LOCO_VERSION_MINOR(LOCO_MODULE_VERSION));
+	Serial.print('.');
+	Serial.print((unsigned)LOCO_VERSION_PATCH(LOCO_MODULE_VERSION));
+	Serial.print(F(" id=0x"));
+	if ((uint8_t)LOCO_MODULE_TYPE < 0x10) {
+		Serial.print('0');
+	}
+	Serial.print((uint8_t)LOCO_MODULE_TYPE, HEX);
+	Serial.print(F(" can="));
+	Serial.println(can.alive() ? '1' : '0');
+	Serial.flush();
 }

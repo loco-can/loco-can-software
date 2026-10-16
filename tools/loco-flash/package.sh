@@ -19,7 +19,7 @@ build() {
   CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
     go build -trimpath -ldflags "$ldflags" -o "$dir/$name" .
   cp "$root/LIESMICH.txt" "$dir/LIESMICH.txt"
-  cp "$repo/license/LICENSE" "$dir/LICENSE"
+  cp "$repo/license/LICENSE" "$dir/LIESMICH"
 }
 
 build windows amd64 LocoFlash.exe "-s -w -H windowsgui"

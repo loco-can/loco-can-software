@@ -33,9 +33,10 @@ type app struct {
 	source firmwareSource
 	repo   string
 	token  string
-	flash  func(ctx context.Context, port string, data []byte, bauds []int, log flashLogger) error
-	ports  func() ([]Port, error)
-	job    *jobState
+	flash    func(ctx context.Context, port string, data []byte, bauds []int, log flashLogger) error
+	ports    func() ([]Port, error)
+	identify func(ctx context.Context, port string) (ModuleInfo, error)
+	job      *jobState
 	quit   func()
 	ctx    context.Context
 	page   *template.Template
@@ -53,9 +54,10 @@ func newApp(ctx context.Context, source firmwareSource, repo, token string) (*ap
 		source: source,
 		repo:   repo,
 		token:  token,
-		flash:  programHex,
-		ports:  listPorts,
-		job:    &jobState{},
+		flash:    programHex,
+		ports:    listPorts,
+		identify: probeModule,
+		job:      &jobState{},
 		ctx:    ctx,
 		page:   page,
 	}, nil
@@ -73,6 +75,7 @@ func (a *app) handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", a.servePage)
 	mux.HandleFunc("GET /api/ports", a.servePorts)
+	mux.HandleFunc("GET /api/probe", a.serveProbe)
 	mux.HandleFunc("GET /api/releases", a.serveReleases)
 	mux.HandleFunc("POST /api/flash", a.serveFlash)
 	mux.HandleFunc("GET /api/job", a.serveJob)
@@ -115,6 +118,27 @@ func (a *app) servePorts(w http.ResponseWriter, r *http.Request) {
 		out = append(out, row{Name: p.Name, USB: p.USB, Desc: p.Desc})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ports": out})
+}
+
+func (a *app) serveProbe(w http.ResponseWriter, r *http.Request) {
+	if !a.allow(w, r) {
+		return
+	}
+	port := strings.TrimSpace(r.URL.Query().Get("port"))
+	if port == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Adapter wählen"})
+		return
+	}
+	if a.identify == nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "keine Abfrage"})
+		return
+	}
+	info, err := a.identify(r.Context(), port)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "module": info.Module, "version": info.Version, "type_id": info.TypeID, "can": info.CAN, "raw": info.Raw})
 }
 
 func (a *app) serveReleases(w http.ResponseWriter, r *http.Request) {
@@ -504,6 +528,7 @@ func cmdGUI(ctx context.Context, args []string) error {
 			if !*noBrowser {
 				_ = openBrowser("http://" + *listen + "/")
 			}
+			fmt.Fprintf(os.Stderr, "Loco-CAN läuft bereits auf http://%s/ — bestehendes Fenster geöffnet. Zum Aktualisieren zuerst Beenden, dann neu starten.\n", *listen)
 			return nil
 		}
 		return err

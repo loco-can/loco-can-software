@@ -1,13 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
+
+var errNoAvrdude = errors.New("avrdude not found")
 
 type commandRunner interface {
 	Run(ctx context.Context, name string, args []string) error
@@ -24,22 +30,89 @@ func (execRunner) Run(ctx context.Context, name string, args []string) error {
 
 func findAvrdude(explicit string) (string, error) {
 	if explicit != "" {
-		if _, err := os.Stat(explicit); err != nil {
+		st, err := os.Stat(explicit)
+		if err != nil {
 			return "", fmt.Errorf("avrdude %s: %w", explicit, err)
+		}
+		if st.IsDir() {
+			return "", fmt.Errorf("avrdude %s is a directory", explicit)
 		}
 		return explicit, nil
 	}
-	if env := os.Getenv("AVRDUDE"); env != "" {
-		if _, err := os.Stat(env); err != nil {
-			return "", fmt.Errorf("avrdude %s: %w", env, err)
+	for _, path := range avrdudeCandidates("") {
+		st, err := os.Stat(path)
+		if err == nil && !st.IsDir() {
+			return path, nil
 		}
-		return env, nil
 	}
-	path, err := exec.LookPath("avrdude")
+	return "", errNoAvrdude
+}
+
+func avrdudeCandidates(explicit string) []string {
+	var out []string
+	if explicit != "" {
+		out = append(out, explicit)
+	}
+	if env := os.Getenv("AVRDUDE"); env != "" {
+		out = append(out, env)
+	}
+	if path, err := exec.LookPath("avrdude"); err == nil {
+		out = append(out, path)
+	}
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("avrdude not found on PATH (install avrdude, or pass -avrdude)")
+		return out
 	}
-	return path, nil
+	pio := filepath.Join(home, ".platformio", "packages")
+	for _, name := range []string{"avrdude", "avrdude.exe"} {
+		matches, _ := filepath.Glob(filepath.Join(pio, "tool-avrdude*", name))
+		out = append(out, matches...)
+	}
+	return out
+}
+
+func flashWithAvrdude(ctx context.Context, port string, data []byte, bauds []int, log flashLogger) error {
+	if log == nil {
+		log = func(string, int, int) {}
+	}
+	dude, err := findAvrdude("")
+	if err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp("", "loco-flash-*.hex")
+	if err != nil {
+		return err
+	}
+	name := tmp.Name()
+	defer os.Remove(name)
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	log("avrdude "+dude, 0, 0)
+	return flashHex(ctx, logRunner{log: log}, dude, "atmega328p", port, name, bauds, 45*time.Second)
+}
+
+type logRunner struct {
+	log flashLogger
+}
+
+func (r logRunner) Run(ctx context.Context, name string, args []string) error {
+	cmd := exec.CommandContext(ctx, name, args...)
+	var buf bytes.Buffer
+	cmd.Stdout = io.MultiWriter(os.Stdout, &buf)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &buf)
+	err := cmd.Run()
+	for _, line := range strings.Split(buf.String(), "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" && r.log != nil {
+			r.log(line, 0, 0)
+		}
+	}
+	return err
 }
 
 func avrdudeConf(bin string) string {

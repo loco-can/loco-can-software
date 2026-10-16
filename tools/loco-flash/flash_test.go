@@ -59,6 +59,28 @@ func TestExplicitBaudDoesNotRetry(t *testing.T) {
 	}
 }
 
+func TestFindPlatformIOAvrdude(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("PATH", home)
+	t.Setenv("AVRDUDE", "")
+	dir := filepath.Join(home, ".platformio", "packages", "tool-avrdude")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	bin := filepath.Join(dir, "avrdude")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	got, err := findAvrdude("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != bin {
+		t.Fatalf("got %s want %s", got, bin)
+	}
+}
+
 func TestAvrdudeUsesOptiboot(t *testing.T) {
 	args := avrdudeArgs("", "atmega328p", "/dev/ttyUSB0", "controller_v2_1_0.hex", 115200)
 	line := strings.Join(args, " ")

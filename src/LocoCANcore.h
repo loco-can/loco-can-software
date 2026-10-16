@@ -23,10 +23,12 @@ class LocoCANcore {
 	public:
 		void begin(void);
 		void update(void);
+		void identify(void);
 
 	private:
 
 		void _send_module_heartbeat(void);
+		void _serial_poll(void);
 		INTELLITIMEOUT _module_heartbeat;
 
 		/*

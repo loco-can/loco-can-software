@@ -50,6 +50,10 @@ type wire interface {
 	ResetInputBuffer() error
 }
 
+type drainer interface {
+	Drain() error
+}
+
 type flashLogger func(msg string, done, total int)
 
 type optiboot struct {
@@ -65,12 +69,14 @@ type optiboot struct {
 func standardOptiboot() optiboot {
 	return optiboot{
 		discharge: 250 * time.Millisecond,
-		pulse:     100 * time.Microsecond,
-		bootWait:  100 * time.Millisecond,
-		syncFor:   500 * time.Millisecond,
-		readWait:  50 * time.Millisecond,
-		cmdWait:   2 * time.Second,
-		resets:    3,
+		// avrdude -c arduino holds DTR for 50 ms. 100 µs is shorter than a
+		// USB SET_CONTROL_LINE_STATE, so Linux often never pulses RESET.
+		pulse:    50 * time.Millisecond,
+		bootWait: 150 * time.Millisecond,
+		syncFor:  800 * time.Millisecond,
+		readWait: 50 * time.Millisecond,
+		cmdWait:  2 * time.Second,
+		resets:   5,
 	}
 }
 
@@ -91,6 +97,12 @@ func programHex(ctx context.Context, portName string, data []byte, bauds []int, 
 	if len(mem.pages()) == 0 {
 		return fmt.Errorf("HEX-Datei enthält keine Daten")
 	}
+	if err := flashWithAvrdude(ctx, portName, data, bauds, log); err == nil {
+		return nil
+	} else if !errors.Is(err, errNoAvrdude) {
+		log("avrdude: "+err.Error(), 0, 0)
+		log("interner Programmer", 0, 0)
+	}
 	var last error
 	for i, baud := range bauds {
 		if err := ctx.Err(); err != nil {
@@ -104,7 +116,9 @@ func programHex(ctx context.Context, portName string, data []byte, bauds []int, 
 			return nil
 		}
 		if !errors.Is(err, errNoContact) {
-			return err
+			log(err.Error(), 0, 0)
+			last = fmt.Errorf("%w: %v", errNoContact, err)
+			continue
 		}
 		last = err
 	}
@@ -128,17 +142,8 @@ func (o optiboot) program(ctx context.Context, w wire, mem *hexImage, log flashL
 	if len(pages) == 0 {
 		return fmt.Errorf("HEX-Datei enthält keine Daten")
 	}
-	if err := o.contact(ctx, w); err != nil {
+	if err := o.enter(ctx, w); err != nil {
 		return err
-	}
-	if _, err := o.command(w, stkSetDevice, m328pDevice, 0); err != nil {
-		return fmt.Errorf("SET_DEVICE: %w", err)
-	}
-	if _, err := o.command(w, stkSetDeviceExt, m328pDeviceExt, 0); err != nil {
-		return fmt.Errorf("SET_DEVICE_EXT: %w", err)
-	}
-	if _, err := o.command(w, stkEnter, nil, 0); err != nil {
-		return fmt.Errorf("ENTER_PROGMODE: %w", err)
 	}
 	sig, err := o.command(w, stkReadSign, nil, 3)
 	if err != nil {
@@ -188,11 +193,12 @@ func is328P(sig []byte) bool {
 	return sig[2] == 0x0f || sig[2] == 0x14
 }
 
-func (o optiboot) contact(ctx context.Context, w wire) error {
+func (o optiboot) enter(ctx context.Context, w wire) error {
 	tries := o.resets
 	if tries < 1 {
 		tries = 1
 	}
+	var last error
 	for attempt := 0; attempt < tries; attempt++ {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -200,17 +206,40 @@ func (o optiboot) contact(ctx context.Context, w wire) error {
 		if err := o.reset(w); err != nil {
 			return err
 		}
-		if err := o.sync(ctx, w); err == nil {
-			return nil
+		if err := o.sync(ctx, w); err != nil {
+			last = errNoContact
+			continue
 		}
+		drainRX(w, o.readWait, 100*time.Millisecond)
+		if _, err := o.command(w, stkSetDevice, m328pDevice, 0); err != nil {
+			drainRX(w, o.readWait, 50*time.Millisecond)
+			if _, enterErr := o.command(w, stkEnter, nil, 0); enterErr == nil {
+				return nil
+			}
+			last = fmt.Errorf("SET_DEVICE: %w", err)
+			continue
+		}
+		if _, err := o.command(w, stkSetDeviceExt, m328pDeviceExt, 0); err != nil {
+			last = fmt.Errorf("SET_DEVICE_EXT: %w", err)
+			continue
+		}
+		if _, err := o.command(w, stkEnter, nil, 0); err != nil {
+			last = fmt.Errorf("ENTER_PROGMODE: %w", err)
+			continue
+		}
+		return nil
 	}
-	return errNoContact
+	if last == nil {
+		return errNoContact
+	}
+	return last
 }
 
-// reset follows avrdude's arduino programmer. On a negative-logic FTDI
-// adapter, asserting DTR/RTS pulls the pin low and the falling edge through
-// the 100 nF capacitor resets the ATmega. The line is released again so a
-// board that wires DTR straight to RESET does not stay in reset.
+// reset follows avrdude -c arduino: DTR/RTS off 250 ms, then on, and left
+// on. The 100 nF capacitor makes a falling edge; RESET rises by itself.
+// Releasing DTR afterwards is what avrdude does not do and can miss the
+// bootloader window. TCFLUSH does not empty an FTDI FIFO on Linux, so the
+// sketch banner is read out afterwards.
 func (o optiboot) reset(w wire) error {
 	if err := setLines(w, false); err != nil {
 		return err
@@ -220,14 +249,19 @@ func (o optiboot) reset(w wire) error {
 		return err
 	}
 	sleep(o.pulse)
-	if err := setLines(w, false); err != nil {
-		return err
-	}
 	sleep(o.bootWait)
+	drainRX(w, o.readWait, 200*time.Millisecond)
 	return nil
 }
 
+type lineSetter interface {
+	SetLines(dtr, rts bool) error
+}
+
 func setLines(w wire, asserted bool) error {
+	if s, ok := w.(lineSetter); ok {
+		return s.SetLines(asserted, asserted)
+	}
 	if err := w.SetDTR(asserted); err != nil {
 		return err
 	}
@@ -244,16 +278,63 @@ func (o optiboot) sync(ctx context.Context, w wire) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		_ = w.ResetInputBuffer()
 		if err := writeAll(w, []byte{stkGetSync, stkCRC}); err != nil {
 			return err
 		}
-		buf, err := readExact(w, 2, o.readWait)
-		if err == nil && len(buf) == 2 && buf[0] == stkInsync && buf[1] == stkOK {
+		if readSyncReply(w, o.readWait) {
+			drainRX(w, o.readWait, 50*time.Millisecond)
 			return nil
 		}
 	}
 	return errNoContact
+}
+
+// readSyncReply skips leftover sketch bytes (often 0x2a '*') until STK
+// INSYNC/OK, matching avrdude's arduino_getsync drain-and-retry.
+func readSyncReply(w wire, timeout time.Duration) bool {
+	if timeout <= 0 {
+		timeout = 50 * time.Millisecond
+	}
+	deadline := time.Now().Add(timeout)
+	sawInsync := false
+	for time.Now().Before(deadline) {
+		remain := time.Until(deadline)
+		b, err := readExact(w, 1, remain)
+		if err != nil {
+			return false
+		}
+		if !sawInsync {
+			if b[0] == stkInsync {
+				sawInsync = true
+			}
+			continue
+		}
+		return b[0] == stkOK
+	}
+	return false
+}
+
+func drainRX(w wire, idle, max time.Duration) {
+	if idle <= 0 {
+		idle = 5 * time.Millisecond
+	}
+	if max <= 0 {
+		max = 50 * time.Millisecond
+	}
+	end := time.Now().Add(max)
+	for time.Now().Before(end) {
+		remain := time.Until(end)
+		wait := idle
+		if wait > remain {
+			wait = remain
+		}
+		if wait <= 0 {
+			return
+		}
+		if _, err := readExact(w, 1, wait); err != nil {
+			return
+		}
+	}
 }
 
 func (o optiboot) writePage(w wire, page flashPage) error {
@@ -329,6 +410,9 @@ func writeAll(w wire, p []byte) error {
 		if n == 0 {
 			return fmt.Errorf("Schreiben ohne Fortschritt")
 		}
+	}
+	if d, ok := w.(drainer); ok {
+		_ = d.Drain()
 	}
 	return nil
 }
