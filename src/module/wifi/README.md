@@ -22,21 +22,21 @@ the cable is unplugged the coincidence stops and bridging starts again.
 The module announces itself with `CAN_ID_MODULE_HEARTBEAT` (type `0x81`,
 wireless bit set).
 
-Flash the same `wifi_v3` firmware on both ESP32 boards.
+Flash the same `wifi_v2` firmware on both ESP32 boards.
 
-## Pins (V3.0 / ESP32-S3)
+## Pins (V2.0 / ESP32-WROOM-32)
 
 | Function | GPIO |
 | --- | --- |
-| CAN RX | 17 |
-| CAN TX | 18 |
-| CAN status LED | 46 |
+| CAN RX | 16 |
+| CAN TX | 17 |
+| CAN status LED | 2 |
 
 ## PlatformIO
 
 ```bash
-pio run -e wifi_v3
-pio run -e wifi_v3 -t upload
+pio run -e wifi_v2
+pio run -e wifi_v2 -t upload
 ```
 
 ## Arduino IDE
@@ -45,8 +45,8 @@ In `hardware.h` select:
 
 ```c
 #define MODULE WIFI_MODULE
-#define WIFI_MODULE_VERSION V_3_0
+#define WIFI_MODULE_VERSION V_2_0
 ```
 
-Board: ESP32-S3. The core includes the module when `MODULE_WIFI_H` is
+Board: ESP32-WROOM-32. The core includes the module when `MODULE_WIFI_H` is
 defined.

@@ -18,21 +18,79 @@ extern CAN_COM can;
 #ifdef MODULE_ARCH_ESP32
 static MODULE_PROGRAMMER *programmer_web = nullptr;
 
-static const char PROGRAMMER_FALLBACK_HTML[] PROGMEM =
-	"<!doctype html><html lang=\"en\"><meta charset=\"utf-8\">"
-	"<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-	"<title>Loco-CAN Programmer</title>"
-	"<body style=\"font-family:sans-serif;background:#16110c;color:#f3ead8;"
-	"max-width:40rem;margin:2rem auto;padding:0 1.25rem\">"
-	"<p style=\"letter-spacing:.28em;text-transform:uppercase;font-size:.7rem;"
-	"color:#c4a36a\">Garden railway · 500 kbit/s</p>"
-	"<h1>Loco-CAN Programmer</h1>"
-	"<p>The access point is up, but the webservice is not on this ESP32 yet.</p>"
-	"<p>On the development machine run <code>npm run firmware</code>, copy the "
-	"<code>data/</code> folder next to <code>loco-can-software.ino</code>, "
-	"upload LittleFS, then reboot.</p>"
-	"<p>SSID <b>LOCO-CAN-PRG</b> · open <b>http://192.168.4.1</b></p>"
-	"</body></html>";
+class ProgrammerCatchAll : public RequestHandler {
+	bool canHandle(HTTPMethod, String) override {
+		return true;
+	}
+	bool handle(WebServer &, HTTPMethod, String) override {
+		if (programmer_web) {
+			programmer_web->_http_static();
+		}
+		return true;
+	}
+};
+
+static bool programmer_fs_has_ui(void) {
+	File root = LittleFS.open("/");
+	if (!root) {
+		return false;
+	}
+	File f = root.openNextFile();
+	while (f) {
+		String name = f.name();
+		f.close();
+		if (name.endsWith("index.html") || name.endsWith("index.html.gz")) {
+			root.close();
+			return true;
+		}
+		f = root.openNextFile();
+	}
+	root.close();
+	return false;
+}
+
+static const char PROGRAMMER_FALLBACK_HTML[] PROGMEM = R"HTML(
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loco-CAN Programmer</title>
+<style>
+body{font-family:sans-serif;background:#16110c;color:#f3ead8;margin:1.25rem;max-width:48rem}
+#st{color:#c4a36a}
+#log{font:13px/1.45 ui-monospace,monospace;margin-top:1rem}
+#log div{border-bottom:1px solid #3a3228;padding:.2rem 0}
+.tx{color:#c4a36a}
+</style>
+<p>LOCO-CAN-PRG · <span id="st">connecting…</span></p>
+<p>LittleFS UI is not installed. This page lists CAN frames from <code>/api/frames</code>.</p>
+<div id="log"></div>
+<script>
+let after=0;
+async function tick(){
+  try{
+    const s=await fetch('/api/status').then(r=>r.json());
+    document.getElementById('st').textContent=
+      'uuid 0x'+Number(s.uuid).toString(16)+' · frames '+s.frames;
+    const j=await fetch('/api/frames?after='+after).then(r=>r.json());
+    after=j.seq;
+    const el=document.getElementById('log');
+    (j.frames||[]).forEach(f=>{
+      const d=document.createElement('div');
+      if(f.tx) d.className='tx';
+      d.textContent=(f.tx?'TX ':'RX ')+
+        '0x'+Number(f.id).toString(16)+
+        ' u=0x'+Number(f.u).toString(16)+
+        ' '+(f.d||'');
+      el.prepend(d);
+      while(el.childElementCount>100) el.lastChild.remove();
+    });
+  }catch(e){
+    document.getElementById('st').textContent='api error';
+  }
+}
+setInterval(tick,400);
+tick();
+</script>
+)HTML";
 
 static const char *programmer_mime(const String &path) {
 	if (path.endsWith(".html")) return "text/html; charset=utf-8";
@@ -84,6 +142,7 @@ void MODULE_PROGRAMMER::begin(void) {
 
 	#ifdef MODULE_ARCH_ESP32
 		_fs_ok = false;
+		_fs_ui = false;
 		_web_seq = 0;
 		_web_head = 0;
 		_web_count = 0;
@@ -114,6 +173,16 @@ void MODULE_PROGRAMMER::update(CAN_MESSAGE message) {
 		_ingest(message);
 		#ifdef MODULE_ARCH_ESP32
 			_web_push(message, false);
+		#endif
+		#ifdef DEBUG
+			static uint16_t rx_shown = 0;
+			if (rx_shown < 16) {
+				rx_shown++;
+				Serial.print("> RX id=0x");
+				Serial.print(message.id, HEX);
+				Serial.print(" uuid=0x");
+				Serial.println(message.uuid, HEX);
+			}
 		#endif
 	}
 
@@ -260,6 +329,7 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 
 	/* format-on-fail would wipe a freshly uploaded LittleFS image */
 	_fs_ok = LittleFS.begin(false);
+	_fs_ui = _fs_ok && programmer_fs_has_ui();
 
 	_http.on("/api/status", HTTP_GET, []() {
 		if (programmer_web) programmer_web->_http_status();
@@ -270,9 +340,7 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 	_http.on("/api/tx", HTTP_POST, []() {
 		if (programmer_web) programmer_web->_http_tx();
 	});
-	_http.onNotFound([]() {
-		if (programmer_web) programmer_web->_http_static();
-	});
+	_http.addHandler(new ProgrammerCatchAll());
 	static const char *header_keys[] = { "Accept-Encoding" };
 	_http.collectHeaders(header_keys, 1);
 	_http.enableCORS(true);
@@ -282,7 +350,13 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 		Serial.print("> AP IP ");
 		Serial.println(WiFi.softAPIP());
 		Serial.print("> LittleFS ");
-		Serial.println(_fs_ok ? "mounted" : "missing");
+		if (_fs_ui) {
+			Serial.println("UI ready");
+		} else if (_fs_ok) {
+			Serial.println("mounted, no UI (fallback page)");
+		} else {
+			Serial.println("missing");
+		}
 	#endif
 #endif
 }
@@ -464,7 +538,7 @@ void MODULE_PROGRAMMER::_http_static(void) {
 
 bool MODULE_PROGRAMMER::_http_send_file(const String &uri) {
 
-	if (!_fs_ok) {
+	if (!_fs_ok || !_fs_ui) {
 		return false;
 	}
 

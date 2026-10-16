@@ -32,7 +32,7 @@ In `hardware.h` select the programmer instead of the controller:
 
 ```c
 #define MODULE PROGRAMMER_MODULE
-#define PROGRAMMER_MODULE_VERSION V_3_0
+#define PROGRAMMER_MODULE_VERSION V_2_0
 ```
 
 In `src/LocoCANcore.h` add:
@@ -43,16 +43,16 @@ In `src/LocoCANcore.h` add:
 #endif
 ```
 
-Board: ESP32 / ESP32-S3, Arduino core. Pins are in `config.h` (CAN 17/18, ST7789 SPI, KY-040 encoder).
+Board: ESP32-WROOM-32 (`esp32dev`), Arduino core. Pins are in `config.h` (CAN 16/17, ST7789 VSPI, KY-040 encoder). V3.0 keeps the ESP32-S3 pin map.
 
 ## PlatformIO
 
 From the repository root the programmer is the default environment. It uses the same LocoCAN IDs as [loco-can/LocoCAN](https://github.com/loco-can/LocoCAN) so the Platform UI can encode and decode frames without a second protocol copy.
 
 ```bash
-pio run -e programmer_v3
-pio run -e programmer_v3 -t upload
-pio run -e programmer_v3 -t uploadfs
+pio run -e programmer_v2
+pio run -e programmer_v2 -t upload
+pio run -e programmer_v2 -t uploadfs
 ```
 
 `platformio.ini` already sets `board_build.filesystem = littlefs` and `data_dir = src/module/programmer/data`.
@@ -68,7 +68,7 @@ npm run firmware
 That builds the UI, gzip-packs it, and copies the LittleFS image to `src/module/programmer/data/` (PlatformIO) and `data/` next to `loco-can-software.ino` (Arduino IDE). Then upload the filesystem:
 
 - Arduino IDE: **Tools → ESP32 Sketch Data Upload** (LittleFS)
-- PlatformIO: `pio run -e programmer_v3 -t uploadfs`
+- PlatformIO: `pio run -e programmer_v2 -t uploadfs`
 
 Reboot the programmer, join **LOCO-CAN-PRG** / `lococanprg`, and open http://192.168.4.1. If LittleFS is empty the access point still starts and shows a short setup page.
 

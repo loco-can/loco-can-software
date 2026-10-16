@@ -50,7 +50,8 @@
 #define MODULE PROGRAMMER_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-#define PROGRAMMER_MODULE_VERSION V_3_0
+#define PROGRAMMER_MODULE_VERSION V_2_0
+// #define PROGRAMMER_MODULE_VERSION V_3_0
 /* ===================================================================== */
 
 
@@ -127,6 +128,7 @@
 // #define MODULE WIFI_MODULE
 
 /* ===== MODULE VERSIONS ===== */
+// #define WIFI_MODULE_VERSION V_2_0
 // #define WIFI_MODULE_VERSION V_3_0
 /* ===================================================================== */
 

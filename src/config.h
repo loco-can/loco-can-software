@@ -48,6 +48,7 @@ PROGRAMMER MODULE
 	The programmer module is the interface to program the Loco-CAN system.
 
 Versions:
+	V_2_0
 	V_3_0
 ======================================================================== */
 #define PROGRAMMER_MODULE "src/module/programmer/config.h"
@@ -131,6 +132,7 @@ WIFI MODULE
 	is connected.
 
 Versions:
+	V_2_0
 	V_3_0
 ======================================================================== */
 #define WIFI_MODULE "src/module/wifi/config.h"

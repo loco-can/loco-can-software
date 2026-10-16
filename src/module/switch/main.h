@@ -51,8 +51,10 @@
 #include "current.h"
 #include "params.h"
 
-#define LOCO_MODULE_TYPE SWITCH_TYPE_ID
-#define LOCO_MODULE_VERSION SWITCH_MODULE_VERSION
+#if defined(SWITCH_MODULE_VERSION)
+	#define LOCO_MODULE_TYPE SWITCH_TYPE_ID
+	#define LOCO_MODULE_VERSION SWITCH_MODULE_VERSION
+#endif
 
 
 extern CAN_COM can;

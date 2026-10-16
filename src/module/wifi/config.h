@@ -16,7 +16,32 @@
 #define MODULE_WIFI_CONFIG_H
 
 
-#if defined(WIFI_MODULE_VERSION) && WIFI_MODULE_VERSION == V_3_0
+#if defined(WIFI_MODULE_VERSION) && WIFI_MODULE_VERSION == V_2_0
+
+	// ======================================
+	// ESP32-WROOM-32
+	// ======================================
+	#define MODULE_ARCH_ESP32
+
+	#define PLATFORM_ANALOG_RESOLUTION 4096
+	#define ANALOGSWITCH_MAX_POS 8
+
+	#define CAN_RX 16
+	#define CAN_TX 17
+	#define CAN_STATUS_LED 2
+	#define CAN_MAX_FILTER 16
+	#define CAN_BUFFER_SIZE 16
+
+	#define WIFI_MODULE_TYPE 0x81
+
+	#define WIFI_NOW_CHANNEL 1
+	#define WIFI_NOW_HELLO_MS 500
+	#define WIFI_NOW_PEER_TIMEOUT_MS 2000
+	#define WIFI_NOW_CABLE_TIMEOUT_MS 750
+	#define WIFI_NOW_QUEUE 16
+	#define WIFI_RECENT_MAX 24
+
+#elif defined(WIFI_MODULE_VERSION) && WIFI_MODULE_VERSION == V_3_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -47,7 +72,7 @@
 	#define WIFI_RECENT_MAX 24
 
 #elif defined(WIFI_MODULE_VERSION)
-	#error "Set WIFI_MODULE_VERSION in hardware.h (V_3_0)"
+	#error "Set WIFI_MODULE_VERSION in hardware.h (V_2_0 or V_3_0)"
 #endif
 
 #if defined(WIFI_MODULE_VERSION)

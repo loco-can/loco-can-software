@@ -24,8 +24,10 @@
 #include "../../core/timeout/intellitimeout.h"
 #include "now_packet.h"
 
-#define LOCO_MODULE_TYPE WIFI_MODULE_TYPE
-#define LOCO_MODULE_VERSION WIFI_MODULE_VERSION
+#if defined(WIFI_MODULE_VERSION)
+	#define LOCO_MODULE_TYPE WIFI_MODULE_TYPE
+	#define LOCO_MODULE_VERSION WIFI_MODULE_VERSION
+#endif
 
 #ifdef MODULE_ARCH_ESP32
 	#include <WiFi.h>

@@ -16,7 +16,45 @@
 #define MODULE_PROGRAMMER_CONFIG_H
 
 
-#if defined(PROGRAMMER_MODULE_VERSION) && PROGRAMMER_MODULE_VERSION == V_3_0
+#if defined(PROGRAMMER_MODULE_VERSION) && PROGRAMMER_MODULE_VERSION == V_2_0
+
+	// ======================================
+	// ESP32-WROOM-32
+	// ======================================
+	#define MODULE_ARCH_ESP32
+
+	#define PLATFORM_ANALOG_RESOLUTION 4096
+	#define ANALOGSWITCH_MAX_POS 8
+
+	/*
+	 * GPIO 6-11 are the WROOM-32 flash bus.
+	 * GPIO 34-39 are input-only: they can be CAN RX, never CAN TX.
+	 */
+	#define CAN_RX 5
+	#define CAN_TX 17
+	#define CAN_STATUS_LED 16
+	#define CAN_MAX_FILTER 16
+	#define CAN_BUFFER_SIZE 16
+
+	/* ST7789 240x240 colour OLED on VSPI (SCK 18, MOSI 23) */
+	#define PROGRAMMER_OLED_CS 2
+	#define PROGRAMMER_OLED_DC 21
+	#define PROGRAMMER_OLED_RST 22
+	#define PROGRAMMER_OLED_BL 32
+
+	/* KY-040 rotary encoder with pushbutton */
+	#define PROGRAMMER_ENC_A 25
+	#define PROGRAMMER_ENC_B 26
+	#define PROGRAMMER_ENC_BTN 27
+
+	#define PROGRAMMER_WIFI_SSID "Loco-CAN-Programmer"
+	#define PROGRAMMER_WIFI_PASS "lococanprg"
+	#define PROGRAMMER_HTTP_PORT 80
+
+	#define PROGRAMMER_GROUP_MAX 48
+	#define PROGRAMMER_OLED_ROWS 6
+
+#elif defined(PROGRAMMER_MODULE_VERSION) && PROGRAMMER_MODULE_VERSION == V_3_0
 
 	// ======================================
 	// BASIC SETTINGS
@@ -26,9 +64,9 @@
 	#define PLATFORM_ANALOG_RESOLUTION 4096
 	#define ANALOGSWITCH_MAX_POS 8
 
-	#define CAN_RX 17
-	#define CAN_TX 18
-	#define CAN_STATUS_LED 46
+	#define CAN_RX 4
+	#define CAN_TX 5
+	#define CAN_STATUS_LED 16
 	#define CAN_MAX_FILTER 16
 	#define CAN_BUFFER_SIZE 16
 
@@ -56,7 +94,7 @@
 	#define PROGRAMMER_OLED_ROWS 6
 
 #elif defined(PROGRAMMER_MODULE_VERSION)
-	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_3_0)"
+	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_2_0 or V_3_0)"
 #endif
 
 #if defined(PROGRAMMER_MODULE_VERSION)

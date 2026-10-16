@@ -33,11 +33,14 @@
 	#include <WebServer.h>
 	#include <DNSServer.h>
 	#include <LittleFS.h>
+	class ProgrammerCatchAll;
 #endif
 
 #define PROGRAMMER_TYPE_ID 0x70
-#define LOCO_MODULE_TYPE PROGRAMMER_TYPE_ID
-#define LOCO_MODULE_VERSION PROGRAMMER_MODULE_VERSION
+#if defined(PROGRAMMER_MODULE_VERSION)
+	#define LOCO_MODULE_TYPE PROGRAMMER_TYPE_ID
+	#define LOCO_MODULE_VERSION PROGRAMMER_MODULE_VERSION
+#endif
 
 extern CAN_COM can;
 
@@ -90,9 +93,11 @@ class MODULE_PROGRAMMER {
 		INTELLITIMEOUT _ping_time;
 
 #ifdef MODULE_ARCH_ESP32
+		friend class ProgrammerCatchAll;
 		WebServer _http{PROGRAMMER_HTTP_PORT};
 		DNSServer _dns;
 		bool _fs_ok;
+		bool _fs_ui;
 		uint32_t _web_seq;
 		uint8_t _web_head;
 		uint8_t _web_count;

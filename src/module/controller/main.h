@@ -178,8 +178,10 @@ buttons
 #include "status.h"
 #include "params.h"
 
-#define LOCO_MODULE_TYPE CONTROLLER_TYPE_ID
-#define LOCO_MODULE_VERSION CONTROLLER_MODULE_VERSION
+#if defined(CONTROLLER_MODULE_VERSION)
+	#define LOCO_MODULE_TYPE CONTROLLER_TYPE_ID
+	#define LOCO_MODULE_VERSION CONTROLLER_MODULE_VERSION
+#endif
 
 
 /* local classes */

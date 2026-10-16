@@ -33,6 +33,14 @@ void LocoCANcore::begin(void) {
 	 * CAN_BUS_SPEED is set in can_protocol.h.
 	 */
 	#ifdef MODULE_ARCH_ESP32
+		#if defined(CONFIG_IDF_TARGET_ESP32)
+			#if (CAN_RX >= 6 && CAN_RX <= 11) || (CAN_TX >= 6 && CAN_TX <= 11)
+				#error "ESP32-WROOM GPIO 6-11 are wired to flash; TWAI on those pins resets the chip"
+			#endif
+			#if CAN_TX >= 34 && CAN_TX <= 39
+				#error "ESP32 GPIO 34-39 are input-only; CAN_TX needs an output pin (RX on 34-39 is fine)"
+			#endif
+		#endif
 		can.setPorts(CAN_RX, CAN_TX);
 	#else
 		#ifndef CAN_SS
@@ -61,7 +69,9 @@ void LocoCANcore::begin(void) {
 	_module.begin();
 
 	_module_heartbeat.begin(MODULE_HEARTBEAT_TIMEOUT);
-	_send_module_heartbeat();
+	#ifndef PROGRAMMER_MODULE_VERSION
+		_send_module_heartbeat();
+	#endif
 
 	#ifdef DEBUG
 		Serial.println();
@@ -75,11 +85,12 @@ void LocoCANcore::begin(void) {
 
 void LocoCANcore::update(void) {
 
-	if (_module_heartbeat.update()) {
-		_send_module_heartbeat();
-	}
+	#ifndef PROGRAMMER_MODULE_VERSION
+		if (_module_heartbeat.update()) {
+			_send_module_heartbeat();
+		}
+	#endif
 
-	bool got = false;
 	uint8_t n = 0;
 
 	/*
@@ -88,17 +99,18 @@ void LocoCANcore::update(void) {
 	 * would filter. With a quiet bus the module still runs once.
 	 */
 	while (n < 8 && can.fetch(can_message)) {
-		got = true;
 		n++;
 		_module.update(can_message);
 	}
 
-	if (!got) {
-		can_message.id = 0;
-		can_message.uuid = 0;
-		can_message.size = 0;
-		_module.update(can_message);
-	}
+	/*
+	 * Always tick once without a frame so HTTP/OLED keep running
+	 * even when the CAN mailbox stayed busy.
+	 */
+	can_message.id = 0;
+	can_message.uuid = 0;
+	can_message.size = 0;
+	_module.update(can_message);
 
 }
 

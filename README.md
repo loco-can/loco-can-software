@@ -123,18 +123,18 @@ The same tree builds in Arduino IDE and in [PlatformIO](https://platformio.org).
 
 ```bash
 npm run firmware                  # pack Next.js UI into LittleFS data/ (needs ../programmer)
-pio run -e programmer_v3          # ESP32-S3 programmer + WiFi UI
-pio run -e programmer_v3 -t upload
-pio run -e programmer_v3 -t uploadfs   # LittleFS UI from src/module/programmer/data
-pio run -e wifi_v3                # ESP32-S3 wireless CAN bridge (ESP-NOW)
+pio run -e programmer_v2          # ESP32-WROOM-32 programmer + WiFi UI
+pio run -e programmer_v2 -t upload
+pio run -e programmer_v2 -t uploadfs   # LittleFS UI from src/module/programmer/data
+pio run -e wifi_v2                # ESP32-WROOM-32 wireless CAN bridge (ESP-NOW)
 pio run -e controller_v21         # ATmega328 controller V2.1
 pio run -e protocol_host          # PC check of LocoCAN IDs (no hardware)
 ```
 
 | Environment | Board | Module |
 | --- | --- | --- |
-| `programmer_v3` | ESP32-S3 | Programmer V3.0 (default) |
-| `wifi_v3` | ESP32-S3 | WIFI V3.0 (CAN + ESP-NOW bridge) |
+| `programmer_v2` | ESP32-WROOM-32 | Programmer V2.0 (default) |
+| `wifi_v2` | ESP32-WROOM-32 | WIFI V2.0 (CAN + ESP-NOW bridge) |
 | `controller_v3` | ESP32-S3 | Controller V3.0 |
 | `controller_v21` / `controller_v20` | ATmega328P Nano | Controller V2.x |
 | `electric_v21` | ATmega328P Nano | Motor module V2.1 |

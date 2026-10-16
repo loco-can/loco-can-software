@@ -25,27 +25,99 @@
 	}
 
 
-	bool CAN_HANDLER::begin(long speed, uint16_t can_rx, uint16_t can_tx) {
-
-		// TwaiCAN::setPins(tx, rx)
-		ESP32Can.setPins(can_tx, can_rx);
-
-	    // .setSpeed() and .begin() functions require to use TwaiSpeed enum,
-	    // but you can easily convert it from numerical value using .convertSpeed()
-	    ESP32Can.setSpeed(ESP32Can.convertSpeed(speed));
+	static bool s_listen_only = false;
 
 
-	    // start CAN bus
-		if(ESP32Can.begin()) {
-			Serial.println("CAN bus started!");
-			return true;
+	static bool twai_install(long speed, int8_t tx, int8_t rx, bool listen_only) {
 
-		}
+		s_listen_only = listen_only;
 
-		else {
-			Serial.println("CAN bus failed!");
+		const TwaiSpeed twai_speed = ESP32Can.convertSpeed(speed);
+
+		twai_general_config_t g_config = {
+			.mode = listen_only ? TWAI_MODE_LISTEN_ONLY : TWAI_MODE_NORMAL,
+			.tx_io = (gpio_num_t)tx,
+			.rx_io = (gpio_num_t)rx,
+			.clkout_io = TWAI_IO_UNUSED,
+			.bus_off_io = TWAI_IO_UNUSED,
+			.tx_queue_len = 5,
+			.rx_queue_len = 16,
+			.alerts_enabled = TWAI_ALERT_NONE,
+			.clkout_divider = 0,
+			.intr_flags = ESP_INTR_FLAG_LEVEL1
+		};
+
+		if (!ESP32Can.begin(twai_speed, tx, rx, 5, 16, nullptr, &g_config)) {
 			return false;
 		}
+
+		#ifdef DEBUG
+			if (listen_only) {
+				Serial.println("> TWAI listen-only (no TX until the bus ACKs)");
+			}
+		#endif
+		return true;
+	}
+
+
+	static void twai_recover_if_needed(void) {
+
+		twai_status_info_t st;
+		if (twai_get_status_info(&st) != ESP_OK) {
+			return;
+		}
+
+		if (st.state == TWAI_STATE_BUS_OFF) {
+			#ifdef DEBUG
+				static uint32_t last_print = 0;
+				uint32_t now = millis();
+				if (now - last_print > 2000) {
+					last_print = now;
+					Serial.print("> TWAI bus-off tec=");
+					Serial.print(st.tx_error_counter);
+					Serial.print(" rec=");
+					Serial.print(st.rx_error_counter);
+					Serial.print(" txq=");
+					Serial.println(st.msgs_to_tx);
+				}
+			#endif
+			twai_clear_transmit_queue();
+			twai_initiate_recovery();
+		}
+		else if (st.state == TWAI_STATE_STOPPED) {
+			twai_clear_transmit_queue();
+			if (twai_start() == ESP_OK) {
+				#ifdef DEBUG
+					Serial.println("> TWAI recovered");
+				#endif
+			}
+		}
+	}
+
+
+	bool CAN_HANDLER::begin(long speed, uint16_t can_rx, uint16_t can_tx) {
+
+		/*
+		 * Programmer is an analyzer: a heartbeat with no ACK takes the
+		 * controller bus-off and receive stops. Listen-only keeps RX up.
+		 */
+		#ifdef PROGRAMMER_MODULE_VERSION
+			const bool listen_only = true;
+		#else
+			const bool listen_only = false;
+		#endif
+
+		if (twai_install(speed, (int8_t)can_tx, (int8_t)can_rx, listen_only)) {
+			#ifdef DEBUG
+				Serial.println("CAN bus started!");
+			#endif
+			return true;
+		}
+
+		#ifdef DEBUG
+			Serial.println("CAN bus failed!");
+		#endif
+		return false;
 	}
 
 
@@ -56,9 +128,12 @@
 
 	uint16_t CAN_HANDLER::parsePacket(void) {
 
+		twai_recover_if_needed();
+
 		CanFrame frame = { 0 };
 
-		if (!ESP32Can.readFrame(frame, 0)) {
+		/* 1 ms, not 0: some IDF builds never dequeue with a 0-tick wait. */
+		if (!ESP32Can.readFrame(frame, 1)) {
 			_rxId = -1;
 			_rxExtended = false;
 			_rxLength = 0;
@@ -95,7 +170,16 @@
 
 	bool CAN_HANDLER::send(CAN_MESSAGE message) {
 
+		if (s_listen_only) {
+			return false;
+		}
+
 		if (message.size > 8) {
+			return false;
+		}
+
+		twai_status_info_t st;
+		if (twai_get_status_info(&st) != ESP_OK || st.state != TWAI_STATE_RUNNING) {
 			return false;
 		}
 
