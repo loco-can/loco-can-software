@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="loco-token" content="{{.Token}}">
+<title>Loco-CAN</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #e6e1d6;
+    --card: #f7f4ee;
+    --ink: #221e18;
+    --muted: #5e564c;
+    --line: #c9c0b0;
+    --green: #143d34;
+    --green-2: #1d5649;
+    --log: #241f1a;
+    --log-ink: #efe8d8;
+    --warn: #8a3d12;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.45 "Segoe UI", "Liberation Sans", "Noto Sans", sans-serif;
+  }
+  main {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 28px 18px 48px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+  }
+  .lead { color: var(--muted); margin: 0 0 22px; }
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+    margin-bottom: 14px;
+  }
+  label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+  select, input[type="file"], button {
+    font: inherit;
+    color: var(--ink);
+  }
+  select {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .fileline { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  label.pick {
+    display: inline-block;
+    color: var(--ink);
+    font-size: 17px;
+    margin: 0;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  #picked { color: var(--muted); }
+  .row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  .row select { flex: 1; min-width: 220px; }
+  .grow { margin-top: 12px; }
+  .check { display: flex; gap: 8px; align-items: center; margin-top: 12px; color: var(--ink); }
+  .check input { width: 18px; height: 18px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  button {
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: #9d917e; }
+  button.primary {
+    background: var(--green);
+    color: #f6f3ec;
+    border-color: var(--green);
+    padding: 12px 18px;
+    font-weight: 650;
+  }
+  button.primary:hover { background: var(--green-2); }
+  button:disabled { opacity: 0.55; cursor: default; }
+  .meta { color: var(--muted); font-size: 14px; margin-top: 8px; min-height: 1.2em; overflow-wrap: anywhere; }
+  .bar {
+    height: 10px;
+    background: #ddd6c8;
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .bar > div {
+    height: 100%;
+    width: 0;
+    background: var(--green);
+  }
+  pre {
+    margin: 0;
+    background: var(--log);
+    color: var(--log-ink);
+    border-radius: 8px;
+    min-height: 180px;
+    max-height: 320px;
+    overflow: auto;
+    padding: 12px;
+    font: 14px/1.4 "Cascadia Mono", "Liberation Mono", ui-monospace, monospace;
+    white-space: pre-wrap;
+  }
+  .err { color: var(--warn); }
+  .foot { color: var(--muted); font-size: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Loco-CAN</h1>
+  <p class="lead">Firmware aus GitHub Releases über einen FTDI-Adapter schreiben. Optiboot ist eingebaut, es ist nichts zu installieren.</p>
+
+  <section>
+    <label for="release">Release</label>
+    <div class="row">
+      <select id="release"></select>
+      <button type="button" id="reload">Aktualisieren</button>
+    </div>
+    <label class="check"><input type="checkbox" id="stable"> Nur stabile Releases</label>
+    <div class="grow">
+      <label for="image">Modul</label>
+      <select id="image"></select>
+      <div class="meta" id="image-meta"></div>
+    </div>
+  </section>
+
+  <section>
+    <label for="port">FTDI-Adapter</label>
+    <div class="row">
+      <select id="port"></select>
+      <button type="button" id="scan">Suchen</button>
+    </div>
+    <label class="check"><input type="checkbox" id="all"> Alle gefundenen FTDI-Adapter nacheinander beschreiben</label>
+    <div class="grow">
+      <label for="file">Oder eine lokale HEX-Datei</label>
+      <div class="fileline">
+        <label class="pick" for="file">HEX-Datei wählen</label>
+        <span id="picked">keine Datei gewählt</span>
+      </div>
+      <input id="file" type="file" accept=".hex,application/octet-stream" hidden>
+    </div>
+  </section>
+
+  <section>
+    <div class="actions">
+      <button type="button" class="primary" id="write">Schreiben</button>
+      <button type="button" id="quit">Beenden</button>
+    </div>
+    <div class="bar" aria-hidden="true"><div id="bar"></div></div>
+    <pre id="log"></pre>
+    <p class="foot">Der Adapter führt DTR über etwa 100&nbsp;nF an RESET. Einen seriellen Monitor vorher schließen. Schließen des Browserfensters lässt das Programm laufen. Ein erneuter Start öffnet diese Seite wieder. Beenden stoppt es.</p>
+  </section>
+</main>
+<script>
+(function () {
+  var token = document.querySelector('meta[name="loco-token"]').content;
+  var releaseEl = document.getElementById("release");
+  var imageEl = document.getElementById("image");
+  var metaEl = document.getElementById("image-meta");
+  var portEl = document.getElementById("port");
+  var logEl = document.getElementById("log");
+  var barEl = document.getElementById("bar");
+  var writeBtn = document.getElementById("write");
+  var fileEl = document.getElementById("file");
+  var allEl = document.getElementById("all");
+  var stableEl = document.getElementById("stable");
+  var releases = [];
+  var poll = null;
+
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = opts.headers || {};
+    headers["X-Loco-Token"] = token;
+    opts.headers = headers;
+    return fetch(path, opts).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        if (!res.ok) {
+          throw new Error(body.error || ("HTTP " + res.status));
+        }
+        return body;
+      });
+    });
+  }
+
+  function fillReleases() {
+    var previous = releaseEl.value;
+    releaseEl.innerHTML = "";
+    if (releases.length === 0) {
+      var empty = document.createElement("option");
+      empty.textContent = "Kein Release gefunden";
+      empty.value = "";
+      releaseEl.appendChild(empty);
+      fillImages();
+      return;
+    }
+    releases.forEach(function (rel, i) {
+      var opt = document.createElement("option");
+      opt.value = String(i);
+      var kind = rel.prerelease ? "Vorabversion" : "Release";
+      opt.textContent = rel.name + "  ·  " + rel.tag + "  ·  " + kind + "  ·  " + rel.date;
+      releaseEl.appendChild(opt);
+    });
+    if (previous && releaseEl.querySelector('option[value="' + previous + '"]')) {
+      releaseEl.value = previous;
+    }
+    fillImages();
+  }
+
+  function selectedRelease() {
+    var i = Number(releaseEl.value);
+    if (!releases[i]) return null;
+    return releases[i];
+  }
+
+  function fillImages() {
+    var rel = selectedRelease();
+    imageEl.innerHTML = "";
+    metaEl.textContent = "";
+    if (!rel || !rel.images || rel.images.length === 0) {
+      var empty = document.createElement("option");
+      empty.textContent = "Keine Firmware";
+      empty.value = "";
+      imageEl.appendChild(empty);
+      return;
+    }
+    rel.images.forEach(function (img) {
+      var opt = document.createElement("option");
+      opt.value = img.file;
+      opt.textContent = img.module + "  " + img.version + "  " + img.file;
+      if (img.protocol && img.protocol !== "arduino") {
+        opt.disabled = true;
+        opt.textContent += "  (nicht über FTDI)";
+      }
+      imageEl.appendChild(opt);
+    });
+    showMeta();
+  }
+
+  function selectedImage() {
+    var rel = selectedRelease();
+    if (!rel) return null;
+    for (var i = 0; i < rel.images.length; i++) {
+      if (rel.images[i].file === imageEl.value) return rel.images[i];
+    }
+    return null;
+  }
+
+  function showMeta() {
+    var img = selectedImage();
+    if (!img) {
+      metaEl.textContent = "";
+      return;
+    }
+    metaEl.textContent = img.sha256 ? ("SHA-256  " + img.sha256) : "Keine Prüfsumme im Release";
+  }
+
+  function loadReleases() {
+    var q = stableEl.checked ? "?stable=1" : "";
+    return api("/api/releases" + q).then(function (body) {
+      releases = body.releases || [];
+      fillReleases();
+    }).catch(function (err) {
+      releases = [];
+      fillReleases();
+      logEl.textContent = err.message;
+    });
+  }
+
+  function loadPorts() {
+    return api("/api/ports").then(function (body) {
+      var previous = portEl.value;
+      portEl.innerHTML = "";
+      var ports = body.ports || [];
+      if (ports.length === 0) {
+        var empty = document.createElement("option");
+        empty.value = "";
+        empty.textContent = "Kein FTDI-Adapter gefunden";
+        portEl.appendChild(empty);
+        return;
+      }
+      ports.forEach(function (p) {
+        var opt = document.createElement("option");
+        opt.value = p.name;
+        opt.textContent = p.desc ? (p.name + "  ·  " + p.desc) : p.name;
+        portEl.appendChild(opt);
+      });
+      if (previous && portEl.querySelector('option[value="' + previous + '"]')) {
+        portEl.value = previous;
+      }
+    }).catch(function (err) {
+      logEl.textContent = err.message;
+    });
+  }
+
+  function renderJob(job) {
+    logEl.textContent = (job.lines || []).join("\n");
+    logEl.scrollTop = logEl.scrollHeight;
+    var pct = 0;
+    if (job.total > 0) pct = Math.round(100 * job.done / job.total);
+    barEl.style.width = pct + "%";
+    if (job.error) {
+      logEl.textContent += (logEl.textContent ? "\n" : "") + job.error;
+    }
+  }
+
+  function watch() {
+    if (poll) return;
+    poll = setInterval(function () {
+      api("/api/job").then(function (job) {
+        renderJob(job);
+        if (!job.running) {
+          clearInterval(poll);
+          poll = null;
+          writeBtn.disabled = false;
+        }
+      }).catch(function () {});
+    }, 400);
+  }
+
+  document.getElementById("reload").onclick = loadReleases;
+  stableEl.onchange = loadReleases;
+  releaseEl.onchange = fillImages;
+  imageEl.onchange = showMeta;
+  document.getElementById("scan").onclick = loadPorts;
+  allEl.onchange = function () { portEl.disabled = allEl.checked; };
+  fileEl.onchange = function () {
+    var name = (fileEl.files && fileEl.files[0]) ? fileEl.files[0].name : "keine Datei gewählt";
+    document.getElementById("picked").textContent = name;
+  };
+
+  writeBtn.onclick = function () {
+    writeBtn.disabled = true;
+    logEl.textContent = "";
+    barEl.style.width = "0";
+    var local = fileEl.files && fileEl.files[0];
+    var req;
+    if (local) {
+      var body = new FormData();
+      body.append("hex", local);
+      body.append("port", portEl.value);
+      body.append("all", allEl.checked ? "1" : "0");
+      req = api("/api/flash", { method: "POST", body: body });
+    } else {
+      var rel = selectedRelease();
+      var img = selectedImage();
+      if (!rel || !img) {
+        writeBtn.disabled = false;
+        logEl.textContent = "Kein Modul ausgewählt";
+        return;
+      }
+      req = api("/api/flash", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tag: rel.tag,
+          file: img.file,
+          port: portEl.value,
+          all: allEl.checked
+        })
+      });
+    }
+    req.then(function () { watch(); }).catch(function (err) {
+      writeBtn.disabled = false;
+      logEl.textContent = err.message;
+    });
+  };
+
+  document.getElementById("quit").onclick = function () {
+    api("/api/quit", { method: "POST", body: "{}" }).catch(function () {});
+    logEl.textContent = "Programm wird beendet.";
+  };
+
+  api("/api/job").then(function (job) {
+    renderJob(job);
+    if (job.running) {
+      writeBtn.disabled = true;
+      watch();
+    }
+  }).catch(function () {});
+  loadReleases();
+  loadPorts();
+})();
+</script>
+</body>
+</html>

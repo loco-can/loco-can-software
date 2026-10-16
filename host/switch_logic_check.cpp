@@ -2,6 +2,7 @@
  * Host checks for switch output functions and CAN settings.
  */
 
+#include "can_protocol.h"
 #include "module/switch/current.h"
 #include "module/switch/function.h"
 #include "module/switch/params.h"
@@ -64,7 +65,7 @@ int switch_logic_check(void) {
 	expect_true("dir 3 is rejected", !switch_map_valid((uint8_t)(3 << SWITCH_MAP_DIR_SHIFT)));
 
 	SWITCH_PARAMS params;
-	switch_params_defaults(params, 21);
+	switch_params_defaults(params, LOCO_VERSION(2, 1, 0));
 	expect_u8("version", params.bytes[SWITCH_PARAM_VERSION], 21);
 	expect_u8("out1", switch_params_map(params, 0), SWITCH_FUNC_LIGHT_LOW_FRONT);
 	expect_u8("out2", switch_params_map(params, 1), SWITCH_FUNC_LIGHT_LOW_BACK);
@@ -122,11 +123,13 @@ int switch_logic_check(void) {
 	request.uuid = 1;
 	request.size = 1;
 	request.data[0] = 0xFF;
-	SWITCH_PARAM_RESULT info = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT info = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_u8("info packets", info.reply_count, 2);
 	expect_u8("info max", info.reply[0].data[0], (uint8_t)(SWITCH_PARAM_BYTES - 1));
-	expect_u8("info version", info.reply[0].data[3], 21);
-	expect_u8("info type", info.reply[0].data[4], SWITCH_TYPE_ID);
+	expect_u8("info major", info.reply[0].data[3], 2);
+	expect_u8("info minor", info.reply[0].data[4], 1);
+	expect_u8("info patch", info.reply[0].data[5], 0);
+	expect_u8("info type", info.reply[0].data[6], SWITCH_TYPE_ID);
 	expect_u8("info name 0", info.reply[1].data[1], 'S');
 
 	request.size = 4;
@@ -134,7 +137,7 @@ int switch_logic_check(void) {
 	request.data[1] = 0x34;
 	request.data[2] = SWITCH_PARAM_MAP;
 	request.data[3] = SWITCH_OUTPUT_COUNT;
-	SWITCH_PARAM_RESULT value = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT value = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_u8("value size", value.reply[0].size, SWITCH_OUTPUT_COUNT);
 	expect_u8("value id", (uint8_t)(value.reply[0].id & 0x7F), SWITCH_PARAM_MAP);
 	expect_u8("stored mains still there", value.reply[0].data[0], mains);
@@ -144,19 +147,19 @@ int switch_logic_check(void) {
 	request.data[0] = 0x00;
 	request.data[1] = 0x01;
 	request.data[2] = SWITCH_FUNC_HORN_HIGH;
-	SWITCH_PARAM_RESULT rejected = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT rejected = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_true("foreign uuid ignored", !rejected.changed);
 	expect_u8("map unchanged", switch_params_map(params, 0), mains);
 
 	request.data[0] = 0x12;
 	request.data[1] = 0x34;
 	request.data[2] = (uint8_t)(7 << SWITCH_MAP_DIR_SHIFT);
-	SWITCH_PARAM_RESULT invalid = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT invalid = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_true("invalid map ignored", !invalid.changed);
 	expect_u8("invalid did not store", switch_params_map(params, 0), mains);
 
 	request.data[2] = SWITCH_FUNC_HORN_HIGH;
-	SWITCH_PARAM_RESULT written = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT written = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_true("own uuid stored", written.changed);
 	expect_u8("output 0 is horn high", switch_params_map(params, 0), SWITCH_FUNC_HORN_HIGH);
 	expect_u8("version stays", params.bytes[SWITCH_PARAM_VERSION], 21);
@@ -174,7 +177,7 @@ int switch_logic_check(void) {
 	request.data[5] = 'M';
 	request.data[6] = 'P';
 	request.data[7] = 0;
-	SWITCH_PARAM_RESULT named = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT named = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_true("name stored", named.changed && params.name[0] == 'L' && params.name[3] == 'P' && params.name[4] == 0);
 
 	request.id = (uint32_t)(CAN_ID_SETUP | SWITCH_PARAM_MAX_CURRENT);
@@ -183,7 +186,7 @@ int switch_logic_check(void) {
 	request.data[1] = 0x34;
 	request.data[2] = 0x88;
 	request.data[3] = 0x13;
-	SWITCH_PARAM_RESULT limit = switch_params_on_can(params, request, 0x1234, 21, SWITCH_TYPE_ID);
+	SWITCH_PARAM_RESULT limit = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_true("max current stored", limit.changed);
 	expect_u16("max current value", switch_params_max_current(params), 5000);
 	expect_u8("map survives limit write", switch_params_map(params, 0), SWITCH_FUNC_HORN_HIGH);

@@ -105,7 +105,7 @@ SETUP
 
 // #pragma message "module controller config.h"
 
-#if defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_1_0
+#if defined(CONTROLLER_MODULE_VERSION) && LOCO_VERSION_IS(CONTROLLER_MODULE_VERSION, 1, 0)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -163,7 +163,7 @@ SETUP
  * CONTROLLER ADAPTER with universal module V2.0
  * (has wrong ICP pinout)
  */
-#elif defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_2_0
+#elif defined(CONTROLLER_MODULE_VERSION) && LOCO_VERSION_IS(CONTROLLER_MODULE_VERSION, 2, 0)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -220,7 +220,7 @@ SETUP
 /*
  * CONTROLLER ADAPTER with universal module V2.1
  */
-#elif defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_2_1
+#elif defined(CONTROLLER_MODULE_VERSION) && LOCO_VERSION_IS(CONTROLLER_MODULE_VERSION, 2, 1)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -280,7 +280,7 @@ SETUP
  * ESP32S3 based version
  * not yet implemented, only for debugging use
  */
-#elif defined(CONTROLLER_MODULE_VERSION) && CONTROLLER_MODULE_VERSION == V_3_0
+#elif defined(CONTROLLER_MODULE_VERSION) && LOCO_VERSION_IS(CONTROLLER_MODULE_VERSION, 3, 0)
 
 	#define MODULE_ARCH_ESP32
 
@@ -302,7 +302,7 @@ SETUP
 	// CAN LED
 
 #elif defined(CONTROLLER_MODULE_VERSION)
-	#error "Set CONTROLLER_MODULE_VERSION in hardware.h (V_1_0, V_2_0, V_2_1, or V_3_0)"
+	#error "Set CONTROLLER_MODULE_VERSION in hardware.h (V_1_0_0, V_2_0_0, V_2_1_0, or V_3_0_0)"
 
 #endif
 

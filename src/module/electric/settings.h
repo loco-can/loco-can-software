@@ -3,7 +3,7 @@
  * settings protocol (doc/SETTINGS.md): 0x7FF request, 0x780 reply,
  * 0x700-0x77F write. The byte layout matches the controller module.
  *
- *   0      version (running firmware, not writable)
+ *   0      version code, major*10+minor (2.1.12 is stored as 21, not writable)
  *   1      plugin type (direct PWM driver, 4QD, Curtis)
  *   2      count of battery voltages to measure
  *   3      PWM mode: drive only, or drive and brake
@@ -54,7 +54,7 @@ struct ELECTRIC_SETTINGS_RESULT {
 	bool changed;
 };
 
-void electric_settings_defaults(ELECTRIC_SETTINGS &settings, uint8_t module_version);
+void electric_settings_defaults(ELECTRIC_SETTINGS &settings, uint32_t module_version);
 
 uint8_t electric_settings_plugin(const ELECTRIC_SETTINGS &settings);
 uint8_t electric_settings_battery_count(const ELECTRIC_SETTINGS &settings);
@@ -71,7 +71,7 @@ ELECTRIC_SETTINGS_RESULT electric_settings_on_can(
 	ELECTRIC_SETTINGS &settings,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 );
 

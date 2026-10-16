@@ -26,13 +26,13 @@ static void electric_settings_copy_name(ELECTRIC_SETTINGS &settings, const char 
 }
 
 
-void electric_settings_defaults(ELECTRIC_SETTINGS &settings, uint8_t module_version) {
+void electric_settings_defaults(ELECTRIC_SETTINGS &settings, uint32_t module_version) {
 
 	for (uint8_t i = 0; i < ELECTRIC_PARAM_BYTES; i++) {
 		settings.bytes[i] = 0;
 	}
 
-	settings.bytes[ELECTRIC_PARAM_VERSION] = module_version;
+	settings.bytes[ELECTRIC_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 	settings.bytes[ELECTRIC_PARAM_PLUGIN] = ELECTRIC_PLUGIN_DIRECT;
 	settings.bytes[ELECTRIC_PARAM_BATTERY_COUNT] = 1;
 	settings.bytes[ELECTRIC_PARAM_PWM_MODE] = ELECTRIC_PWM_DRIVE_BRAKE;
@@ -139,17 +139,19 @@ static bool electric_settings_uuid_match(const CAN_MESSAGE &message, uint16_t se
 }
 
 
-static void electric_settings_info(ELECTRIC_SETTINGS_RESULT &result, const ELECTRIC_SETTINGS &settings, uint8_t module_version, uint8_t module_type) {
+static void electric_settings_info(ELECTRIC_SETTINGS_RESULT &result, const ELECTRIC_SETTINGS &settings, uint32_t module_version, uint8_t module_type) {
 
 	CAN_MESSAGE &info = result.reply[0];
 	electric_settings_clear(info);
 	info.id = CAN_ID_REPLY;
-	info.size = 5;
+	info.size = 7;
 	info.data[0] = (uint8_t)(ELECTRIC_PARAM_BYTES - 1);
 	info.data[1] = 0x20;
 	info.data[2] = 0;
-	info.data[3] = module_version;
-	info.data[4] = module_type;
+	info.data[3] = (uint8_t)LOCO_VERSION_MAJOR(module_version);
+	info.data[4] = (uint8_t)LOCO_VERSION_MINOR(module_version);
+	info.data[5] = (uint8_t)LOCO_VERSION_PATCH(module_version);
+	info.data[6] = module_type;
 
 	CAN_MESSAGE &name = result.reply[1];
 	electric_settings_clear(name);
@@ -222,7 +224,7 @@ ELECTRIC_SETTINGS_RESULT electric_settings_on_can(
 	ELECTRIC_SETTINGS &settings,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 ) {
 
@@ -301,7 +303,7 @@ ELECTRIC_SETTINGS_RESULT electric_settings_on_can(
 	}
 
 	for (uint8_t i = 0; i < length; i++) {
-		if ((uint8_t)(index + i) == ELECTRIC_PARAM_VERSION && message.data[2 + i] != module_version) {
+		if ((uint8_t)(index + i) == ELECTRIC_PARAM_VERSION && message.data[2 + i] != (uint8_t)LOCO_VERSION_CODE(module_version)) {
 			return result;
 		}
 	}
@@ -314,7 +316,7 @@ ELECTRIC_SETTINGS_RESULT electric_settings_on_can(
 		settings.bytes[at] = electric_settings_accept(at, message.data[2 + i], settings.bytes[at]);
 	}
 
-	settings.bytes[ELECTRIC_PARAM_VERSION] = module_version;
+	settings.bytes[ELECTRIC_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 	result.changed = true;
 	return result;
 }

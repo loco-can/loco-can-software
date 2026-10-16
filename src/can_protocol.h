@@ -50,10 +50,25 @@
 // vehicle status values
 #define CAN_ID_VEHICLE_STATUS 0x500
 
+// Module version is major.minor.patch, for example 2.1.12.
+// LOCO_VERSION(2, 1, 12) packs that into one integer. Hardware
+// configuration follows major.minor, so 2.1.0 and 2.1.12 share a board.
+// The settings byte keeps the older major*10+minor code (2.1 -> 21).
+#define LOCO_VERSION(major, minor, patch) \
+	((((major) * 1UL) << 16) | (((minor) * 1UL) << 8) | ((patch) * 1UL))
+#define LOCO_VERSION_MAJOR(v) ((((v) * 1UL) >> 16) & 0xFFUL)
+#define LOCO_VERSION_MINOR(v) ((((v) * 1UL) >> 8) & 0xFFUL)
+#define LOCO_VERSION_PATCH(v) (((v) * 1UL) & 0xFFUL)
+#define LOCO_VERSION_IS(version, major, minor) \
+	(LOCO_VERSION_MAJOR(version) == (major) && LOCO_VERSION_MINOR(version) == (minor))
+#define LOCO_VERSION_CODE(v) ((LOCO_VERSION_MAJOR(v) * 10UL) + LOCO_VERSION_MINOR(v))
+
 // message heartbeat
 // Every module sends this every MODULE_HEARTBEAT_TIMEOUT ms.
 //   data[0]  module type (*_TYPE_ID)
-//   data[1]  module version (V_x_y as 10*x+y, e.g. 21)
+//   data[1]  major
+//   data[2]  minor
+//   data[3]  patch (2.1.12 -> 2, 1, 12)
 #define CAN_ID_MODULE_HEARTBEAT 0x510
 
 #define MODULE_HEARTBEAT_TIMEOUT 1000

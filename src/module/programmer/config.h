@@ -16,7 +16,7 @@
 #define MODULE_PROGRAMMER_CONFIG_H
 
 
-#if defined(PROGRAMMER_MODULE_VERSION) && PROGRAMMER_MODULE_VERSION == V_2_0
+#if defined(PROGRAMMER_MODULE_VERSION) && LOCO_VERSION_IS(PROGRAMMER_MODULE_VERSION, 2, 0)
 
 	// ======================================
 	// ESP32-WROOM-32
@@ -54,7 +54,7 @@
 	#define PROGRAMMER_GROUP_MAX 48
 	#define PROGRAMMER_OLED_ROWS 6
 
-#elif defined(PROGRAMMER_MODULE_VERSION) && PROGRAMMER_MODULE_VERSION == V_3_0
+#elif defined(PROGRAMMER_MODULE_VERSION) && LOCO_VERSION_IS(PROGRAMMER_MODULE_VERSION, 3, 0)
 
 	// ======================================
 	// BASIC SETTINGS
@@ -94,7 +94,7 @@
 	#define PROGRAMMER_OLED_ROWS 6
 
 #elif defined(PROGRAMMER_MODULE_VERSION)
-	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_2_0 or V_3_0)"
+	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_2_0_0 or V_3_0_0)"
 #endif
 
 #if defined(PROGRAMMER_MODULE_VERSION)

@@ -2,7 +2,7 @@
  * Switch parameters stored in EEPROM and edited over the CAN setup
  * protocol (0x7FF request, 0x780 reply, 0x700-0x77F write).
  *
- *   0      module version
+ *   0      version code, major*10+minor (2.1.12 is stored as 21)
  *   1..6   output function map, one byte per output
  *   7..8   max_current, little-endian milliamps
  *
@@ -42,7 +42,7 @@ struct SWITCH_PARAM_RESULT {
 	bool changed;
 };
 
-void switch_params_defaults(SWITCH_PARAMS &params, uint8_t module_version);
+void switch_params_defaults(SWITCH_PARAMS &params, uint32_t module_version);
 
 uint8_t switch_params_map(const SWITCH_PARAMS &params, uint8_t output);
 
@@ -53,7 +53,7 @@ SWITCH_PARAM_RESULT switch_params_on_can(
 	SWITCH_PARAMS &params,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 );
 

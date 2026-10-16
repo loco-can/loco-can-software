@@ -36,10 +36,10 @@
 // #define MODULE UNIVERSAL_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define UNIVERSAL_MODULE_VERSION V_1_0
-// #define UNIVERSAL_MODULE_VERSION V_2_0
-// #define UNIVERSAL_MODULE_VERSION V_2_1
-// #define UNIVERSAL_MODULE_VERSION V_3_0
+// #define UNIVERSAL_MODULE_VERSION V_1_0_0
+// #define UNIVERSAL_MODULE_VERSION V_2_0_0
+// #define UNIVERSAL_MODULE_VERSION V_2_1_0
+// #define UNIVERSAL_MODULE_VERSION V_3_0_0
 /* ===================================================================== */
 
 /* ========================================================================
@@ -50,8 +50,8 @@
 #define MODULE PROGRAMMER_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-#define PROGRAMMER_MODULE_VERSION V_2_0
-// #define PROGRAMMER_MODULE_VERSION V_3_0
+#define PROGRAMMER_MODULE_VERSION V_2_0_0
+// #define PROGRAMMER_MODULE_VERSION V_3_0_0
 /* ===================================================================== */
 
 
@@ -65,8 +65,8 @@
 //#define MODULE CONTROLLER_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define CONTROLLER_MODULE_VERSION V_2_0
-//#define CONTROLLER_MODULE_VERSION V_2_1
+// #define CONTROLLER_MODULE_VERSION V_2_0_0
+//#define CONTROLLER_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -80,8 +80,8 @@
 // #define MODULE ELECTRIC_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define ELECTRIC_MODULE_VERSION V_1_0
-// #define ELECTRIC_MODULE_VERSION V_2_0
+// #define ELECTRIC_MODULE_VERSION V_1_0_0
+// #define ELECTRIC_MODULE_VERSION V_2_0_0
 /* ===================================================================== */
 
 
@@ -99,8 +99,8 @@
 // #define MODULE SWITCH_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define SWITCH_MODULE_VERSION V_2_0
-// #define SWITCH_MODULE_VERSION V_2_1
+// #define SWITCH_MODULE_VERSION V_2_0_0
+// #define SWITCH_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -113,8 +113,8 @@
 // #define MODULE SENSOR_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define SENSOR_MODULE_VERSION V_2_0
-// #define SENSOR_MODULE_VERSION V_2_1
+// #define SENSOR_MODULE_VERSION V_2_0_0
+// #define SENSOR_MODULE_VERSION V_2_1_0
 /* ===================================================================== */
 
 
@@ -128,8 +128,8 @@
 // #define MODULE WIFI_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define WIFI_MODULE_VERSION V_2_0
-// #define WIFI_MODULE_VERSION V_3_0
+// #define WIFI_MODULE_VERSION V_2_0_0
+// #define WIFI_MODULE_VERSION V_3_0_0
 /* ===================================================================== */
 
 
@@ -143,7 +143,7 @@
 // #define MODULE LED_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define LED_MODULE_VERSION V_2_0
+// #define LED_MODULE_VERSION V_2_0_0
 /* ===================================================================== */
 
 
@@ -160,7 +160,7 @@
 // #define MODULE DRIVE_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define DRIVE_MODULE_VERSION V_2_0
+// #define DRIVE_MODULE_VERSION V_2_0_0
 /* ===================================================================== */
 
 #endif /* !PIOENV */

@@ -9,29 +9,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C/C++ Runner: Debug Session",
-            "type": "cppdbg",
-            "request": "launch",
-            "args": [],
-            "stopAtEntry": false,
-            "externalConsole": true,
-            "cwd": "c:/Users/Tom/Documents/Entwicklung/loco-can-software",
-            "program": "c:/Users/Tom/Documents/Entwicklung/loco-can-software/build/Debug/outDebug",
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "/home/tom/Dokumente/Entwicklung/loco-can-software/.pio/build/programmer_v2/firmware.elf",
+            "executable": "/home/tom/Dokumente/Entwicklung/loco-can-software/.pio/build/programmer_v2/programmer_v2_0_0.elf",
             "projectEnvName": "programmer_v2",
             "toolchainBinDir": "/home/tom/.platformio/packages/toolchain-xtensa-esp32/bin",
             "internalConsoleOptions": "openOnSessionStart",
@@ -44,7 +25,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "/home/tom/Dokumente/Entwicklung/loco-can-software/.pio/build/programmer_v2/firmware.elf",
+            "executable": "/home/tom/Dokumente/Entwicklung/loco-can-software/.pio/build/programmer_v2/programmer_v2_0_0.elf",
             "projectEnvName": "programmer_v2",
             "toolchainBinDir": "/home/tom/.platformio/packages/toolchain-xtensa-esp32/bin",
             "internalConsoleOptions": "openOnSessionStart"
@@ -53,7 +34,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "/home/tom/Dokumente/Entwicklung/loco-can-software/.pio/build/programmer_v2/firmware.elf",
+            "executable": "/home/tom/Dokumente/Entwicklung/loco-can-software/.pio/build/programmer_v2/programmer_v2_0_0.elf",
             "projectEnvName": "programmer_v2",
             "toolchainBinDir": "/home/tom/.platformio/packages/toolchain-xtensa-esp32/bin",
             "internalConsoleOptions": "openOnSessionStart",

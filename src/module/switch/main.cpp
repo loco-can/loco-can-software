@@ -50,13 +50,13 @@ void MODULE_SWITCH::_load_params(void) {
 
 	switch_eeprom_begin();
 
-	uint8_t version = (uint8_t)SWITCH_MODULE_VERSION;
+	uint8_t version = (uint8_t)LOCO_VERSION_CODE(SWITCH_MODULE_VERSION);
 	uint8_t magic = EEPROM.read(0);
 	uint8_t schema = EEPROM.read(1);
 	uint8_t stored_version = EEPROM.read(2);
 
 	if (magic != SWITCH_PARAM_MAGIC || schema != SWITCH_PARAM_SCHEMA || stored_version != version) {
-		switch_params_defaults(_params, version);
+		switch_params_defaults(_params, SWITCH_MODULE_VERSION);
 		_save_params();
 		return;
 	}
@@ -73,7 +73,7 @@ void MODULE_SWITCH::_load_params(void) {
 
 	for (uint8_t i = 0; i < SWITCH_OUTPUT_COUNT; i++) {
 		if (!switch_map_valid(_params.bytes[SWITCH_PARAM_MAP + i])) {
-			switch_params_defaults(_params, version);
+			switch_params_defaults(_params, SWITCH_MODULE_VERSION);
 			_save_params();
 			return;
 		}
@@ -109,7 +109,7 @@ void MODULE_SWITCH::_handle_setup(CAN_MESSAGE message) {
 		_params,
 		message,
 		(uint16_t)can.uuid(),
-		(uint8_t)SWITCH_MODULE_VERSION,
+		SWITCH_MODULE_VERSION,
 		SWITCH_TYPE_ID
 	);
 

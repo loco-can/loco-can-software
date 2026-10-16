@@ -32,7 +32,7 @@ In `hardware.h` select the programmer instead of the controller:
 
 ```c
 #define MODULE PROGRAMMER_MODULE
-#define PROGRAMMER_MODULE_VERSION V_2_0
+#define PROGRAMMER_MODULE_VERSION V_2_0_0
 ```
 
 In `src/LocoCANcore.h` add:

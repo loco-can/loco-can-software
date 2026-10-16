@@ -62,6 +62,7 @@ struct PROGRAMMER_NODE {
 	uint8_t type;
 	uint8_t version_maj;
 	uint8_t version_min;
+	uint8_t version_patch;
 	char name[16];
 	uint8_t max_settings;
 	bool used;

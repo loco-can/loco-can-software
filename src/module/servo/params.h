@@ -2,7 +2,7 @@
  * Servo parameters stored in EEPROM and edited over the CAN setup
  * protocol (0x7FF request, 0x780 reply, 0x700-0x77F write).
  *
- *   0      module version
+ *   0      version code, major*10+minor (2.1.12 is stored as 21)
  *   1..4   output map, one byte per servo (see mapping.h)
  *
  * CAN id 0x700 writes the module name. Ids 0x701.. write parameter bytes.
@@ -37,7 +37,7 @@ struct SERVO_PARAM_RESULT {
 	bool changed;
 };
 
-void servo_params_defaults(SERVO_PARAMS &params, uint8_t module_version);
+void servo_params_defaults(SERVO_PARAMS &params, uint32_t module_version);
 
 uint8_t servo_params_map(const SERVO_PARAMS &params, uint8_t output);
 
@@ -45,7 +45,7 @@ SERVO_PARAM_RESULT servo_params_on_can(
 	SERVO_PARAMS &params,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 );
 

@@ -6,7 +6,7 @@
  * positions (count, then little-endian ADC points, index 0 = lowest
  * voltage) and the drive/brake lever positions.
  *
- *   0      version
+ *   0      version code, major*10+minor (2.1.12 is stored as 21)
  *   1      mains count
  *   2..7   mains points (3 x uint16)
  *   8      direction count
@@ -72,7 +72,7 @@ struct CONTROLLER_PARAM_RESULT {
 	bool changed;
 };
 
-void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake, uint8_t module_version);
+void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake, uint32_t module_version);
 
 uint16_t controller_params_get16(const CONTROLLER_PARAMS &params, uint8_t index);
 void controller_params_put16(CONTROLLER_PARAMS &params, uint8_t index, uint16_t value);
@@ -84,7 +84,7 @@ CONTROLLER_PARAM_RESULT controller_params_on_can(
 	CONTROLLER_PARAMS &params,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 );
 

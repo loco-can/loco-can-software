@@ -54,13 +54,13 @@ static void controller_params_copy_name(CONTROLLER_PARAMS &params, const char *n
 }
 
 
-void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake, uint8_t module_version) {
+void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake, uint32_t module_version) {
 
 	for (uint8_t i = 0; i < CONTROLLER_PARAM_BYTES; i++) {
 		params.bytes[i] = 0;
 	}
 
-	params.bytes[CONTROLLER_PARAM_VERSION] = module_version;
+	params.bytes[CONTROLLER_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 
 	controller_params_fill_switch(params, CONTROLLER_PARAM_MAINS_COUNT, CONTROLLER_PARAM_MAINS_POINTS, resolution);
 	controller_params_fill_switch(params, CONTROLLER_PARAM_DIR_COUNT, CONTROLLER_PARAM_DIR_POINTS, resolution);
@@ -154,17 +154,19 @@ static bool controller_params_uuid_match(const CAN_MESSAGE &message, uint16_t se
 }
 
 
-static void controller_params_info(CONTROLLER_PARAM_RESULT &result, const CONTROLLER_PARAMS &params, uint8_t module_version, uint8_t module_type) {
+static void controller_params_info(CONTROLLER_PARAM_RESULT &result, const CONTROLLER_PARAMS &params, uint32_t module_version, uint8_t module_type) {
 
 	CAN_MESSAGE &info = result.reply[0];
 	controller_params_clear(info);
 	info.id = CAN_ID_REPLY;
-	info.size = 5;
+	info.size = 7;
 	info.data[0] = (uint8_t)(CONTROLLER_PARAM_BYTES - 1);
 	info.data[1] = 0x20;
 	info.data[2] = 0;
-	info.data[3] = module_version;
-	info.data[4] = module_type;
+	info.data[3] = (uint8_t)LOCO_VERSION_MAJOR(module_version);
+	info.data[4] = (uint8_t)LOCO_VERSION_MINOR(module_version);
+	info.data[5] = (uint8_t)LOCO_VERSION_PATCH(module_version);
+	info.data[6] = module_type;
 
 	CAN_MESSAGE &name = result.reply[1];
 	controller_params_clear(name);
@@ -215,7 +217,7 @@ CONTROLLER_PARAM_RESULT controller_params_on_can(
 	CONTROLLER_PARAMS &params,
 	const CAN_MESSAGE &message,
 	uint16_t self_uuid,
-	uint8_t module_version,
+	uint32_t module_version,
 	uint8_t module_type
 ) {
 
@@ -295,7 +297,7 @@ CONTROLLER_PARAM_RESULT controller_params_on_can(
 	}
 
 	for (uint8_t i = 0; i < length; i++) {
-		if ((uint8_t)(index + i) == CONTROLLER_PARAM_VERSION && message.data[2 + i] != module_version) {
+		if ((uint8_t)(index + i) == CONTROLLER_PARAM_VERSION && message.data[2 + i] != (uint8_t)LOCO_VERSION_CODE(module_version)) {
 			return result;
 		}
 	}
@@ -304,7 +306,7 @@ CONTROLLER_PARAM_RESULT controller_params_on_can(
 		params.bytes[index + i] = message.data[2 + i];
 	}
 
-	params.bytes[CONTROLLER_PARAM_VERSION] = module_version;
+	params.bytes[CONTROLLER_PARAM_VERSION] = (uint8_t)LOCO_VERSION_CODE(module_version);
 	result.changed = true;
 	return result;
 }
