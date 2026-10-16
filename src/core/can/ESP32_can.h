@@ -14,6 +14,8 @@
 #include "can_message.h"
 #include "driver/twai.h"
 
+void loco_twai_rebind_rx(void);
+
 
 class CAN_HANDLER {
 

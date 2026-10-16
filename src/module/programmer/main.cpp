@@ -16,6 +16,10 @@
 extern CAN_COM can;
 
 #ifdef MODULE_ARCH_ESP32
+#include "driver/twai.h"
+#include "driver/gpio.h"
+#include "soc/gpio_sig_map.h"
+
 static MODULE_PROGRAMMER *programmer_web = nullptr;
 
 class ProgrammerCatchAll : public RequestHandler {
@@ -30,22 +34,68 @@ class ProgrammerCatchAll : public RequestHandler {
 	}
 };
 
-static bool programmer_fs_has_ui(void) {
+/*
+ * Arduino-ESP32 LittleFS.exists()/open() on a missing path logs
+ * vfs_api "does not exist, no permits for creation". Index the
+ * image once and only open names that were listed.
+ */
+#define PROGRAMMER_FS_MAX 128
+static String programmer_fs_paths[PROGRAMMER_FS_MAX];
+static uint8_t programmer_fs_n = 0;
+
+static String programmer_fs_normalize(const char *name) {
+	if (!name || !name[0]) {
+		return String();
+	}
+	if (name[0] == '/') {
+		return String(name);
+	}
+	return String("/") + name;
+}
+
+static void programmer_fs_scan_dir(File dir) {
+	File f = dir.openNextFile();
+	while (f) {
+		if (f.isDirectory()) {
+			programmer_fs_scan_dir(f);
+		} else if (programmer_fs_n < PROGRAMMER_FS_MAX) {
+			const char *p = f.path();
+			if (!p || !p[0]) {
+				p = f.name();
+			}
+			String n = programmer_fs_normalize(p);
+			if (n.length() > 0) {
+				programmer_fs_paths[programmer_fs_n++] = n;
+			}
+		}
+		f.close();
+		f = dir.openNextFile();
+	}
+}
+
+static bool programmer_fs_scan(void) {
+	programmer_fs_n = 0;
 	File root = LittleFS.open("/");
 	if (!root) {
 		return false;
 	}
-	File f = root.openNextFile();
-	while (f) {
-		String name = f.name();
-		f.close();
-		if (name.endsWith("index.html") || name.endsWith("index.html.gz")) {
-			root.close();
+	programmer_fs_scan_dir(root);
+	root.close();
+	for (uint8_t i = 0; i < programmer_fs_n; i++) {
+		if (programmer_fs_paths[i].endsWith("index.html") ||
+			programmer_fs_paths[i].endsWith("index.html.gz")) {
 			return true;
 		}
-		f = root.openNextFile();
 	}
-	root.close();
+	return false;
+}
+
+static bool programmer_fs_known(const String &path) {
+	for (uint8_t i = 0; i < programmer_fs_n; i++) {
+		if (programmer_fs_paths[i] == path) {
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -171,19 +221,9 @@ void MODULE_PROGRAMMER::update(CAN_MESSAGE message) {
 
 	if (message.uuid != 0 || message.id != 0 || message.size != 0) {
 		_ingest(message);
-		#ifdef MODULE_ARCH_ESP32
-			_web_push(message, false);
-		#endif
-		#ifdef DEBUG
-			static uint16_t rx_shown = 0;
-			if (rx_shown < 16) {
-				rx_shown++;
-				Serial.print("> RX id=0x");
-				Serial.print(message.id, HEX);
-				Serial.print(" uuid=0x");
-				Serial.println(message.uuid, HEX);
-			}
-		#endif
+#ifdef MODULE_ARCH_ESP32
+		_web_push(message, false);
+#endif
 	}
 
 	_poll_encoder();
@@ -327,21 +367,38 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 #ifdef MODULE_ARCH_ESP32
 	programmer_web = this;
 
+	#ifdef DEBUG
+		Serial.println("> starting WiFi AP");
+		Serial.flush();
+	#endif
+
 	WiFi.persistent(false);
+	WiFi.mode(WIFI_OFF);
+	delay(50);
 	WiFi.mode(WIFI_AP);
 	WiFi.setSleep(false);
+	delay(50);
+	const bool ap_ok = WiFi.softAP(PROGRAMMER_WIFI_SSID, PROGRAMMER_WIFI_PASS, 1, 0, 4);
 	WiFi.softAPConfig(
 		IPAddress(192, 168, 4, 1),
 		IPAddress(192, 168, 4, 1),
 		IPAddress(255, 255, 255, 0)
 	);
-	WiFi.softAP(PROGRAMMER_WIFI_SSID, PROGRAMMER_WIFI_PASS);
+	delay(100);
+
+	#ifdef DEBUG
+		Serial.print("> AP ");
+		Serial.println(ap_ok ? "ok" : "fail");
+		Serial.print("> AP IP ");
+		Serial.println(WiFi.softAPIP());
+		Serial.flush();
+	#endif
 
 	_dns.start(53, "*", WiFi.softAPIP());
 
 	/* format-on-fail would wipe a freshly uploaded LittleFS image */
 	_fs_ok = LittleFS.begin(false);
-	_fs_ui = _fs_ok && programmer_fs_has_ui();
+	_fs_ui = _fs_ok && programmer_fs_scan();
 
 	_http.on("/api/status", HTTP_GET, []() {
 		if (programmer_web) programmer_web->_http_status();
@@ -358,9 +415,9 @@ void MODULE_PROGRAMMER::_start_ap(void) {
 	_http.enableCORS(true);
 	_http.begin();
 
+	loco_twai_rebind_rx();
+
 	#ifdef DEBUG
-		Serial.print("> AP IP ");
-		Serial.println(WiFi.softAPIP());
 		Serial.print("> LittleFS ");
 		if (_fs_ui) {
 			Serial.println("UI ready");
@@ -567,12 +624,12 @@ bool MODULE_PROGRAMMER::_http_send_file(const String &uri) {
 	const String accept = _http.header("Accept-Encoding");
 	const bool want_gzip = accept.indexOf("gzip") >= 0;
 
-	if (want_gzip && LittleFS.exists(gz)) {
+	if (want_gzip && programmer_fs_known(gz)) {
 		open_path = gz;
 		gzip = true;
-	} else if (LittleFS.exists(path)) {
+	} else if (programmer_fs_known(path)) {
 		open_path = path;
-	} else if (LittleFS.exists(gz)) {
+	} else if (programmer_fs_known(gz)) {
 		open_path = gz;
 		gzip = true;
 	} else {

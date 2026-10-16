@@ -37,7 +37,7 @@ void LocoCANcore::begin(void) {
 			#if (CAN_RX >= 6 && CAN_RX <= 11) || (CAN_TX >= 6 && CAN_TX <= 11)
 				#error "ESP32-WROOM GPIO 6-11 are wired to flash; TWAI on those pins resets the chip"
 			#endif
-			#if CAN_TX >= 34 && CAN_TX <= 39
+			#if defined(CAN_TX) && (CAN_TX) >= 0 && (CAN_TX) <= 39 && (CAN_TX) >= 34
 				#error "ESP32 GPIO 34-39 are input-only; CAN_TX needs an output pin (RX on 34-39 is fine)"
 			#endif
 		#endif

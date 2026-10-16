@@ -28,10 +28,17 @@
 
 	/*
 	 * GPIO 6-11 are the WROOM-32 flash bus.
-	 * GPIO 34-39 are input-only: they can be CAN RX, never CAN TX.
+	 * GPIO 34-39 have no internal pull-up; the TWAI driver needs one on RX.
+	 * GPIO 5 is VSPI default SS (output).
+	 * Analyzer: transceiver RXD → CAN_RX. Firmware holds CAN_TX high
+	 * (recessive). If TXD is not wired to GPIO 17, tie TXD to 3.3 V —
+	 * a floating TXD is dominant and makes every node report bus errors.
 	 */
-	#define CAN_RX 5
+	#define CAN_RX 4
 	#define CAN_TX 17
+	#if CAN_TX >= 34 && CAN_TX <= 39
+		#error "CAN_TX cannot be GPIO 34-39 (input-only)"
+	#endif
 	#define CAN_STATUS_LED 16
 	#define CAN_MAX_FILTER 16
 	#define CAN_BUFFER_SIZE 16
