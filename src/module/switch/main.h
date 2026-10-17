@@ -52,7 +52,7 @@
 #include "params.h"
 
 #if defined(SWITCH_MODULE_VERSION)
-	#define LOCO_MODULE_TYPE SWITCH_TYPE_ID
+	#define LOCO_MODULE_TYPE MODULE_TYPE
 	#define LOCO_MODULE_VERSION SWITCH_MODULE_VERSION
 	#define LOCO_MODULE_NAME "switch"
 #endif

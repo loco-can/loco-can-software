@@ -110,7 +110,7 @@ void MODULE_SWITCH::_handle_setup(CAN_MESSAGE message) {
 		message,
 		(uint16_t)can.uuid(),
 		SWITCH_MODULE_VERSION,
-		SWITCH_TYPE_ID
+		MODULE_TYPE
 	);
 
 	for (uint8_t i = 0; i < result.reply_count && i < 2; i++) {

@@ -17,6 +17,9 @@
 #ifndef MODULE_SERVO_CONFIG_H
 #define MODULE_SERVO_CONFIG_H
 
+/* 8-bit type: bit7 wireless, bits6-4 group, bits3-0 type (doc/SETTINGS.md). */
+#define MODULE_TYPE TYPE_SERVO
+
 
 /* ******************************************
  * The module version is set in the config.h file.

@@ -15,6 +15,9 @@
 #ifndef MODULE_PROGRAMMER_CONFIG_H
 #define MODULE_PROGRAMMER_CONFIG_H
 
+/* 8-bit type: bit7 wireless, bits6-4 group, bits3-0 type (doc/SETTINGS.md). */
+#define MODULE_TYPE TYPE_PROGRAMMER
+
 
 #if defined(PROGRAMMER_MODULE_VERSION) && LOCO_VERSION_IS(PROGRAMMER_MODULE_VERSION, 2, 0)
 

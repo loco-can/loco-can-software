@@ -20,9 +20,7 @@
 #include <stdint.h>
 
 #include "../../core/can/can_message.h"
-
-/* Actuator group, type 0 (doc/SETTINGS.md). */
-#define ELECTRIC_TYPE_ID 0x20
+#include "../../can_protocol.h"
 
 #define ELECTRIC_PARAM_VERSION 0
 #define ELECTRIC_PARAM_PLUGIN 1

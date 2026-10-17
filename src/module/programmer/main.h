@@ -36,9 +36,8 @@
 	class ProgrammerCatchAll;
 #endif
 
-#define PROGRAMMER_TYPE_ID 0x70
 #if defined(PROGRAMMER_MODULE_VERSION)
-	#define LOCO_MODULE_TYPE PROGRAMMER_TYPE_ID
+	#define LOCO_MODULE_TYPE MODULE_TYPE
 	#define LOCO_MODULE_VERSION PROGRAMMER_MODULE_VERSION
 	#define LOCO_MODULE_NAME "programmer"
 #endif

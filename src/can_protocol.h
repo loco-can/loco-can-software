@@ -63,6 +63,41 @@
 	(LOCO_VERSION_MAJOR(version) == (major) && LOCO_VERSION_MINOR(version) == (minor))
 #define LOCO_VERSION_CODE(v) ((LOCO_VERSION_MAJOR(v) * 10UL) + LOCO_VERSION_MINOR(v))
 
+/*
+ * 8-bit module type (doc/SETTINGS.md):
+ *   bit 7     1 = wireless
+ *   bits 6-4  group
+ *   bits 3-0  type inside the group
+ *
+ *   Controller                          0x1n
+ *   Actuator (electric, servo, switch)  0x2n
+ *   Sensor                              0x3n
+ */
+#define LOCO_TYPE_WIRELESS         0x80
+#define LOCO_TYPE_GROUP_CONTROLLER 0x10
+#define LOCO_TYPE_GROUP_ACTUATOR   0x20
+#define LOCO_TYPE_GROUP_SENSOR     0x30
+#define LOCO_TYPE_GROUP_PROGRAMMER 0x70
+
+#define LOCO_TYPE(group, n) ((group) | ((n) & 0x0F))
+
+#define TYPE_CONTROLLER LOCO_TYPE(LOCO_TYPE_GROUP_CONTROLLER, 0)
+#define TYPE_ELECTRIC   LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 0)
+#define TYPE_SERVO      LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 1)
+#define TYPE_SWITCH     LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 2)
+#define TYPE_DRIVE      LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 3)
+#define TYPE_SENSOR     LOCO_TYPE(LOCO_TYPE_GROUP_SENSOR, 0)
+#define TYPE_PROGRAMMER LOCO_TYPE(LOCO_TYPE_GROUP_PROGRAMMER, 0)
+#define TYPE_WIFI       (LOCO_TYPE_WIRELESS | 0x01)
+
+#define CONTROLLER_TYPE_ID TYPE_CONTROLLER
+#define ELECTRIC_TYPE_ID   TYPE_ELECTRIC
+#define SERVO_TYPE_ID      TYPE_SERVO
+#define SWITCH_TYPE_ID     TYPE_SWITCH
+#define SENSOR_TYPE_ID     TYPE_SENSOR
+#define PROGRAMMER_TYPE_ID TYPE_PROGRAMMER
+#define WIFI_MODULE_TYPE   TYPE_WIFI
+
 // message heartbeat
 // Every module sends this every MODULE_HEARTBEAT_TIMEOUT ms.
 //   data[0]  module type (*_TYPE_ID)

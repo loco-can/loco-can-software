@@ -25,7 +25,7 @@
 #include "now_packet.h"
 
 #if defined(WIFI_MODULE_VERSION)
-	#define LOCO_MODULE_TYPE WIFI_MODULE_TYPE
+	#define LOCO_MODULE_TYPE MODULE_TYPE
 	#define LOCO_MODULE_VERSION WIFI_MODULE_VERSION
 	#define LOCO_MODULE_NAME "wifi"
 #endif

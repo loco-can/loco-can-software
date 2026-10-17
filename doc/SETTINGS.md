@@ -10,9 +10,24 @@ The address 0x00 is used to access the module name, while the 0xFF can not be us
 
 Each module has an eight bit identification code containing of 3 bits for the module group identification, 4 bits for the module type inside the group and the hightest bit to indicate wireless capability if set to 1.
 
+	bit 7     wireless
+	bits 6-4  group
+	bits 3-0  type inside the group
 
+	Controller 								0x1n
+	Actuator (electric, servo, switch, drive)	0x2n
+	Sensor									0x3n
+	Programmer								0x7n
 
-	Controller 			0x1n
+	TYPE_CONTROLLER   0x10
+	TYPE_ELECTRIC     0x20
+	TYPE_SERVO        0x21
+	TYPE_SWITCH       0x22
+	TYPE_DRIVE        0x23
+	TYPE_SENSOR       0x30
+	TYPE_PROGRAMMER   0x70
+	TYPE_WIFI         0x81	(bit 7 set)
+
 ## Settings Protocol
 
 To change the settings of the module the highest CAN identifiers in the range between 0x700 and 0x7FF are used. The messages are devided in three groups for requests, replys and setup data.

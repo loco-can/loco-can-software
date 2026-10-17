@@ -17,6 +17,9 @@
 #ifndef MODULE_ELECTRIC_CONFIG_H
 #define MODULE_ELECTRIC_CONFIG_H
 
+/* 8-bit type: bit7 wireless, bits6-4 group, bits3-0 type (doc/SETTINGS.md). */
+#define MODULE_TYPE TYPE_ELECTRIC
+
 
 /* ******************************************
  * The module version is set in the hardware.h file.

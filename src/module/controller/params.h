@@ -30,8 +30,7 @@
 #include <stdint.h>
 
 #include "../../core/can/can_message.h"
-
-#define CONTROLLER_TYPE_ID 0x10
+#include "../../can_protocol.h"
 
 #define CONTROLLER_PARAM_VERSION 0
 #define CONTROLLER_PARAM_MAINS_COUNT 1

@@ -51,7 +51,7 @@
 #include "settings.h"
 
 #if defined(ELECTRIC_MODULE_VERSION)
-	#define LOCO_MODULE_TYPE ELECTRIC_TYPE_ID
+	#define LOCO_MODULE_TYPE MODULE_TYPE
 	#define LOCO_MODULE_VERSION ELECTRIC_MODULE_VERSION
 	#define LOCO_MODULE_NAME "electric"
 #endif

@@ -16,7 +16,7 @@
 
 #include "mapping.h"
 
-#define SERVO_TYPE_ID 0x51
+#include "../../can_protocol.h"
 
 #define SERVO_PARAM_VERSION 0
 #define SERVO_PARAM_MAP 1

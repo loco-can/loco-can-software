@@ -167,7 +167,7 @@ void MODULE_CONTROLLER::_handle_setup(CAN_MESSAGE message) {
 		message,
 		(uint16_t)can.uuid(),
 		CONTROLLER_MODULE_VERSION,
-		CONTROLLER_TYPE_ID
+		MODULE_TYPE
 	);
 
 	for (uint8_t i = 0; i < result.reply_count && i < 2; i++) {

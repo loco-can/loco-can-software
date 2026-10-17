@@ -111,28 +111,58 @@ body{font-family:sans-serif;background:#16110c;color:#f3ead8;margin:1.25rem;max-
 .tx{color:#c4a36a}
 </style>
 <p>LOCO-CAN-PRG · <span id="st">connecting…</span></p>
-<p>LittleFS UI is not installed. This page lists CAN frames from <code>/api/frames</code>.</p>
+<p>LittleFS UI is not installed. Frames are collected for 1 s and grouped by UUID.</p>
 <div id="log"></div>
 <script>
-let after=0;
+let after=0,lastPaint=0;
+const live=new Map();
+const order=[];
+let view=[];
+function hex(n){return '0x'+Number(n).toString(16);}
+function render(){
+  const el=document.getElementById('log');
+  el.innerHTML=view.map(b=>
+    '<div><strong>'+hex(b.u)+'</strong></div>'+
+    b.msgs.map(f=>
+      '<div class="'+(f.tx?'tx':'')+'">'+
+      (f.tx?'TX ':'RX ')+hex(f.id)+' '+f.n+'/s '+(f.d||'')+'</div>'
+    ).join('')
+  ).join('');
+}
+function snapshot(now){
+  live.forEach((f,k)=>{
+    if(now-f.t>=10000) live.delete(k);
+    else {if(f.w>0) f.n=f.w;f.w=0;}
+  });
+  const by=new Map();
+  live.forEach(f=>{
+    const list=by.get(f.u)||[];
+    list.push(f);
+    by.set(f.u,list);
+    if(order.indexOf(f.u)<0) order.push(f.u);
+  });
+  view=order.filter(u=>by.has(u)).map(u=>({
+    u,
+    msgs:(by.get(u)||[]).slice().sort((a,b)=>a.id-b.id)
+  }));
+  for(let i=order.length-1;i>=0;i--) if(!by.has(order[i])) order.splice(i,1);
+  render();
+}
 async function tick(){
   try{
     const s=await fetch('/api/status').then(r=>r.json());
-    document.getElementById('st').textContent=
-      'uuid 0x'+Number(s.uuid).toString(16)+' · frames '+s.frames;
     const j=await fetch('/api/frames?after='+after).then(r=>r.json());
     after=j.seq;
-    const el=document.getElementById('log');
     (j.frames||[]).forEach(f=>{
-      const d=document.createElement('div');
-      if(f.tx) d.className='tx';
-      d.textContent=(f.tx?'TX ':'RX ')+
-        '0x'+Number(f.id).toString(16)+
-        ' u=0x'+Number(f.u).toString(16)+
-        ' '+(f.d||'');
-      el.prepend(d);
-      while(el.childElementCount>100) el.lastChild.remove();
+      const k=f.id+':'+f.u;
+      const g=live.get(k);
+      live.set(k,{id:f.id,u:f.u,tx:f.tx,d:f.d||'',t:Date.now(),w:(g?g.w:0)+1,n:g?g.n:0});
     });
+    const now=Date.now();
+    if(!view.length && live.size){lastPaint=now;snapshot(now);}
+    else if(now-lastPaint>=1000){lastPaint=now;snapshot(now);}
+    document.getElementById('st').textContent=
+      'uuid '+hex(s.uuid)+' · '+view.length+' UUID';
   }catch(e){
     document.getElementById('st').textContent='api error';
   }

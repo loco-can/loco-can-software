@@ -105,7 +105,7 @@ void MODULE_ELECTRIC::_handle_settings(CAN_MESSAGE message) {
 		message,
 		(uint16_t)can.uuid(),
 		ELECTRIC_MODULE_VERSION,
-		ELECTRIC_TYPE_ID
+		MODULE_TYPE
 	);
 
 	for (uint8_t i = 0; i < result.reply_count && i < 2; i++) {

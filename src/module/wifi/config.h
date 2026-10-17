@@ -15,6 +15,9 @@
 #ifndef MODULE_WIFI_CONFIG_H
 #define MODULE_WIFI_CONFIG_H
 
+/* 8-bit type: bit7 wireless, bits6-4 group, bits3-0 type (doc/SETTINGS.md). */
+#define MODULE_TYPE TYPE_WIFI
+
 
 #if defined(WIFI_MODULE_VERSION) && LOCO_VERSION_IS(WIFI_MODULE_VERSION, 2, 0)
 
@@ -31,8 +34,6 @@
 	#define CAN_STATUS_LED 2
 	#define CAN_MAX_FILTER 16
 	#define CAN_BUFFER_SIZE 16
-
-	#define WIFI_MODULE_TYPE 0x81
 
 	#define WIFI_NOW_CHANNEL 1
 	#define WIFI_NOW_HELLO_MS 500
@@ -60,9 +61,6 @@
 	// ======================================
 	// INCLUDED FUNCTIONS
 	// ======================================
-
-	/* highest bit set = wireless capable (see doc/SETTINGS.md) */
-	#define WIFI_MODULE_TYPE 0x81
 
 	#define WIFI_NOW_CHANNEL 1
 	#define WIFI_NOW_HELLO_MS 500

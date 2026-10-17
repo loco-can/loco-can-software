@@ -20,7 +20,7 @@
 #include "current.h"
 #include "function.h"
 
-#define SWITCH_TYPE_ID 0x20
+#include "../../can_protocol.h"
 
 #define SWITCH_PARAM_VERSION 0
 #define SWITCH_PARAM_MAP 1

@@ -27,9 +27,8 @@
 #include "../../core/can/can_com.h"
 #include "../../can_protocol.h"
 
-#define SENSOR_TYPE_ID 0x30
 #if defined(SENSOR_MODULE_VERSION)
-	#define LOCO_MODULE_TYPE SENSOR_TYPE_ID
+	#define LOCO_MODULE_TYPE MODULE_TYPE
 	#define LOCO_MODULE_VERSION SENSOR_MODULE_VERSION
 	#define LOCO_MODULE_NAME "sensor"
 #endif

@@ -45,7 +45,7 @@
 #include "params.h"
 
 #if defined(SERVO_MODULE_VERSION)
-	#define LOCO_MODULE_TYPE SERVO_TYPE_ID
+	#define LOCO_MODULE_TYPE MODULE_TYPE
 	#define LOCO_MODULE_VERSION SERVO_MODULE_VERSION
 	#define LOCO_MODULE_NAME "servo"
 #endif
