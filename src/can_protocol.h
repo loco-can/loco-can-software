@@ -347,6 +347,8 @@
 
 
 #define CAN_NAME_MAX_SIZE 5
+#define CAN_NAME_REPLY_SIZE 7
+#define CAN_SETUP_REPLY_MAX 4
 #define CAN_VALUE_MAX_SIZE 6
 
 #endif

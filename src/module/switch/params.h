@@ -38,7 +38,7 @@ struct SWITCH_PARAMS {
 
 struct SWITCH_PARAM_RESULT {
 	uint8_t reply_count;
-	CAN_MESSAGE reply[2];
+	CAN_MESSAGE reply[CAN_SETUP_REPLY_MAX];
 	bool changed;
 };
 

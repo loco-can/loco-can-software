@@ -180,6 +180,38 @@ int switch_logic_check(void) {
 	SWITCH_PARAM_RESULT named = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
 	expect_true("name stored", named.changed && params.name[0] == 'L' && params.name[3] == 'P' && params.name[4] == 0);
 
+	request.size = 8;
+	request.data[2] = 0;
+	request.data[3] = 'A';
+	request.data[4] = 'B';
+	request.data[5] = 'C';
+	request.data[6] = 'D';
+	request.data[7] = 'E';
+	switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
+	request.data[2] = 1;
+	request.data[3] = 'F';
+	request.data[4] = 'G';
+	request.data[5] = 'H';
+	request.data[6] = 'I';
+	request.data[7] = 'J';
+	SWITCH_PARAM_RESULT named2 = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
+	expect_true(
+		"name chunk 2 stored",
+		named2.changed && params.name[0] == 'A' && params.name[5] == 'F' && params.name[9] == 'J' && params.name[10] == 0
+	);
+
+	request.id = CAN_ID_REQUEST;
+	request.size = 2;
+	request.data[0] = 0x12;
+	request.data[1] = 0x34;
+	SWITCH_PARAM_RESULT long_name = switch_params_on_can(params, request, 0x1234, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
+	expect_u8("long name packets", long_name.reply_count, 3);
+	expect_u8("long name pack0", long_name.reply[1].data[0], 0x31);
+	expect_u8("long name char0", long_name.reply[1].data[1], 'A');
+	expect_u8("long name char6", long_name.reply[1].data[7], 'G');
+	expect_u8("long name pack1", long_name.reply[2].data[0], 0x32);
+	expect_u8("long name char7", long_name.reply[2].data[1], 'H');
+
 	request.id = (uint32_t)(CAN_ID_SETUP | SWITCH_PARAM_MAX_CURRENT);
 	request.size = 4;
 	request.data[0] = 0x12;
@@ -190,6 +222,64 @@ int switch_logic_check(void) {
 	expect_true("max current stored", limit.changed);
 	expect_u16("max current value", switch_params_max_current(params), 5000);
 	expect_u8("map survives limit write", switch_params_map(params, 0), SWITCH_FUNC_HORN_HIGH);
+
+	expect_u8("ui low beam fwd", SWITCH_FUNC_LIGHT_LOW_FRONT, 41);
+	expect_u8("ui low beam rev", SWITCH_FUNC_LIGHT_LOW_BACK, 73);
+	expect_u8("ui high beam fwd", SWITCH_FUNC_LIGHT_HIGH_FRONT, 42);
+	expect_u8("ui horn low", SWITCH_FUNC_HORN_LOW, 17);
+
+	switch_params_defaults(params, LOCO_VERSION(2, 1, 0));
+	CAN_MESSAGE set;
+	memset(&set, 0, sizeof(set));
+	set.id = (uint32_t)(CAN_ID_SETUP + 1);
+	set.uuid = 0xf001;
+	set.size = 3;
+	set.data[0] = 0x11;
+	set.data[1] = 0xe8;
+	set.data[2] = 41;
+	SWITCH_PARAM_RESULT ui_miss = switch_params_on_can(
+		params,
+		set,
+		0x4b02,
+		LOCO_VERSION(2, 1, 0),
+		SWITCH_TYPE_ID
+	);
+	expect_true("programmer uuid miss ignored", !ui_miss.changed);
+	expect_u8("default out1 kept", switch_params_map(params, 0), SWITCH_FUNC_LIGHT_LOW_FRONT);
+
+	SWITCH_PARAM_RESULT ui_hit = switch_params_on_can(
+		params,
+		set,
+		0x11e8,
+		LOCO_VERSION(2, 1, 0),
+		SWITCH_TYPE_ID
+	);
+	expect_true("programmer set stored", ui_hit.changed);
+	expect_u8("out1 from ui", switch_params_map(params, 0), 41);
+
+	set.data[2] = 73;
+	(void)switch_params_on_can(params, set, 0x11e8, LOCO_VERSION(2, 1, 0), SWITCH_TYPE_ID);
+	expect_u8("out1 ui reverse", switch_params_map(params, 0), 73);
+
+	CAN_MESSAGE get;
+	memset(&get, 0, sizeof(get));
+	get.id = CAN_ID_REQUEST;
+	get.uuid = 0xf001;
+	get.size = 4;
+	get.data[0] = 0x11;
+	get.data[1] = 0xe8;
+	get.data[2] = 1;
+	get.data[3] = 1;
+	SWITCH_PARAM_RESULT got = switch_params_on_can(
+		params,
+		get,
+		0x11e8,
+		LOCO_VERSION(2, 1, 0),
+		SWITCH_TYPE_ID
+	);
+	expect_u8("get reply id", (uint8_t)(got.reply[0].id & 0x7F), 1);
+	expect_u8("get reply size", got.reply[0].size, 1);
+	expect_u8("get reply value", got.reply[0].data[0], 73);
 
 	if (g_fails == 0) {
 		printf("switch function and settings check ok\n");

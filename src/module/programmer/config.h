@@ -33,9 +33,8 @@
 	 * GPIO 6-11 are the WROOM-32 flash bus.
 	 * GPIO 34-39 have no internal pull-up; the TWAI driver needs one on RX.
 	 * GPIO 5 is VSPI default SS (output).
-	 * Analyzer: transceiver RXD → CAN_RX. Firmware holds CAN_TX high
-	 * (recessive). If TXD is not wired to GPIO 17, tie TXD to 3.3 V —
-	 * a floating TXD is dominant and makes every node report bus errors.
+	 * Transceiver RXD → CAN_RX (GPIO 4), TXD → CAN_TX (GPIO 17).
+	 * RX is RMT CH2. TX uses TWAI NO_ACK (GPIO 17 is UART2 by default).
 	 */
 	#define CAN_RX 4
 	#define CAN_TX 17

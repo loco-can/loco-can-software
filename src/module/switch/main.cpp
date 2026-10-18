@@ -105,6 +105,21 @@ void MODULE_SWITCH::_save_params(void) {
 
 void MODULE_SWITCH::_handle_setup(CAN_MESSAGE message) {
 
+	#ifdef DEBUG
+		Serial.print("> switch rx id=0x");
+		Serial.print(message.id, HEX);
+		Serial.print(" n=");
+		Serial.print(message.size);
+		Serial.print(" d=");
+		for (uint8_t i = 0; i < message.size && i < 8; i++) {
+			if (message.data[i] < 0x10) {
+				Serial.print("0");
+			}
+			Serial.print(message.data[i], HEX);
+		}
+		Serial.println();
+	#endif
+
 	SWITCH_PARAM_RESULT result = switch_params_on_can(
 		_params,
 		message,
@@ -113,13 +128,35 @@ void MODULE_SWITCH::_handle_setup(CAN_MESSAGE message) {
 		MODULE_TYPE
 	);
 
-	for (uint8_t i = 0; i < result.reply_count && i < 2; i++) {
+	for (uint8_t i = 0; i < result.reply_count && i < CAN_SETUP_REPLY_MAX; i++) {
 		can.send(result.reply[i]);
 	}
 
 	if (result.changed) {
 		_save_params();
+		#ifdef DEBUG
+			Serial.print("> switch saved idx=");
+			Serial.print((unsigned)(message.id & 0x7F));
+			Serial.print(" out");
+			for (uint8_t i = 0; i < SWITCH_OUTPUT_COUNT; i++) {
+				Serial.print(" ");
+				Serial.print(switch_params_map(_params, i));
+			}
+			Serial.print(" Imax=");
+			Serial.println(switch_params_max_current(_params));
+		#endif
 	}
+	#ifdef DEBUG
+		else if (result.reply_count == 0) {
+			Serial.println("> switch ignored");
+		}
+		else {
+			Serial.print("> switch reply 0x");
+			Serial.print(result.reply[0].id, HEX);
+			Serial.print(" n=");
+			Serial.println(result.reply[0].size);
+		}
+	#endif
 }
 
 

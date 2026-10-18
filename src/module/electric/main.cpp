@@ -108,7 +108,7 @@ void MODULE_ELECTRIC::_handle_settings(CAN_MESSAGE message) {
 		MODULE_TYPE
 	);
 
-	for (uint8_t i = 0; i < result.reply_count && i < 2; i++) {
+	for (uint8_t i = 0; i < result.reply_count && i < CAN_SETUP_REPLY_MAX; i++) {
 		can.send(result.reply[i]);
 	}
 

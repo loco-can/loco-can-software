@@ -597,7 +597,11 @@ void MODULE_PROGRAMMER::_http_tx(void) {
 		}
 	}
 
-	can.send(message);
+	const bool sent = can.send(message);
+	if (!sent) {
+		_http.send(503, "application/json", "{\"ok\":false,\"error\":\"CAN TX failed\"}");
+		return;
+	}
 	_ingest(message);
 	_web_push(message, true);
 	_http.send(200, "application/json", "{\"ok\":true}");

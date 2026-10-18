@@ -102,7 +102,7 @@ void LocoCANcore::update(void) {
 	 * module heartbeat. fetch() keeps DLC-0 heartbeats, which read()
 	 * would filter. With a quiet bus the module still runs once.
 	 */
-	while (n < 8 && can.fetch(can_message)) {
+	while (n < 24 && can.fetch(can_message)) {
 		n++;
 		_module.update(can_message);
 	}

@@ -4,6 +4,8 @@
 
 #include "settings.h"
 
+#include <string.h>
+
 #include "../../can_protocol.h"
 #include "plugin.h"
 
@@ -141,31 +143,45 @@ static bool electric_settings_uuid_match(const CAN_MESSAGE &message, uint16_t se
 
 static void electric_settings_info(ELECTRIC_SETTINGS_RESULT &result, const ELECTRIC_SETTINGS &settings, uint32_t module_version, uint8_t module_type) {
 
+	uint8_t nlen = 0;
+	while (nlen < ELECTRIC_SETTINGS_NAME_LEN && settings.name[nlen] != 0) {
+		nlen++;
+	}
+
+	uint8_t name_packets = nlen == 0 ? 1 : (uint8_t)((nlen + CAN_NAME_REPLY_SIZE - 1) / CAN_NAME_REPLY_SIZE);
+	if (name_packets > CAN_SETUP_REPLY_MAX - 1) {
+		name_packets = CAN_SETUP_REPLY_MAX - 1;
+	}
+	uint8_t total = (uint8_t)(1 + name_packets);
+
 	CAN_MESSAGE &info = result.reply[0];
 	electric_settings_clear(info);
 	info.id = CAN_ID_REPLY;
 	info.size = 7;
 	info.data[0] = (uint8_t)(ELECTRIC_PARAM_BYTES - 1);
-	info.data[1] = 0x20;
+	info.data[1] = (uint8_t)(total << 4);
 	info.data[2] = 0;
 	info.data[3] = (uint8_t)LOCO_VERSION_MAJOR(module_version);
 	info.data[4] = (uint8_t)LOCO_VERSION_MINOR(module_version);
 	info.data[5] = (uint8_t)LOCO_VERSION_PATCH(module_version);
 	info.data[6] = module_type;
 
-	CAN_MESSAGE &name = result.reply[1];
-	electric_settings_clear(name);
-	name.id = CAN_ID_REPLY;
-	name.data[0] = 0x21;
+	for (uint8_t p = 0; p < name_packets; p++) {
+		CAN_MESSAGE &name = result.reply[1 + p];
+		electric_settings_clear(name);
+		name.id = CAN_ID_REPLY;
+		name.data[0] = (uint8_t)((total << 4) | (p + 1));
 
-	uint8_t n = 0;
-	while (n < 7 && settings.name[n] != 0) {
-		name.data[1 + n] = (uint8_t)settings.name[n];
-		n++;
+		uint8_t n = 0;
+		uint8_t from = (uint8_t)(p * CAN_NAME_REPLY_SIZE);
+		while (n < CAN_NAME_REPLY_SIZE && (uint8_t)(from + n) < nlen) {
+			name.data[1 + n] = (uint8_t)settings.name[from + n];
+			n++;
+		}
+		name.size = (uint8_t)(1 + n);
 	}
 
-	name.size = (uint8_t)(1 + n);
-	result.reply_count = 2;
+	result.reply_count = total;
 }
 
 
@@ -231,8 +247,9 @@ ELECTRIC_SETTINGS_RESULT electric_settings_on_can(
 	ELECTRIC_SETTINGS_RESULT result;
 	result.reply_count = 0;
 	result.changed = false;
-	electric_settings_clear(result.reply[0]);
-	electric_settings_clear(result.reply[1]);
+	for (uint8_t i = 0; i < CAN_SETUP_REPLY_MAX; i++) {
+		electric_settings_clear(result.reply[i]);
+	}
 
 	if (message.id == CAN_ID_REQUEST) {
 		bool global = (message.size == 0) || (message.size >= 1 && message.data[0] == 0xFF);
@@ -271,11 +288,19 @@ ELECTRIC_SETTINGS_RESULT electric_settings_on_can(
 
 	if (index == 0) {
 		uint8_t from = 2;
+		uint8_t n = 0;
 		if (message.size >= 4) {
 			from = 3;
+			n = (uint8_t)(message.data[2] * CAN_NAME_MAX_SIZE);
+			if (n >= ELECTRIC_SETTINGS_NAME_LEN) {
+				return result;
+			}
 		}
 
-		uint8_t n = 0;
+		if (n == 0) {
+			memset(settings.name, 0, ELECTRIC_SETTINGS_NAME_LEN + 1);
+		}
+
 		while (from < message.size && n < ELECTRIC_SETTINGS_NAME_LEN) {
 			settings.name[n] = (char)message.data[from];
 			n++;
