@@ -294,6 +294,13 @@ int controller_logic_check(void) {
 	expect_u8("2.1.12 patch", patch_info.reply[0].data[5], 12);
 	expect_u8("2.1.12 type", patch_info.reply[0].data[6], CONTROLLER_TYPE_ID);
 
+	expect_u8("live mains channel", (uint8_t)controller_params_live_channel(CONTROLLER_PARAM_LIVE_MAINS), 0);
+	expect_u8("live drive channel", (uint8_t)controller_params_live_channel(CONTROLLER_PARAM_LIVE_DRIVE), 4);
+	if (controller_params_live_channel(CONTROLLER_PARAM_DRIVE_ZERO) >= 0) {
+		fprintf(stderr, "FAIL stored points must not map to live analog\n");
+		g_fails++;
+	}
+
 	if (g_fails == 0) {
 		printf("controller status and drive frame check ok\n");
 	}

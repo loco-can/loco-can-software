@@ -66,50 +66,15 @@
 	#define PROGRAMMER_GROUP_MAX 48
 	#define PROGRAMMER_OLED_ROWS 7
 
-#elif defined(PROGRAMMER_MODULE_VERSION) && LOCO_VERSION_IS(PROGRAMMER_MODULE_VERSION, 3, 0)
-
-	// ======================================
-	// BASIC SETTINGS
-	// ======================================
-	#define MODULE_ARCH_ESP32
-
-	#define PLATFORM_ANALOG_RESOLUTION 4096
-	#define ANALOGSWITCH_MAX_POS 8
-
-	#define CAN_RX 4
-	#define CAN_TX 5
-	#define CAN_STATUS_LED 16
-	#define CAN_MAX_FILTER 16
-	#define CAN_BUFFER_SIZE 16
-
-	// ======================================
-	// INCLUDED FUNCTIONS
-	// ======================================
-
-	/* SSD1351 128x128 RGB OLED (SPI) */
-	#define PROGRAMMER_OLED_SCK 12
-	#define PROGRAMMER_OLED_MOSI 11
-	#define PROGRAMMER_OLED_CS 10
-	#define PROGRAMMER_OLED_DC 9
-	#define PROGRAMMER_OLED_RST 8
-	#define PROGRAMMER_OLED_WIDTH 128
-	#define PROGRAMMER_OLED_HEIGHT 128
-
-	/* KY-040 rotary encoder with pushbutton */
-	#define PROGRAMMER_ENC_A 5
-	#define PROGRAMMER_ENC_B 6
-	#define PROGRAMMER_ENC_BTN 4
-
-	/* WiFi access point for the webservice (WPA2 password must be ≥ 8 chars) */
-	#define PROGRAMMER_WIFI_SSID "LOCO-CAN-PRG"
-	#define PROGRAMMER_WIFI_PASS "lococanprg"
-	#define PROGRAMMER_HTTP_PORT 80
-
-	#define PROGRAMMER_GROUP_MAX 48
-	#define PROGRAMMER_OLED_ROWS 7
-
+	#define PROGRAMMER_IO1 5
+	#define PROGRAMMER_IO2 19
+	#define PROGRAMMER_IO3 33
+	#define PROGRAMMER_IO4 15
+	#define PROGRAMMER_IO14 14
+	#define PROGRAMMER_IO15 13
+	
 #elif defined(PROGRAMMER_MODULE_VERSION)
-	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_2_0_0 or V_3_0_0)"
+	#error "Set PROGRAMMER_MODULE_VERSION in hardware.h (V_2_0_0)"
 #endif
 
 #if defined(PROGRAMMER_MODULE_VERSION)

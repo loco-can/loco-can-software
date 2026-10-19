@@ -9,6 +9,7 @@
 #include "../../config.h"
 #include "main.h"
 #include "drive_codec.h"
+#include <string.h>
 
 
 extern CAN_COM can;
@@ -160,7 +161,70 @@ void MODULE_CONTROLLER::_apply_params(void) {
 }
 
 
+bool MODULE_CONTROLLER::_live_analog(uint8_t index, uint16_t &adc) {
+
+	adc = 0;
+	const int8_t channel = controller_params_live_channel(index);
+	if (channel < 0) {
+		return false;
+	}
+
+	switch (channel) {
+#ifdef CONTROLLER_MAINS_PORT
+		case 0:
+			adc = _mains_switch.get_analog();
+			return true;
+#endif
+#ifdef CONTROLLER_DIR_PORT
+		case 1:
+			adc = _dir_switch.get_analog();
+			return true;
+#endif
+#ifdef CONTROLLER_LIGHT_PORT
+		case 2:
+			adc = _light_switch.get_analog();
+			return true;
+#endif
+#ifdef CONTROLLER_LIGHT2_PORT
+		case 3:
+			adc = _light2_switch.get_analog();
+			return true;
+#endif
+#ifdef CONTROLLER_DRIVE_PORT
+		case 4:
+			adc = analogRead(CONTROLLER_DRIVE_PORT);
+			return true;
+#endif
+#ifdef CONTROLLER_BREAK_PORT
+		case 5:
+			adc = analogRead(CONTROLLER_BREAK_PORT);
+			return true;
+#endif
+		default:
+			return false;
+	}
+}
+
+
 void MODULE_CONTROLLER::_handle_setup(CAN_MESSAGE message) {
+
+	if (message.id == CAN_ID_REQUEST && message.size >= 3) {
+		uint16_t target = ((uint16_t)message.data[0] << 8) | message.data[1];
+		if (target == (uint16_t)can.uuid()) {
+			uint16_t adc = 0;
+			if (_live_analog(message.data[2], adc)) {
+				CAN_MESSAGE reply;
+				memset(&reply, 0, sizeof(reply));
+				reply.id = (uint32_t)(CAN_ID_REPLY | (message.data[2] & 0x7F));
+				reply.uuid = (uint16_t)can.uuid();
+				reply.size = 2;
+				reply.data[0] = (uint8_t)(adc & 0xFF);
+				reply.data[1] = (uint8_t)(adc >> 8);
+				can.send(reply);
+				return;
+			}
+		}
+	}
 
 	CONTROLLER_PARAM_RESULT result = controller_params_on_can(
 		_params,

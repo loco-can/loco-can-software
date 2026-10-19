@@ -20,6 +20,9 @@
  *   41..42 brake zero
  *   43..44 brake full
  *
+ * Live ADC (GET 0x7FF UUID index, not stored):
+ *   45 mains, 47 dir, 49 light, 51 light2, 53 drive, 55 brake
+ *
  * CAN id 0x700 writes the module name. Ids 0x701.. write parameter bytes.
  */
 #pragma once
@@ -57,6 +60,14 @@
 #define CONTROLLER_PARAM_BYTES 45
 #define CONTROLLER_PARAM_NAME_LEN 15
 
+/* Live ADC (GET only, not EEPROM). Programmer capture uses these. */
+#define CONTROLLER_PARAM_LIVE_MAINS 45
+#define CONTROLLER_PARAM_LIVE_DIR 47
+#define CONTROLLER_PARAM_LIVE_LIGHT 49
+#define CONTROLLER_PARAM_LIVE_LIGHT2 51
+#define CONTROLLER_PARAM_LIVE_DRIVE 53
+#define CONTROLLER_PARAM_LIVE_BRAKE 55
+
 #define CONTROLLER_PARAM_MAGIC 0xC3
 #define CONTROLLER_PARAM_SCHEMA 1
 
@@ -78,6 +89,9 @@ void controller_params_put16(CONTROLLER_PARAMS &params, uint8_t index, uint16_t 
 
 /* copy up to max points; returns the stored count */
 uint8_t controller_params_points(const CONTROLLER_PARAMS &params, uint8_t count_index, uint8_t max_points, uint16_t *out);
+
+/* 0=mains 1=dir 2=light 3=light2 4=drive 5=brake, or -1 */
+int8_t controller_params_live_channel(uint8_t index);
 
 CONTROLLER_PARAM_RESULT controller_params_on_can(
 	CONTROLLER_PARAMS &params,

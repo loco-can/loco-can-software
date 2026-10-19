@@ -225,6 +225,7 @@ class MODULE_CONTROLLER {
 		void _save_params(void);
 		void _apply_params(void);
 		void _handle_setup(CAN_MESSAGE message);
+		bool _live_analog(uint8_t index, uint16_t &adc);
 
 		CAN_MESSAGE _message;
 

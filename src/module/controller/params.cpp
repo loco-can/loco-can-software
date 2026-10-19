@@ -114,6 +114,27 @@ void controller_params_put16(CONTROLLER_PARAMS &params, uint8_t index, uint16_t 
 }
 
 
+int8_t controller_params_live_channel(uint8_t index) {
+
+	switch (index) {
+		case CONTROLLER_PARAM_LIVE_MAINS:
+			return 0;
+		case CONTROLLER_PARAM_LIVE_DIR:
+			return 1;
+		case CONTROLLER_PARAM_LIVE_LIGHT:
+			return 2;
+		case CONTROLLER_PARAM_LIVE_LIGHT2:
+			return 3;
+		case CONTROLLER_PARAM_LIVE_DRIVE:
+			return 4;
+		case CONTROLLER_PARAM_LIVE_BRAKE:
+			return 5;
+		default:
+			return -1;
+	}
+}
+
+
 uint8_t controller_params_points(const CONTROLLER_PARAMS &params, uint8_t count_index, uint8_t max_points, uint16_t *out) {
 
 	if (count_index >= CONTROLLER_PARAM_BYTES || out == 0) {
