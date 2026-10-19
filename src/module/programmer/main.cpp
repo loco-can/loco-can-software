@@ -19,6 +19,9 @@ extern CAN_COM can;
 #include "driver/twai.h"
 #include "driver/gpio.h"
 #include "soc/gpio_sig_map.h"
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1351.h>
 
 static MODULE_PROGRAMMER *programmer_web = nullptr;
 
@@ -200,6 +203,107 @@ static bool programmer_json_u32(const String &body, const char *key, uint32_t *o
 	*out = (uint32_t) body.substring(i + needle.length()).toInt();
 	return true;
 }
+
+static Adafruit_SSD1351 programmer_oled(
+	PROGRAMMER_OLED_WIDTH,
+	PROGRAMMER_OLED_HEIGHT,
+	&SPI,
+	PROGRAMMER_OLED_CS,
+	PROGRAMMER_OLED_DC,
+	PROGRAMMER_OLED_RST
+);
+
+#define PROGRAMMER_OLED_BLACK 0x0000
+#define PROGRAMMER_OLED_DIM 0x7BEF
+#define PROGRAMMER_OLED_TEXT 0xFFFF
+#define PROGRAMMER_OLED_ACCENT 0x07FF
+#define PROGRAMMER_OLED_SEL 0xFFE0
+
+static void programmer_hex4(char *out, uint16_t value) {
+	static const char hex[] = "0123456789ABCDEF";
+	out[0] = hex[(value >> 12) & 0xF];
+	out[1] = hex[(value >> 8) & 0xF];
+	out[2] = hex[(value >> 4) & 0xF];
+	out[3] = hex[value & 0xF];
+	out[4] = 0;
+}
+
+static const char *programmer_id_name(uint16_t id) {
+	if (id >= CAN_ID_SETUP && id < CAN_ID_REPLY) {
+		return "SET";
+	}
+	if (id > CAN_ID_REPLY && id < CAN_ID_REQUEST) {
+		return "VAL";
+	}
+	switch (id) {
+		case CAN_ID_EMERGENCY: return "ESTOP";
+		case CAN_ID_DRIVE_HEARTBEAT: return "D-HB";
+		case CAN_ID_TRAINEND_HEARTBEAT: return "END";
+		case CAN_ID_MODULE_CURRENT: return "Imod";
+		case CAN_ID_MOTOR_CURRENT: return "Imot";
+		case CAN_ID_BATT_CURRENT: return "Ibat";
+		case CAN_ID_SPEED: return "SPD";
+		case CAN_ID_DIR: return "DIR";
+		case CAN_ID_SIGNAL: return "SIG";
+		case CAN_ID_TACHO: return "TACH";
+		case CAN_ID_VOLTAGE: return "V";
+		case CAN_ID_MOTOR_VOLTAGE: return "Vmot";
+		case CAN_ID_BATT_VOLTAGE: return "Vbat";
+		case CAN_ID_DRIVE: return "DRIVE";
+		case CAN_ID_LIGHT: return "LIGHT";
+		case CAN_ID_SWITCH: return "SW";
+		case CAN_ID_VEHICLE_STATUS: return "STAT";
+		case CAN_ID_MODULE_HEARTBEAT: return "HB";
+		case CAN_ID_LOCO_SETUP: return "LOCO";
+		case CAN_ID_REPLY: return "INFO";
+		case CAN_ID_REQUEST: return "PING";
+		default: return "CAN";
+	}
+}
+
+static const char *programmer_type_name(uint8_t type) {
+	switch (type) {
+		case TYPE_CONTROLLER: return "CTRL";
+		case TYPE_ELECTRIC: return "MOT";
+		case TYPE_SERVO: return "SRV";
+		case TYPE_SWITCH: return "SW";
+		case TYPE_DRIVE: return "DRV";
+		case TYPE_SENSOR: return "SNS";
+		case TYPE_PROGRAMMER: return "PRG";
+		case TYPE_WIFI: return "WIFI";
+		default: return "MOD";
+	}
+}
+
+static void programmer_oled_begin(void) {
+	SPI.begin(PROGRAMMER_OLED_SCK, -1, PROGRAMMER_OLED_MOSI, PROGRAMMER_OLED_CS);
+	programmer_oled.begin();
+	programmer_oled.fillScreen(PROGRAMMER_OLED_BLACK);
+	programmer_oled.setTextWrap(false);
+	programmer_oled.setTextSize(1);
+	programmer_oled.setTextColor(PROGRAMMER_OLED_TEXT);
+	programmer_oled.setCursor(4, 8);
+	programmer_oled.print("Loco-CAN");
+	programmer_oled.setCursor(4, 24);
+	programmer_oled.print("Programmer");
+}
+
+static void programmer_oled_line(
+	uint8_t row,
+	bool selected,
+	const char *left,
+	const char *right
+) {
+	const int16_t y = 16 + (int16_t)row * 16;
+	programmer_oled.fillRect(0, y, PROGRAMMER_OLED_WIDTH, 16, PROGRAMMER_OLED_BLACK);
+	programmer_oled.setTextColor(selected ? PROGRAMMER_OLED_SEL : PROGRAMMER_OLED_DIM);
+	programmer_oled.setCursor(4, y + 4);
+	programmer_oled.print(left);
+	if (right && right[0]) {
+		programmer_oled.setCursor(76, y + 4);
+		programmer_oled.print(right);
+	}
+}
 #endif
 
 
@@ -236,6 +340,10 @@ void MODULE_PROGRAMMER::begin(void) {
 
 	_oled_time.begin(80);
 	_ping_time.begin(400);
+
+	#ifdef MODULE_ARCH_ESP32
+		programmer_oled_begin();
+	#endif
 
 	_start_ap();
 
@@ -379,11 +487,100 @@ void MODULE_PROGRAMMER::_ping(void) {
 
 void MODULE_PROGRAMMER::_draw_oled(void) {
 
-	/*
-	 * Host the colour list on the ST7789. The web UI in this repository
-	 * is the full rendering of the same group table. On the device, draw
-	 * PROGRAMMER_OLED_ROWS lines of name + CAN-ID + UUID.
-	 */
+#ifdef MODULE_ARCH_ESP32
+	programmer_oled.fillRect(0, 0, PROGRAMMER_OLED_WIDTH, 16, PROGRAMMER_OLED_BLACK);
+	programmer_oled.setTextColor(PROGRAMMER_OLED_ACCENT);
+	programmer_oled.setCursor(4, 4);
+	programmer_oled.print(_mode == PROGRAMMER_MODE_SETUP ? "Setup" : "Analyse");
+
+	uint8_t count = 0;
+	if (_mode == PROGRAMMER_MODE_SETUP) {
+		for (uint8_t i = 0; i < 16; i++) {
+			if (_nodes[i].used) {
+				count++;
+			}
+		}
+	} else {
+		for (uint8_t i = 0; i < PROGRAMMER_GROUP_MAX; i++) {
+			if (_groups[i].used) {
+				count++;
+			}
+		}
+	}
+
+	if (count == 0) {
+		programmer_oled_line(0, false, _mode == PROGRAMMER_MODE_SETUP ? "Ping modules" : "Waiting CAN", "");
+		for (uint8_t row = 1; row < PROGRAMMER_OLED_ROWS; row++) {
+			programmer_oled.fillRect(0, 16 + (int16_t)row * 16, PROGRAMMER_OLED_WIDTH, 16, PROGRAMMER_OLED_BLACK);
+		}
+		return;
+	}
+
+	if (_cursor < 0) {
+		_cursor = 0;
+	}
+	if (_cursor >= count) {
+		_cursor = count - 1;
+	}
+
+	uint8_t start = 0;
+	if (_cursor >= PROGRAMMER_OLED_ROWS) {
+		start = (uint8_t)(_cursor - PROGRAMMER_OLED_ROWS + 1);
+	}
+
+	uint8_t index = 0;
+	uint8_t drawn = 0;
+	char left[18];
+	char right[12];
+
+	if (_mode == PROGRAMMER_MODE_SETUP) {
+		for (uint8_t i = 0; i < 16 && drawn < PROGRAMMER_OLED_ROWS; i++) {
+			if (!_nodes[i].used) {
+				continue;
+			}
+			if (index < start) {
+				index++;
+				continue;
+			}
+			if (_nodes[i].name[0]) {
+				strncpy(left, _nodes[i].name, 10);
+				left[10] = 0;
+			} else {
+				strncpy(left, programmer_type_name(_nodes[i].type), sizeof(left) - 1);
+				left[sizeof(left) - 1] = 0;
+			}
+			right[0] = '0';
+			right[1] = 'x';
+			programmer_hex4(right + 2, _nodes[i].uuid);
+			programmer_oled_line(drawn, index == _cursor, left, right);
+			index++;
+			drawn++;
+		}
+	} else {
+		for (uint8_t i = 0; i < PROGRAMMER_GROUP_MAX && drawn < PROGRAMMER_OLED_ROWS; i++) {
+			if (!_groups[i].used) {
+				continue;
+			}
+			if (index < start) {
+				index++;
+				continue;
+			}
+			strncpy(left, programmer_id_name(_groups[i].id), 8);
+			left[8] = 0;
+			right[0] = '0';
+			right[1] = 'x';
+			programmer_hex4(right + 2, _groups[i].uuid);
+			programmer_oled_line(drawn, index == _cursor, left, right);
+			index++;
+			drawn++;
+		}
+	}
+
+	while (drawn < PROGRAMMER_OLED_ROWS) {
+		programmer_oled.fillRect(0, 16 + (int16_t)drawn * 16, PROGRAMMER_OLED_WIDTH, 16, PROGRAMMER_OLED_BLACK);
+		drawn++;
+	}
+#endif
 }
 
 

@@ -43,7 +43,9 @@ In `src/LocoCANcore.h` add:
 #endif
 ```
 
-Board: ESP32-WROOM-32 (`esp32dev`), Arduino core. Pins are in `config.h` (CAN 16/17, ST7789 VSPI, KY-040 encoder). V3.0 keeps the ESP32-S3 pin map.
+Board: ESP32-WROOM-32 (`esp32dev`), Arduino core. Pins are in `config.h` (CAN 4/17, SSD1351 VSPI, KY-040 encoder). V3.0 keeps the ESP32-S3 pin map.
+
+V2.0 SSD1351 wiring: SCK 18, MOSI 23, CS 2, DC 21, RST 22. The OLED has no backlight pin.
 
 ## PlatformIO
 
