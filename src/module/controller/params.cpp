@@ -69,6 +69,13 @@ void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, 
 	controller_params_fill_switch(params, CONTROLLER_PARAM_LIGHT_COUNT, CONTROLLER_PARAM_LIGHT_POINTS, resolution);
 	controller_params_fill_switch(params, CONTROLLER_PARAM_LIGHT2_COUNT, CONTROLLER_PARAM_LIGHT2_POINTS, resolution);
 
+	controller_params_init_levers(params, resolution, dual_brake);
+	controller_params_copy_name(params, "CTRL");
+}
+
+
+void controller_params_init_levers(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake) {
+
 	uint16_t full = 0;
 	if (resolution > 0) {
 		full = (uint16_t)(resolution - 1);
@@ -88,8 +95,19 @@ void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, 
 		controller_params_put16(params, CONTROLLER_PARAM_BRAKE_ZERO, center);
 		controller_params_put16(params, CONTROLLER_PARAM_BRAKE_FULL, 0);
 	}
+}
 
-	controller_params_copy_name(params, "CTRL");
+
+bool controller_params_levers_look_dual(const CONTROLLER_PARAMS &params, uint16_t resolution) {
+
+	uint16_t full = 0;
+	if (resolution > 0) {
+		full = (uint16_t)(resolution - 1);
+	}
+
+	return controller_params_get16(params, CONTROLLER_PARAM_DRIVE_ZERO) == 0
+		&& controller_params_get16(params, CONTROLLER_PARAM_DRIVE_FULL) == full
+		&& controller_params_get16(params, CONTROLLER_PARAM_BRAKE_FULL) == full;
 }
 
 

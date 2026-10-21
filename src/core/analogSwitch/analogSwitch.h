@@ -33,7 +33,7 @@ class ANALOGSWITCH {
 
 		uint8_t remove(uint8_t); // remove position with index idx
 
-		// replace every stored point; index 0 is the lowest voltage
+		// replace every stored point; index 0 is the first programmed point
 		void set_positions(const uint16_t *points, uint8_t count);
 		uint8_t count(void);
 		uint16_t position(uint8_t logical_index);
@@ -46,8 +46,6 @@ class ANALOGSWITCH {
 		uint16_t _positions[ANALOGSWITCH_MAX_POS]; // up to 16 positions
 		uint8_t _pos_count; // count of stored positions
 
-		void _sort(void); // sort the positions
-		static int _compare(const void*, const void*); // compare method for qsort
 };
 
 #endif

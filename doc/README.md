@@ -31,6 +31,8 @@ The design is highly modular. For the simple control of an electric locomotive o
 
 The structure of a bus system makes it easy to expand the contruction with additional functions. New modules, i.e. for light, controlling servos or measuring current, only need to be hooked into the CAN-line.
 
+How the cab and the motor module command and report on that bus is documented in [CONTROLLER_ELECTRIC.md](CONTROLLER_ELECTRIC.md). Protocol IDs are in [PROTOCOL.md](PROTOCOL.md); EEPROM layout is in [SETTINGS.md](SETTINGS.md).
+
 
 # Configuration
 **This functionality is not yet implemented**

@@ -24,6 +24,15 @@ uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool
 				nulled = false;
 				return CONTROLLER_STATUS_OFF;
 			}
+			/*
+			 * Stay off after a fault until the mains switch is cycled.
+			 * Returning to standby while the vehicle still reports error
+			 * sends another fault drive every loop and the cab never
+			 * publishes a clean 0x400.
+			 */
+			if (in.system_error) {
+				return CONTROLLER_STATUS_OFF;
+			}
 			if (!in.bus_free) {
 				if (in.foreign) {
 					return CONTROLLER_STATUS_LOCKED;

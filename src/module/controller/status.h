@@ -20,7 +20,7 @@
 #define CONTROLLER_STATUS_SETUP 6
 #define CONTROLLER_STATUS_ON 7
 
-/* Analog-switch positions, index 0 = lowest voltage. */
+/* Analog-switch positions, index 0 = first programmed point. */
 #define CONTROLLER_MAINS_OFF 0
 #define CONTROLLER_MAINS_ON 1
 #define CONTROLLER_MAINS_MOTOR 2
@@ -45,6 +45,16 @@ struct CONTROLLER_INPUTS {
 	bool bus_moving;
 	bool system_error;
 };
+
+/* Two programmed points are reverse / forward. Three are reverse / neutral / forward. */
+inline uint8_t controller_dir_from_switch(uint8_t index, uint8_t count) {
+
+	if (count < 3 && index == 1) {
+		return CONTROLLER_DIR_FORWARD;
+	}
+
+	return index;
+}
 
 inline bool controller_is_commanding(uint8_t status) {
 	return status != CONTROLLER_STATUS_OFF && status != CONTROLLER_STATUS_LOCKED;

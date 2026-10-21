@@ -14,6 +14,7 @@
 
 #include "../../config.h"
 #include "analogSwitch.h"
+#include "analog_switch_logic.h"
 
 
 ANALOGSWITCH::ANALOGSWITCH(void) {
@@ -32,30 +33,12 @@ void ANALOGSWITCH::begin(uint8_t port) {
 
 
 // get switch position
-// 0 is the learned point with the lowest voltage
+// 0 is the first programmed point (EEPROM / learn order)
 uint8_t ANALOGSWITCH::get(void) {
 
 	uint16_t analogval = get_analog();
 
-	if (_pos_count == 0) {
-		return 0;
-	}
-
-	uint8_t nearest = 0;
-	uint16_t best = 0xFFFF;
-
-	for (uint8_t i = 0; i < _pos_count; i++) {
-		uint16_t pos = _positions[i];
-		uint16_t dist = (analogval > pos) ? (uint16_t)(analogval - pos) : (uint16_t)(pos - analogval);
-
-		if (dist < best) {
-			best = dist;
-			nearest = i;
-		}
-	}
-
-	// _positions is sorted descending, so flip the index
-	return (uint8_t)((_pos_count - 1) - nearest);
+	return analog_switch_nearest(_positions, _pos_count, analogval);
 }
 
 
@@ -69,8 +52,6 @@ uint8_t ANALOGSWITCH::learn() {
 		_pos_count++;
 	}
 
-	_sort();
-
 	return _pos_count;
 }
 
@@ -82,8 +63,6 @@ uint8_t ANALOGSWITCH::learn(uint16_t value) {
 		_positions[_pos_count] = value;
 		_pos_count++;
 	}
-
-	_sort();
 
 	return _pos_count;
 }
@@ -104,8 +83,6 @@ uint8_t ANALOGSWITCH::remove(uint8_t idx) {
 
 		_pos_count--;
 	}
-
-	_sort();
 
 	return _pos_count;
 }
@@ -128,7 +105,6 @@ void ANALOGSWITCH::set_positions(const uint16_t *points, uint8_t count) {
 		_pos_count++;
 	}
 
-	_sort();
 }
 
 
@@ -137,35 +113,14 @@ uint8_t ANALOGSWITCH::count(void) {
 }
 
 
-// logical index 0 is the lowest stored voltage
+// logical index 0 is the first programmed point
 uint16_t ANALOGSWITCH::position(uint8_t logical_index) {
 
 	if (_pos_count == 0 || logical_index >= _pos_count) {
 		return 0;
 	}
 
-	return _positions[(_pos_count - 1) - logical_index];
-}
-
-
-// sort positions ascending
-void ANALOGSWITCH::_sort(void) {
-
-	qsort(_positions, _pos_count, sizeof(_positions[0]), _compare);
-
-}
-
-int ANALOGSWITCH::_compare(const void *a, const void *b) {
-	uint16_t va = *(const uint16_t *)a;
-	uint16_t vb = *(const uint16_t *)b;
-
-	if (va < vb) {
-		return 1;
-	}
-	if (va > vb) {
-		return -1;
-	}
-	return 0;
+	return _positions[logical_index];
 }
 
 

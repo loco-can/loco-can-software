@@ -3,6 +3,7 @@
  */
 
 #include "can_protocol.h"
+#include "core/analogSwitch/analog_switch_logic.h"
 #include "module/controller/drive_codec.h"
 #include "module/controller/params.h"
 #include "module/controller/status.h"
@@ -83,6 +84,12 @@ int controller_logic_check(void) {
 	in.mains = CONTROLLER_MAINS_ON;
 	in.system_error = true;
 	expect_status("standby system error", step(CONTROLLER_STATUS_STANDBY, in, nulled), CONTROLLER_STATUS_OFF);
+	expect_status("fault stays off until mains off", step(CONTROLLER_STATUS_OFF, in, nulled), CONTROLLER_STATUS_OFF);
+	in.mains = CONTROLLER_MAINS_OFF;
+	expect_status("mains off after fault", step(CONTROLLER_STATUS_OFF, in, nulled), CONTROLLER_STATUS_OFF);
+	in.mains = CONTROLLER_MAINS_ON;
+	in.system_error = false;
+	expect_status("mains cycle after fault", step(CONTROLLER_STATUS_OFF, in, nulled), CONTROLLER_STATUS_STANDBY);
 
 	in = idle();
 	in.mains = CONTROLLER_MAINS_MOTOR;
@@ -202,6 +209,18 @@ int controller_logic_check(void) {
 	controller_params_defaults(params, 1024, true, LOCO_VERSION(2, 1, 0));
 	expect_u16("dual drive zero", controller_params_get16(params, CONTROLLER_PARAM_DRIVE_ZERO), 0);
 	expect_u16("dual brake full", controller_params_get16(params, CONTROLLER_PARAM_BRAKE_FULL), 1023);
+	if (!controller_params_levers_look_dual(params, 1024)) {
+		fprintf(stderr, "FAIL dual image not detected\n");
+		g_fails++;
+	}
+
+	controller_params_init_levers(params, 1024, false);
+	expect_u16("migrated drive zero", controller_params_get16(params, CONTROLLER_PARAM_DRIVE_ZERO), 511);
+	expect_u16("migrated brake full", controller_params_get16(params, CONTROLLER_PARAM_BRAKE_FULL), 0);
+	if (controller_params_levers_look_dual(params, 1024)) {
+		fprintf(stderr, "FAIL single lever image still looks dual\n");
+		g_fails++;
+	}
 
 	expect_u16("axis zero", controller_map_axis(0, 0, 1023), 0);
 	expect_u16("axis full", controller_map_axis(1023, 0, 1023), 1023);
@@ -209,12 +228,15 @@ int controller_logic_check(void) {
 
 	uint16_t drive_cal = 9;
 	uint16_t brake_cal = 9;
-	controller_split_calibrated(0, 0, 511, 1023, drive_cal, brake_cal);
+	controller_split_calibrated(0, 511, 1023, 511, 0, drive_cal, brake_cal);
 	expect_u16("cal brake", brake_cal, 1023);
 	expect_u16("cal brake drive", drive_cal, 0);
-	controller_split_calibrated(1023, 0, 511, 1023, drive_cal, brake_cal);
+	controller_split_calibrated(1023, 511, 1023, 511, 0, drive_cal, brake_cal);
 	expect_u16("cal drive", drive_cal, 1023);
 	expect_u16("cal drive brake", brake_cal, 0);
+	controller_split_calibrated(400, 511, 1023, 450, 100, drive_cal, brake_cal);
+	expect_u16("brake uses brake zero", brake_cal, (uint16_t)(((uint32_t)(450 - 400) * 1023UL) / (450 - 100)));
+	expect_u16("drive stays on drive zero", drive_cal, 0);
 
 	CAN_MESSAGE request;
 	request.id = CAN_ID_REQUEST;
@@ -293,6 +315,17 @@ int controller_logic_check(void) {
 	expect_u8("2.1.12 minor", patch_info.reply[0].data[4], 1);
 	expect_u8("2.1.12 patch", patch_info.reply[0].data[5], 12);
 	expect_u8("2.1.12 type", patch_info.reply[0].data[6], CONTROLLER_TYPE_ID);
+
+	expect_u8("dir 3pos reverse", controller_dir_from_switch(0, 3), CONTROLLER_DIR_REVERSE);
+	expect_u8("dir 3pos neutral", controller_dir_from_switch(1, 3), CONTROLLER_DIR_NEUTRAL);
+	expect_u8("dir 3pos forward", controller_dir_from_switch(2, 3), CONTROLLER_DIR_FORWARD);
+	expect_u8("dir 2pos reverse", controller_dir_from_switch(0, 2), CONTROLLER_DIR_REVERSE);
+	expect_u8("dir 2pos forward", controller_dir_from_switch(1, 2), CONTROLLER_DIR_FORWARD);
+
+	const uint16_t dir_pts[3] = { 800, 500, 200 };
+	expect_u8("captured reverse stays 0", analog_switch_nearest(dir_pts, 3, 800), 0);
+	expect_u8("captured neutral stays 1", analog_switch_nearest(dir_pts, 3, 500), 1);
+	expect_u8("captured forward stays 2", analog_switch_nearest(dir_pts, 3, 200), 2);
 
 	expect_u8("live mains channel", (uint8_t)controller_params_live_channel(CONTROLLER_PARAM_LIVE_MAINS), 0);
 	expect_u8("live drive channel", (uint8_t)controller_params_live_channel(CONTROLLER_PARAM_LIVE_DRIVE), 4);

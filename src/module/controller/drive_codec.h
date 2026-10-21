@@ -116,13 +116,22 @@ inline uint16_t controller_map_axis(uint16_t raw, uint16_t zero, uint16_t full) 
 
 
 /*
- * One lever: center is zero, above center drives, below center brakes.
- * brake_full, zero and drive_full are the stored ADC positions.
+ * One lever: drive and brake each have their own zero and full ADC
+ * positions. The zeros may differ so a captured brake rest is not
+ * forced to the drive idle point.
  */
-inline void controller_split_calibrated(uint16_t raw, uint16_t brake_full, uint16_t zero, uint16_t drive_full, uint16_t &drive, uint16_t &brake) {
+inline void controller_split_calibrated(
+	uint16_t raw,
+	uint16_t drive_zero,
+	uint16_t drive_full,
+	uint16_t brake_zero,
+	uint16_t brake_full,
+	uint16_t &drive,
+	uint16_t &brake
+) {
 
-	drive = controller_map_axis(raw, zero, drive_full);
-	brake = controller_map_axis(raw, zero, brake_full);
+	drive = controller_map_axis(raw, drive_zero, drive_full);
+	brake = controller_map_axis(raw, brake_zero, brake_full);
 }
 
 

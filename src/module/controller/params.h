@@ -3,8 +3,8 @@
  * protocol (0x7FF request, 0x780 reply, 0x700-0x77F write).
  *
  * Byte 0 is the module version. The following bytes are the analog-switch
- * positions (count, then little-endian ADC points, index 0 = lowest
- * voltage) and the drive/brake lever positions.
+ * positions (count, then little-endian ADC points, index 0 = first
+ * programmed point) and the drive/brake lever positions.
  *
  *   0      version code, major*10+minor (2.1.12 is stored as 21)
  *   1      mains count
@@ -83,6 +83,8 @@ struct CONTROLLER_PARAM_RESULT {
 };
 
 void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake, uint32_t module_version);
+void controller_params_init_levers(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake);
+bool controller_params_levers_look_dual(const CONTROLLER_PARAMS &params, uint16_t resolution);
 
 uint16_t controller_params_get16(const CONTROLLER_PARAMS &params, uint8_t index);
 void controller_params_put16(CONTROLLER_PARAMS &params, uint8_t index, uint16_t value);

@@ -370,6 +370,14 @@ int electric_logic_check(void) {
 	bits = electric_vehicle_status(driving(false, 0, 0), out, 0, 20, false, true, false);
 	expect_true("link fault is error", bits.error && !bits.ready && !bits.mains);
 
+	ELECTRIC_COMMAND faulted = driving(false, 0, 0);
+	faulted.error = true;
+	bits = electric_vehicle_status(faulted, out, 0, 20, false, false, false);
+	expect_true("cab fault drive is not vehicle error", !bits.error);
+	faulted.error = false;
+	bits = electric_vehicle_status(faulted, out, 0, 20, false, false, false);
+	expect_true("next good drive is not latched error", !bits.error);
+
 	bits = electric_vehicle_status(driving(false, 0, 0), out, 0, 20, false, false, true);
 	expect_true("setup idle report", bits.mains && bits.drive && bits.ready && !bits.moving);
 

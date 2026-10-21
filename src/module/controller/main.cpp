@@ -82,10 +82,7 @@ void MODULE_CONTROLLER::_load_params(void) {
 
 	controller_eeprom_begin();
 
-	bool dual = false;
-	#ifdef CONTROLLER_BREAK_PORT
-		dual = true;
-	#endif
+	const bool dual = CONTROLLER_HAS_DUAL_BRAKE;
 
 	uint8_t version = (uint8_t)LOCO_VERSION_CODE(CONTROLLER_MODULE_VERSION);
 	uint8_t magic = EEPROM.read(0);
@@ -107,6 +104,11 @@ void MODULE_CONTROLLER::_load_params(void) {
 	}
 	_params.name[CONTROLLER_PARAM_NAME_LEN] = 0;
 	_params.bytes[CONTROLLER_PARAM_VERSION] = version;
+
+	if (!dual && controller_params_levers_look_dual(_params, PLATFORM_ANALOG_RESOLUTION)) {
+		controller_params_init_levers(_params, PLATFORM_ANALOG_RESOLUTION, false);
+		_save_params();
+	}
 }
 
 
@@ -195,10 +197,12 @@ bool MODULE_CONTROLLER::_live_analog(uint8_t index, uint16_t &adc) {
 		case 4:
 			adc = analogRead(CONTROLLER_DRIVE_PORT);
 			return true;
-#endif
-#ifdef CONTROLLER_BREAK_PORT
 		case 5:
+#if CONTROLLER_HAS_DUAL_BRAKE
 			adc = analogRead(CONTROLLER_BREAK_PORT);
+#else
+			adc = analogRead(CONTROLLER_DRIVE_PORT);
+#endif
 			return true;
 #endif
 		default:
@@ -366,7 +370,7 @@ void MODULE_CONTROLLER::_read_controls(void) {
 	#endif
 
 	#ifdef CONTROLLER_DIR_PORT
-		_dir = _dir_switch.get();
+		_dir = controller_dir_from_switch(_dir_switch.get(), _dir_switch.count());
 	#else
 		_dir = CONTROLLER_DIR_NEUTRAL;
 	#endif
@@ -405,12 +409,19 @@ void MODULE_CONTROLLER::_read_controls(void) {
 		uint16_t drive_full = controller_params_get16(_params, CONTROLLER_PARAM_DRIVE_FULL);
 		uint16_t brake_zero = controller_params_get16(_params, CONTROLLER_PARAM_BRAKE_ZERO);
 		uint16_t brake_full = controller_params_get16(_params, CONTROLLER_PARAM_BRAKE_FULL);
-		#ifdef CONTROLLER_BREAK_PORT
+		#if CONTROLLER_HAS_DUAL_BRAKE
 			_drive_value = controller_map_axis(drive_raw, drive_zero, drive_full);
 			_break_value = controller_map_axis(analogRead(CONTROLLER_BREAK_PORT), brake_zero, brake_full);
 		#else
-			(void)brake_zero;
-			controller_split_calibrated(drive_raw, brake_full, drive_zero, drive_full, _drive_value, _break_value);
+			controller_split_calibrated(
+				drive_raw,
+				drive_zero,
+				drive_full,
+				brake_zero,
+				brake_full,
+				_drive_value,
+				_break_value
+			);
 		#endif
 	#else
 		_drive_value = 0;
@@ -610,7 +621,7 @@ void MODULE_CONTROLLER::_send_drive(bool fault) {
 	drive.loco = fault ? 0 : _main_loco();
 	drive.drive = speed ? _drive_value : 0;
 	drive.power = speed ? _power_value : 0;
-	drive.brake = fault ? 1023 : (speed ? _break_value : 0);
+	drive.brake = fault ? 1023 : _break_value;
 
 	_message.id = CAN_ID_DRIVE;
 	_message.size = 8;

@@ -129,17 +129,25 @@ void MODULE_ELECTRIC::_handle_can(CAN_MESSAGE message) {
 			}
 			_seen_drive = true;
 			_drive_timeout.retrigger();
-			if (_command.error) {
-				_emergency = true;
-			}
+			/*
+			 * A live drive frame is the link. Clearing only on mains-off
+			 * latched link_fault forever: the cab dropped to OFF, sent
+			 * one error frame, then returned to standby with mains still
+			 * on. Status stayed error and the cab oscillated.
+			 * 0x000 emergency still needs mains off.
+			 */
+			_link_fault = false;
 			if (!_command.mains && !_command.error) {
 				_emergency = false;
-				_link_fault = false;
 			}
 			break;
 
 		case CAN_ID_DRIVE_HEARTBEAT:
-			/* Drive frames time the link out. A heartbeat on its own does not refresh a throttle command. */
+			/*
+			 * Heartbeat does not keep the throttle alive. A missing
+			 * heartbeat is also not a fault: the cab simply is not
+			 * commanding. Drive timeout drops the command to idle.
+			 */
 			break;
 
 		case CAN_ID_EMERGENCY:
@@ -407,8 +415,18 @@ void MODULE_ELECTRIC::update(CAN_MESSAGE message) {
 	}
 
 	bool drive_fresh = _seen_drive && !_drive_timeout.check();
-	if (_seen_drive && !drive_fresh && _command.mains) {
-		_link_fault = true;
+	if (_seen_drive && !drive_fresh) {
+		/*
+		 * Cab left the bus (no 0x400, no 0x010). That is idle, not a
+		 * link fault — otherwise status stays error until the next drive.
+		 */
+		_link_fault = false;
+		_command.mains = false;
+		_command.motor = false;
+		_command.drive = 0;
+		_command.brake = 0;
+		_command.power = 0;
+		_command.error = false;
 	}
 
 	_read_sensors();

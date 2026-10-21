@@ -389,14 +389,19 @@ ELECTRIC_STATUS_BITS electric_vehicle_status(
 	bits.drive = false;
 	bits.mains = false;
 
-	if (setup_idle && !link_fault && !command.emergency && !command.error) {
+	if (setup_idle && !link_fault && !command.emergency) {
 		bits.mains = true;
 		bits.drive = true;
 		bits.ready = true;
 		return bits;
 	}
 
-	bits.error = link_fault || command.error || command.emergency;
+	/*
+	 * command.error is the cab telling us to cut. Echoing it on 0x500
+	 * makes the cab see a vehicle fault, drop to OFF, send another
+	 * error drive, and never recover. Cut happens in the plugin.
+	 */
+	bits.error = link_fault || command.emergency;
 	bits.mains = command.present && command.mains && !bits.error;
 	bits.drive = bits.mains && command.motor;
 	bits.ready = bits.drive && !output.direction_blocked;
