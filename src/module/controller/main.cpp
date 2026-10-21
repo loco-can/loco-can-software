@@ -9,6 +9,7 @@
 #include "../../config.h"
 #include "main.h"
 #include "drive_codec.h"
+#include "../../core/setup/setup_mode.h"
 #include <string.h>
 
 
@@ -786,10 +787,14 @@ void MODULE_CONTROLLER::_update_led(void) {
 
 void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 
-	if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
-		_handle_setup(message);
+	if (loco_setup.active) {
+		if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
+			_handle_setup(message);
+		}
+		return;
 	}
-	else if (message.uuid != 0) {
+
+	if (message.uuid != 0) {
 		/* #ifdef DEVEL
 			Serial.print("got message ");
 			can.print_message(message);

@@ -7,6 +7,7 @@
  */
 
 #include "main.h"
+#include "../../core/setup/setup_mode.h"
 
 #ifdef MODULE_ELECTRIC_CONFIG_H
 
@@ -379,10 +380,23 @@ void MODULE_ELECTRIC::begin(void) {
 
 void MODULE_ELECTRIC::update(CAN_MESSAGE message) {
 
-	if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
-		_handle_settings(message);
+	if (loco_setup.active) {
+		if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
+			_handle_settings(message);
+		}
+		ELECTRIC_OUTPUT off;
+		off.drive_pwm = 0;
+		off.brake_pwm = 0;
+		off.forward = false;
+		off.reverse = false;
+		off.power = false;
+		off.direction_blocked = false;
+		off.direction = ELECTRIC_DIR_NONE;
+		_write_outputs(off);
+		return;
 	}
-	else if (message.uuid != 0) {
+
+	if (message.uuid != 0) {
 		_handle_can(message);
 	}
 

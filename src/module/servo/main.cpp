@@ -7,6 +7,7 @@
  */
 
 #include "main.h"
+#include "../../core/setup/setup_mode.h"
 
 #ifdef MODULE_SERVO_CONFIG_H
 
@@ -184,10 +185,17 @@ void MODULE_SERVO::update(CAN_MESSAGE message) {
 
 	bool frame = message.id != 0 || message.uuid != 0 || message.size != 0;
 
-	if (frame && (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP)) {
-		_handle_setup(message);
+	if (loco_setup.active) {
+		if (frame && (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP)) {
+			_handle_setup(message);
+		}
+		for (uint8_t i = 0; i < SERVO_OUTPUT_COUNT; i++) {
+			servo_out[i].set(0);
+		}
+		return;
 	}
-	else if (frame && message.uuid != (uint16_t)can.uuid()) {
+
+	if (frame && message.uuid != (uint16_t)can.uuid()) {
 		servo_bus_apply(_bus, message);
 		if (message.id != CAN_ID_EMERGENCY && _bus.alive) {
 			_bus_timeout.retrigger();

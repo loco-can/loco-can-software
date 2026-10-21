@@ -33,6 +33,9 @@ int main(void) {
 	REQUIRE(CAN_ID_REQUEST == 0x7FF, "CAN_ID_REQUEST");
 	REQUIRE(CAN_ID_REPLY == 0x780, "CAN_ID_REPLY");
 	REQUIRE(CAN_ID_SETUP == 0x700, "CAN_ID_SETUP");
+	REQUIRE(CAN_ID_SETUP_MODE == 0x7F8, "CAN_ID_SETUP_MODE");
+	REQUIRE(CAN_SETUP_MODE_ENTER == 0xFE, "CAN_SETUP_MODE_ENTER");
+	REQUIRE(CAN_SETUP_MODE_LEAVE == 0xFD, "CAN_SETUP_MODE_LEAVE");
 
 	REQUIRE(CONTROL_MAINS_FLAG == 0, "CONTROL_MAINS_FLAG");
 	REQUIRE(CONTROL_DRIVE_FLAG == 1, "CONTROL_DRIVE_FLAG");
@@ -118,6 +121,11 @@ int main(void) {
 
 	int servo_logic_check(void);
 	if (servo_logic_check() != 0) {
+		return 1;
+	}
+
+	int setup_mode_check(void);
+	if (setup_mode_check() != 0) {
 		return 1;
 	}
 

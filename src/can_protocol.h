@@ -345,6 +345,27 @@
 #define CAN_SETUP_MASK 0x700
 #define CAN_ID_SETUP 0x700
 
+/*
+ * Module setup mode (programmer session)
+ *
+ * Started only when no CAN_ID_DRIVE_HEARTBEAT has been seen recently.
+ * The programmer broadcasts enter/leave; every module ACKs.
+ * While active, modules send nothing on their own and accept only
+ * identifiers in 0x700-0x7FF.
+ *
+ *   0x7FF  [CAN_SETUP_MODE_ENTER]   programmer → all
+ *   0x7FF  [CAN_SETUP_MODE_LEAVE]   programmer → all
+ *   0x7F8  [op] [type] [status] [maj] [min] [patch]
+ *          status 1 = ok, 0 = refused (controller heartbeat)
+ */
+#define CAN_ID_SETUP_MODE 0x7F8
+#define CAN_SETUP_MODE_ENTER 0xFE
+#define CAN_SETUP_MODE_LEAVE 0xFD
+#define CAN_SETUP_MODE_OK 1
+#define CAN_SETUP_MODE_BUSY 0
+#define CAN_SETUP_MODE_HOLD_MS 250
+#define CAN_SETUP_MODE_TIMEOUT_MS 30000
+#define CAN_SETUP_MODE_KEEPALIVE_MS 5000
 
 #define CAN_NAME_MAX_SIZE 5
 #define CAN_NAME_REPLY_SIZE 7

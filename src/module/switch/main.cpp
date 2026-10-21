@@ -7,6 +7,7 @@
  */
 
 #include "main.h"
+#include "../../core/setup/setup_mode.h"
 
 #ifdef MODULE_SWITCH_CONFIG_H
 
@@ -278,10 +279,17 @@ void MODULE_SWITCH::update(CAN_MESSAGE message) {
 
 	bool frame = message.id != 0 || message.uuid != 0 || message.size != 0;
 
-	if (frame && (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP)) {
-		_handle_setup(message);
+	if (loco_setup.active) {
+		if (frame && (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP)) {
+			_handle_setup(message);
+		}
+		for (uint8_t i = 0; i < SWITCH_OUTPUT_COUNT; i++) {
+			digitalWrite(SWITCH_OUTPUT_PORT[i], LOW);
+		}
+		return;
 	}
-	else if (frame && message.uuid != 0 && message.uuid != (uint16_t)can.uuid()) {
+
+	if (frame && message.uuid != 0 && message.uuid != (uint16_t)can.uuid()) {
 		if (message.id == CAN_ID_LIGHT || message.id == CAN_ID_SIGNAL || message.id == CAN_ID_DRIVE || message.id == CAN_ID_EMERGENCY) {
 			switch_bus_apply(_bus, message);
 			if (message.id != CAN_ID_EMERGENCY && message.size >= 1) {

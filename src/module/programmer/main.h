@@ -10,8 +10,9 @@
  *   the group identifier to a plain-text name and show payload fields as
  *   integers or boolean switches.
  *
- *   Setup: send a global 0x7FF ping, list answering modules and write
- *   EEPROM parameters back with 0x7nn frames.
+ *   Setup: enter bus setup mode (blocked while a controller drive
+ *   heartbeat is present), collect module ACKs, then read and write
+ *   EEPROM parameters with 0x7nn frames.
  *
  *   Local UI is a colour OLED plus rotary encoder. The same functions are
  *   exposed by the ESP32 WiFi access point webservice.
@@ -46,7 +47,7 @@ extern CAN_COM can;
 
 #define PROGRAMMER_MODE_ANALYSE 0
 #define PROGRAMMER_MODE_SETUP 1
-#define PROGRAMMER_WEB_FRAMES 64
+#define PROGRAMMER_WEB_FRAMES 128
 
 struct PROGRAMMER_GROUP {
 	uint16_t id;
@@ -92,6 +93,8 @@ class MODULE_PROGRAMMER {
 		INTELLIBUTTON _encoder_btn;
 		INTELLITIMEOUT _oled_time;
 		INTELLITIMEOUT _ping_time;
+		INTELLITIMEOUT _setup_keep;
+		bool _setup_bus;
 
 #ifdef MODULE_ARCH_ESP32
 		friend class ProgrammerCatchAll;
@@ -110,6 +113,9 @@ class MODULE_PROGRAMMER {
 		void _draw_oled(void);
 		void _start_ap(void);
 		void _ping(void);
+		bool _controller_present(void);
+		bool _enter_bus_setup(void);
+		void _leave_bus_setup(void);
 		uint16_t _own_uuid(void);
 		int8_t _find_group(uint16_t id, uint16_t uuid);
 

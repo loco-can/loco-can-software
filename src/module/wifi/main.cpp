@@ -7,6 +7,7 @@
  */
 
 #include "../../config.h"
+#include "../../core/setup/setup_mode.h"
 
 #ifdef MODULE_WIFI_CONFIG_H
 
@@ -100,12 +101,16 @@ void MODULE_WIFI::begin(void) {
 void MODULE_WIFI::update(CAN_MESSAGE message) {
 
 	if (message.id != 0 || message.uuid != 0 || message.size != 0) {
-		_handle_can(message);
+		if (!loco_setup.active || loco_setup_is_range(message.id)) {
+			_handle_can(message);
+		}
 	}
 
 	CAN_MESSAGE frame;
 	while (can.fetch(frame)) {
-		_handle_can(frame);
+		if (!loco_setup.active || loco_setup_is_range(frame.id)) {
+			_handle_can(frame);
+		}
 	}
 
 	_poll_now();
@@ -179,6 +184,10 @@ void MODULE_WIFI::_handle_now_can(const WIFI_NOW_PACKET &pkt) {
 	}
 
 	_remember(_recent_now, message);
+
+	if (loco_setup.active && !loco_setup_is_range(message.id)) {
+		return;
+	}
 
 	if (!wifi_now_should_bridge(_peer_ok, _cable)) {
 		return;

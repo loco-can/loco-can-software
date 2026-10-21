@@ -11,6 +11,7 @@
 #ifdef MODULE_PROGRAMMER_CONFIG_H
 
 #include "main.h"
+#include "../../core/setup/setup_mode.h"
 #include <string.h>
 
 extern CAN_COM can;
@@ -256,6 +257,7 @@ static const char *programmer_id_name(uint16_t id) {
 		case CAN_ID_MODULE_HEARTBEAT: return "HB";
 		case CAN_ID_LOCO_SETUP: return "LOCO";
 		case CAN_ID_REPLY: return "INFO";
+		case CAN_ID_SETUP_MODE: return "SMODE";
 		case CAN_ID_REQUEST: return "PING";
 		default: return "CAN";
 	}
@@ -316,6 +318,7 @@ void MODULE_PROGRAMMER::begin(void) {
 
 	_mode = PROGRAMMER_MODE_ANALYSE;
 	_cursor = 0;
+	_setup_bus = false;
 
 	for (uint8_t i = 0; i < PROGRAMMER_GROUP_MAX; i++) {
 		_groups[i].used = false;
@@ -340,6 +343,7 @@ void MODULE_PROGRAMMER::begin(void) {
 
 	_oled_time.begin(80);
 	_ping_time.begin(400);
+	_setup_keep.begin(CAN_SETUP_MODE_KEEPALIVE_MS);
 
 	#ifdef MODULE_ARCH_ESP32
 		programmer_oled_begin();
@@ -365,6 +369,10 @@ void MODULE_PROGRAMMER::update(CAN_MESSAGE message) {
 	}
 
 	_poll_encoder();
+
+	if (_mode == PROGRAMMER_MODE_SETUP && _setup_bus && _setup_keep.update()) {
+		_enter_bus_setup();
+	}
 
 	#ifdef MODULE_ARCH_ESP32
 		_web_poll();
@@ -401,6 +409,33 @@ void MODULE_PROGRAMMER::_ingest(CAN_MESSAGE message) {
 	_groups[slot].last = message;
 	_groups[slot].count++;
 	_groups[slot].last_ms = millis();
+
+	if (message.id == CAN_ID_DRIVE_HEARTBEAT) {
+		loco_setup_note_controller(loco_setup, millis());
+		if (_setup_bus) {
+			_leave_bus_setup();
+		}
+	}
+
+	if (message.id == CAN_ID_SETUP_MODE && message.size >= 3) {
+		for (uint8_t i = 0; i < 16; i++) {
+			bool known = _nodes[i].used && _nodes[i].uuid == message.uuid;
+			if (!known && _nodes[i].used) {
+				continue;
+			}
+			if (!known) {
+				_nodes[i].used = true;
+				_nodes[i].uuid = message.uuid;
+				_nodes[i].name[0] = 0;
+				_nodes[i].max_settings = 0;
+			}
+			_nodes[i].type = message.data[1];
+			_nodes[i].version_maj = message.size > 3 ? message.data[3] : 0;
+			_nodes[i].version_min = message.size > 4 ? message.data[4] : 0;
+			_nodes[i].version_patch = message.size > 5 ? message.data[5] : 0;
+			break;
+		}
+	}
 
 	/* learn module presence from heartbeat and info replies */
 	if (message.id == CAN_ID_MODULE_HEARTBEAT || message.id == CAN_ID_REPLY) {
@@ -465,12 +500,70 @@ void MODULE_PROGRAMMER::_poll_encoder(void) {
 		_cursor = 0;
 		if (_mode == PROGRAMMER_MODE_SETUP) {
 			_ping();
+		} else {
+			_leave_bus_setup();
 		}
 	}
 }
 
 
+bool MODULE_PROGRAMMER::_controller_present(void) {
+	return loco_setup_controller_present(loco_setup, millis());
+}
+
+
+bool MODULE_PROGRAMMER::_enter_bus_setup(void) {
+
+	if (_controller_present()) {
+		#ifdef DEBUG
+			Serial.println("> setup blocked: controller heartbeat");
+		#endif
+		return false;
+	}
+
+	CAN_MESSAGE request;
+	memset(&request, 0, sizeof(request));
+	request.id = CAN_ID_REQUEST;
+	request.uuid = _own_uuid();
+	request.size = 1;
+	request.data[0] = CAN_SETUP_MODE_ENTER;
+	if (!can.send(request)) {
+		return false;
+	}
+	_setup_bus = true;
+	_setup_keep.retrigger();
+#ifdef MODULE_ARCH_ESP32
+	_web_push(request, true);
+#endif
+	return true;
+}
+
+
+void MODULE_PROGRAMMER::_leave_bus_setup(void) {
+
+	if (!_setup_bus) {
+		return;
+	}
+
+	CAN_MESSAGE request;
+	memset(&request, 0, sizeof(request));
+	request.id = CAN_ID_REQUEST;
+	request.uuid = _own_uuid();
+	request.size = 1;
+	request.data[0] = CAN_SETUP_MODE_LEAVE;
+	can.send(request);
+	_setup_bus = false;
+#ifdef MODULE_ARCH_ESP32
+	_web_push(request, true);
+#endif
+}
+
+
 void MODULE_PROGRAMMER::_ping(void) {
+
+	if (!_enter_bus_setup()) {
+		return;
+	}
 
 	CAN_MESSAGE request;
 	memset(&request, 0, sizeof(request));
@@ -509,7 +602,11 @@ void MODULE_PROGRAMMER::_draw_oled(void) {
 	}
 
 	if (count == 0) {
-		programmer_oled_line(0, false, _mode == PROGRAMMER_MODE_SETUP ? "Ping modules" : "Waiting CAN", "");
+		const char *empty = "Waiting CAN";
+		if (_mode == PROGRAMMER_MODE_SETUP) {
+			empty = _controller_present() ? "Controller HB" : "Enter setup";
+		}
+		programmer_oled_line(0, false, empty, "");
 		for (uint8_t row = 1; row < PROGRAMMER_OLED_ROWS; row++) {
 			programmer_oled.fillRect(0, 16 + (int16_t)row * 16, PROGRAMMER_OLED_WIDTH, 16, PROGRAMMER_OLED_BLACK);
 		}
@@ -698,6 +795,10 @@ void MODULE_PROGRAMMER::_http_status(void) {
 	body += String(_own_uuid());
 	body += ",\"mode\":";
 	body += String(_mode);
+	body += ",\"setup\":";
+	body += _setup_bus ? "true" : "false";
+	body += ",\"controller\":";
+	body += _controller_present() ? "true" : "false";
 	body += ",\"frames\":";
 	body += String(_web_seq);
 	body += "}";
@@ -726,7 +827,7 @@ void MODULE_PROGRAMMER::_http_frames(void) {
 	bool first = true;
 	uint8_t emitted = 0;
 
-	for (uint8_t i = 0; i < _web_count && emitted < 32; i++) {
+	for (uint8_t i = 0; i < _web_count && emitted < PROGRAMMER_WEB_FRAMES; i++) {
 		const PROGRAMMER_WEB_FRAME &frame = _web_log[(start + i) % PROGRAMMER_WEB_FRAMES];
 		if (frame.seq <= after) {
 			continue;
@@ -792,6 +893,19 @@ void MODULE_PROGRAMMER::_http_tx(void) {
 			message.data[message.size++] = (uint8_t) ((hi << 4) | lo);
 			dpos += 2;
 		}
+	}
+
+	if (loco_setup_is_enter(message.id, message.size, message.data[0])) {
+		if (_controller_present()) {
+			_http.send(503, "application/json", "{\"ok\":false,\"error\":\"Controller heartbeat on the bus\"}");
+			return;
+		}
+		_setup_bus = true;
+		_setup_keep.retrigger();
+		_mode = PROGRAMMER_MODE_SETUP;
+	} else if (loco_setup_is_leave(message.id, message.size, message.data[0])) {
+		_setup_bus = false;
+		_mode = PROGRAMMER_MODE_ANALYSE;
 	}
 
 	const bool sent = can.send(message);

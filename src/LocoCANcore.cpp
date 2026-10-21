@@ -13,7 +13,10 @@
 #include "config.h"
 
 #include "can_protocol.h"
+#include "core/setup/setup_mode.h"
 #include "LocoCANcore.h"
+
+LOCO_SETUP_SESSION loco_setup;
 
 
 CAN_COM can;
@@ -68,6 +71,7 @@ void LocoCANcore::begin(void) {
 	// start module
 	_module.begin();
 
+	loco_setup_clear(loco_setup);
 	_module_heartbeat.begin(MODULE_HEARTBEAT_TIMEOUT);
 	#ifndef PROGRAMMER_MODULE_VERSION
 		_send_module_heartbeat();
@@ -85,12 +89,57 @@ void LocoCANcore::begin(void) {
 }
 
 
+static void loco_setup_dispatch(CAN_MESSAGE &message) {
+
+	const uint32_t now = millis();
+	const uint8_t first = message.size > 0 ? message.data[0] : 0;
+	const uint8_t ev = loco_setup_on_frame(
+		loco_setup,
+		message.id,
+		message.size,
+		first,
+		now
+	);
+
+#ifndef PROGRAMMER_MODULE_VERSION
+	if (ev == LOCO_SETUP_EV_ENTER || ev == LOCO_SETUP_EV_REFUSE || ev == LOCO_SETUP_EV_LEAVE) {
+		CAN_MESSAGE ack;
+		const uint8_t op = (ev == LOCO_SETUP_EV_LEAVE)
+			? CAN_SETUP_MODE_LEAVE
+			: CAN_SETUP_MODE_ENTER;
+		const uint8_t status = (ev == LOCO_SETUP_EV_REFUSE)
+			? CAN_SETUP_MODE_BUSY
+			: CAN_SETUP_MODE_OK;
+		loco_setup_make_ack(
+			ack,
+			(uint16_t)can.uuid(),
+			op,
+			(uint8_t)LOCO_MODULE_TYPE,
+			LOCO_MODULE_VERSION,
+			status
+		);
+		can.send(ack);
+	}
+
+	if (loco_setup_expired(loco_setup, now)) {
+		loco_setup.active = false;
+	}
+#else
+	(void)ev;
+#endif
+}
+
+
 void LocoCANcore::update(void) {
 
 	_serial_poll();
 
+	if (loco_setup_expired(loco_setup, millis())) {
+		loco_setup.active = false;
+	}
+
 	#ifndef PROGRAMMER_MODULE_VERSION
-		if (_module_heartbeat.update()) {
+		if (!loco_setup.active && _module_heartbeat.update()) {
 			_send_module_heartbeat();
 		}
 	#endif
@@ -104,6 +153,15 @@ void LocoCANcore::update(void) {
 	 */
 	while (n < 24 && can.fetch(can_message)) {
 		n++;
+		loco_setup_dispatch(can_message);
+#ifndef PROGRAMMER_MODULE_VERSION
+		if (loco_setup.active) {
+			const bool empty = can_message.id == 0 && can_message.uuid == 0 && can_message.size == 0;
+			if (!empty && !loco_setup_is_range(can_message.id)) {
+				continue;
+			}
+		}
+#endif
 		_module.update(can_message);
 	}
 
