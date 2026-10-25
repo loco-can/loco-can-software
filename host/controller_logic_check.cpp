@@ -111,6 +111,10 @@ int controller_logic_check(void) {
 		g_fails++;
 	}
 
+	in.dir = CONTROLLER_DIR_NEUTRAL;
+	nulled = true;
+	expect_status("nulled mid is on", step(CONTROLLER_STATUS_NULLED, in, nulled), CONTROLLER_STATUS_ON);
+	expect_status("mid stays on", step(CONTROLLER_STATUS_ON, in, nulled), CONTROLLER_STATUS_ON);
 	in.dir = CONTROLLER_DIR_FORWARD;
 	expect_status("direction selects ready", step(CONTROLLER_STATUS_ON, in, nulled), CONTROLLER_STATUS_READY);
 
@@ -158,8 +162,18 @@ int controller_logic_check(void) {
 		fprintf(stderr, "FAIL standby/setup must command the bus\n");
 		g_fails++;
 	}
-	if (!controller_motor_on(CONTROLLER_STATUS_ON) || controller_motor_on(CONTROLLER_STATUS_STANDBY)) {
+	if (controller_motor_on(CONTROLLER_STATUS_ON) || controller_motor_on(CONTROLLER_STATUS_STANDBY)) {
 		fprintf(stderr, "FAIL motor flag\n");
+		g_fails++;
+	}
+	if (!controller_motor_on(CONTROLLER_STATUS_READY) || !controller_motor_on(CONTROLLER_STATUS_MOVING)) {
+		fprintf(stderr, "FAIL ready/moving must enable motor\n");
+		g_fails++;
+	}
+	if (controller_direction_selected(CONTROLLER_DIR_NEUTRAL)
+		|| !controller_direction_selected(CONTROLLER_DIR_FORWARD)
+		|| !controller_direction_selected(CONTROLLER_DIR_REVERSE)) {
+		fprintf(stderr, "FAIL direction selected\n");
 		g_fails++;
 	}
 	if (!controller_transmits_speed(CONTROLLER_STATUS_MOVING) || controller_transmits_speed(CONTROLLER_STATUS_ON)) {

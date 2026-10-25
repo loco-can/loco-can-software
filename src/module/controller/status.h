@@ -62,9 +62,12 @@ inline bool controller_is_commanding(uint8_t status) {
 	return status != CONTROLLER_STATUS_OFF && status != CONTROLLER_STATUS_LOCKED;
 }
 
+inline bool controller_direction_selected(uint8_t dir) {
+	return dir != CONTROLLER_DIR_NEUTRAL;
+}
+
 inline bool controller_motor_on(uint8_t status) {
-	return status == CONTROLLER_STATUS_ON
-		|| status == CONTROLLER_STATUS_READY
+	return status == CONTROLLER_STATUS_READY
 		|| status == CONTROLLER_STATUS_MOVING;
 }
 

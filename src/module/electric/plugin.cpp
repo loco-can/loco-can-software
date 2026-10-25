@@ -359,11 +359,7 @@ uint8_t electric_status_byte(const ELECTRIC_STATUS_BITS &bits) {
 }
 
 
-static bool electric_is_moving(const ELECTRIC_OUTPUT &output, int32_t motor_voltage, uint16_t voltage_min) {
-
-	if (output.drive_pwm > 0 || output.brake_pwm > 0) {
-		return true;
-	}
+static bool electric_is_moving(int32_t motor_voltage, uint16_t voltage_min) {
 
 	return !electric_voltage_low(motor_voltage, voltage_min);
 }
@@ -405,7 +401,7 @@ ELECTRIC_STATUS_BITS electric_vehicle_status(
 	bits.mains = command.present && command.mains && !bits.error;
 	bits.drive = bits.mains && command.motor;
 	bits.ready = bits.drive && !output.direction_blocked;
-	bits.moving = electric_is_moving(output, motor_voltage, voltage_min);
+	bits.moving = electric_is_moving(motor_voltage, voltage_min);
 	bits.multi = command.multi;
 
 	if (bits.error) {

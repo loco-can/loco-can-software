@@ -98,7 +98,7 @@ byte 7:  brake 7..0
 | Field             | Controller source                        | Electric use                                              |
 | ----------------- | ---------------------------------------- | --------------------------------------------------------- |
 | `mains`           | Main switch not off, and commanding      | Must be set or outputs stay off                           |
-| `motor`           | Status `ON` / `READY` / `MOVING`         | Pantograph / “drive enabled”                              |
+| `motor`           | Status `READY` / `MOVING` (direction not mid) | Pantograph / drive enabled. Mid / `ON` keeps mains only |
 | `dir`             | Latched reverse while moving             | XOR with EEPROM `reversed`                                |
 | `up` / `down`     | Horn / horn2                             | Not used by electric (also on `0x220`)                    |
 | `error`           | Fault frame on drop to off               | Immediate cut, status error                               |
@@ -147,7 +147,7 @@ byte 2:  UUID MSB
 | Bit               | Meaning for the controller                                                  |
 | ----------------- | --------------------------------------------------------------------------- |
 | `error`           | `0x000` emergency or leftover link fault. Cab fault drive is not copied.    |
-| `moving`          | PWM active or |motor voltage| ≥ `voltage_min` → cab may enter `MOVING`      |
+| `moving`          | `|motor voltage|` ≥ change-over (`voltage_min`). PWM alone is not enough.   |
 | `ready`           | Mains + motor, direction settled, no fault                                  |
 | `mains` / `drive` | Echo of the command (cleared on error)                                      |
 | `reverse-logic`   | EEPROM direction flip from loco setup                                       |
@@ -203,7 +203,7 @@ Inputs that come from the **bus / other cab**:
 
 The cab remembers up to six vehicles. A UUID expires 2 s after the last `0x500`. That list is also the loco-setup roster and the multi-traction count.
 
-`READY` does not mean “lever off the stop”. The cab enters `READY` when mains is motor and direction is not neutral. It enters `MOVING` only when an electric module reports `moving`.
+`READY` does not mean “lever off the stop”. The cab enters `READY` only when mains is motor **and** the direction lever is not in the mid / neutral position. Mid keeps status `ON`: mains stays on, the motor flag is off, so the locomotive must not report ready. `MOVING` starts only when an electric module reports `moving`.
 
 ---
 

@@ -351,7 +351,7 @@ int electric_logic_check(void) {
 	ELECTRIC_STATUS_BITS bits = electric_vehicle_status(
 		driving(true, 1023, 0),
 		moving,
-		0,
+		400,
 		20,
 		true,
 		false,
@@ -366,6 +366,10 @@ int electric_logic_check(void) {
 	moving.direction_blocked = true;
 	bits = electric_vehicle_status(driving(true, 1023, 0), moving, 400, 20, false, false, false);
 	expect_true("blocked is not ready", !bits.ready && bits.moving);
+	bits = electric_vehicle_status(driving(true, 1023, 0), moving, 19, 20, false, false, false);
+	expect_true("below change-over is not moving", !bits.moving);
+	bits = electric_vehicle_status(driving(true, 1023, 0), moving, 20, 20, false, false, false);
+	expect_true("at change-over is moving", bits.moving);
 
 	bits = electric_vehicle_status(driving(false, 0, 0), out, 0, 20, false, true, false);
 	expect_true("link fault is error", bits.error && !bits.ready && !bits.mains);
@@ -377,6 +381,11 @@ int electric_logic_check(void) {
 	faulted.error = false;
 	bits = electric_vehicle_status(faulted, out, 0, 20, false, false, false);
 	expect_true("next good drive is not latched error", !bits.error);
+
+	ELECTRIC_COMMAND mid = driving(false, 0, 0);
+	mid.motor = false;
+	bits = electric_vehicle_status(mid, out, 0, 20, false, false, false);
+	expect_true("mid lever is not ready", bits.mains && !bits.drive && !bits.ready);
 
 	bits = electric_vehicle_status(driving(false, 0, 0), out, 0, 20, false, false, true);
 	expect_true("setup idle report", bits.mains && bits.drive && bits.ready && !bits.moving);

@@ -92,7 +92,7 @@ uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool
 			if (in.mains != CONTROLLER_MAINS_MOTOR) {
 				return CONTROLLER_STATUS_STANDBY;
 			}
-			if (in.dir != CONTROLLER_DIR_NEUTRAL) {
+			if (controller_direction_selected(in.dir)) {
 				return CONTROLLER_STATUS_READY;
 			}
 			return CONTROLLER_STATUS_ON;
@@ -105,7 +105,7 @@ uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool
 			if (in.mains != CONTROLLER_MAINS_MOTOR) {
 				return CONTROLLER_STATUS_STANDBY;
 			}
-			if (in.dir != CONTROLLER_DIR_NEUTRAL) {
+			if (controller_direction_selected(in.dir)) {
 				if (!nulled && !in.drive_zero) {
 					nulled = false;
 					return CONTROLLER_STATUS_NULLED;
@@ -123,7 +123,7 @@ uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool
 			if (in.bus_moving) {
 				return CONTROLLER_STATUS_MOVING;
 			}
-			if (in.dir == CONTROLLER_DIR_NEUTRAL) {
+			if (!controller_direction_selected(in.dir)) {
 				return CONTROLLER_STATUS_ON;
 			}
 			if (in.mains != CONTROLLER_MAINS_MOTOR) {
@@ -140,7 +140,7 @@ uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool
 				if (in.mains != CONTROLLER_MAINS_MOTOR) {
 					return CONTROLLER_STATUS_STANDBY;
 				}
-				if (in.dir == CONTROLLER_DIR_NEUTRAL) {
+				if (!controller_direction_selected(in.dir)) {
 					return CONTROLLER_STATUS_ON;
 				}
 				return CONTROLLER_STATUS_READY;
