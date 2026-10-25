@@ -421,6 +421,7 @@ void MODULE_ELECTRIC::update(CAN_MESSAGE message) {
 		 * link fault — otherwise status stays error until the next drive.
 		 */
 		_link_fault = false;
+		_emergency = false;
 		_command.mains = false;
 		_command.motor = false;
 		_command.drive = 0;

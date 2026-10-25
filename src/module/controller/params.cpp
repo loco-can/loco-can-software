@@ -3,6 +3,7 @@
  */
 
 #include "params.h"
+#include "gauge.h"
 
 #include <string.h>
 
@@ -70,6 +71,7 @@ void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, 
 	controller_params_fill_switch(params, CONTROLLER_PARAM_LIGHT2_COUNT, CONTROLLER_PARAM_LIGHT2_POINTS, resolution);
 
 	controller_params_init_levers(params, resolution, dual_brake);
+	controller_params_init_gauges(params);
 	controller_params_copy_name(params, "CTRL");
 }
 
@@ -94,6 +96,22 @@ void controller_params_init_levers(CONTROLLER_PARAMS &params, uint16_t resolutio
 		controller_params_put16(params, CONTROLLER_PARAM_DRIVE_FULL, full);
 		controller_params_put16(params, CONTROLLER_PARAM_BRAKE_ZERO, center);
 		controller_params_put16(params, CONTROLLER_PARAM_BRAKE_FULL, 0);
+	}
+}
+
+
+void controller_params_init_gauges(CONTROLLER_PARAMS &params) {
+
+	static const uint8_t modes[3] = {
+		CONTROLLER_PARAM_GAUGE_BATT_MODE,
+		CONTROLLER_PARAM_GAUGE_MOTOR_MODE,
+		CONTROLLER_PARAM_GAUGE_CURRENT_MODE
+	};
+
+	for (uint8_t i = 0; i < 3; i++) {
+		params.bytes[modes[i]] = CONTROLLER_GAUGE_SERVO;
+		controller_params_put16(params, (uint8_t)(modes[i] + 1), 0);
+		controller_params_put16(params, (uint8_t)(modes[i] + 3), CONTROLLER_GAUGE_SERVO_MAX);
 	}
 }
 
@@ -149,6 +167,21 @@ int8_t controller_params_live_channel(uint8_t index) {
 			return 5;
 		default:
 			return -1;
+	}
+}
+
+
+uint8_t controller_params_live_gauge_mode(uint8_t index) {
+
+	switch (index) {
+		case CONTROLLER_PARAM_LIVE_GAUGE_BATT:
+			return CONTROLLER_PARAM_GAUGE_BATT_MODE;
+		case CONTROLLER_PARAM_LIVE_GAUGE_MOTOR:
+			return CONTROLLER_PARAM_GAUGE_MOTOR_MODE;
+		case CONTROLLER_PARAM_LIVE_GAUGE_CURRENT:
+			return CONTROLLER_PARAM_GAUGE_CURRENT_MODE;
+		default:
+			return 0;
 	}
 }
 

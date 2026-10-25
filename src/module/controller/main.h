@@ -171,12 +171,12 @@ buttons
 #include "../../core/analogSwitch/analogSwitch.h"
 #include "../../core/button/intelliButton.h"
 #include "../../core/led/intelliLed.h"
-#include "../../core/servo/intelliServo.h"
 #include "../../core/timeout/intellitimeout.h"
 #include "../../core/flags/flags.h"
 
 #include "status.h"
 #include "params.h"
+#include "gauge.h"
 
 #if defined(CONTROLLER_MODULE_VERSION)
 	#define LOCO_MODULE_TYPE MODULE_TYPE
@@ -226,6 +226,10 @@ class MODULE_CONTROLLER {
 		void _apply_params(void);
 		void _handle_setup(CAN_MESSAGE message);
 		bool _live_analog(uint8_t index, uint16_t &adc);
+		bool _gauge_preview(uint8_t live_index, uint16_t &value) const;
+		bool _set_gauge_preview(uint8_t live_index, uint16_t value);
+		void _note_gauge(uint16_t id, uint16_t uuid, const uint8_t *data, uint8_t size);
+		void _write_gauges(bool park);
 
 		CAN_MESSAGE _message;
 
@@ -239,6 +243,8 @@ class MODULE_CONTROLLER {
 		bool _bus_moving;
 		bool _foreign;
 		bool _fault_frame;
+		bool _fault_latched;
+		bool _idle_frame;
 		bool _setup_release;
 		bool _setup_ignore_release;
 
@@ -279,6 +285,24 @@ class MODULE_CONTROLLER {
 
 		ANALOGSWITCH _light_switch;
 		ANALOGSWITCH _light2_switch;
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+		struct {
+			uint16_t can_id;
+			uint16_t value;
+			uint16_t full_scale;
+			uint16_t seen;
+			uint16_t out_min;
+			uint16_t out_max;
+			uint16_t preview;
+			uint8_t preview_on;
+			uint8_t port;
+			uint8_t param_mode;
+			uint8_t mode;
+			uint8_t signed_abs;
+		} _gauges[3];
+		uint8_t _gauge_count;
+#endif
 
 #if defined(CONTROLLER_STATUS_RED_PORT) && defined(CONTROLLER_STATUS_GREEN_PORT)
 		void _update_led(void);

@@ -65,6 +65,19 @@ int setup_mode_check(void) {
 	expect_true("inactive after abort", !session.active);
 
 	loco_setup_clear(session);
+	loco_setup_on_frame(session, CAN_ID_REQUEST, 1, CAN_SETUP_MODE_ENTER, 8000);
+	ev = loco_setup_on_frame(
+		session, CAN_ID_DRIVE_HEARTBEAT, 0, 0, 8000 + CAN_SETUP_MODE_HOLD_MS - 1
+	);
+	expect_u8("leftover heartbeat ignored", ev, LOCO_SETUP_EV_NONE);
+	expect_true("stay in after leftover", session.active);
+	ev = loco_setup_on_frame(
+		session, CAN_ID_DRIVE_HEARTBEAT, 0, 0, 8000 + CAN_SETUP_MODE_HOLD_MS
+	);
+	expect_u8("late heartbeat aborts", ev, LOCO_SETUP_EV_ABORT);
+	expect_true("inactive after late heartbeat", !session.active);
+
+	loco_setup_clear(session);
 	loco_setup_on_frame(session, CAN_ID_REQUEST, 1, CAN_SETUP_MODE_ENTER, 10);
 	expect_true(
 		"expired",

@@ -19,9 +19,22 @@
  *   39..40 drive full
  *   41..42 brake zero
  *   43..44 brake full
+ *   45     battery gauge mode (0 analog PWM, 1 servo)
+ *   46..47 battery gauge output min
+ *   48..49 battery gauge output max
+ *   50     motor-voltage gauge mode
+ *   51..52 motor-voltage gauge output min
+ *   53..54 motor-voltage gauge output max
+ *   55     current gauge mode
+ *   56..57 current gauge output min
+ *   58..59 current gauge output max
  *
  * Live ADC (GET 0x7FF UUID index, not stored):
- *   45 mains, 47 dir, 49 light, 51 light2, 53 drive, 55 brake
+ *   60 mains, 62 dir, 64 light, 66 light2, 68 drive, 70 brake
+ *
+ * Live gauge preview (GET/SET, not stored). Moves the output in
+ * module setup so the programmer slider can find min/max:
+ *   72 battery, 74 motor voltage, 76 current
  *
  * CAN id 0x700 writes the module name. Ids 0x701.. write parameter bytes.
  */
@@ -57,19 +70,34 @@
 #define CONTROLLER_PARAM_BRAKE_ZERO 41
 #define CONTROLLER_PARAM_BRAKE_FULL 43
 
-#define CONTROLLER_PARAM_BYTES 45
+#define CONTROLLER_PARAM_GAUGE_BATT_MODE 45
+#define CONTROLLER_PARAM_GAUGE_BATT_MIN 46
+#define CONTROLLER_PARAM_GAUGE_BATT_MAX 48
+#define CONTROLLER_PARAM_GAUGE_MOTOR_MODE 50
+#define CONTROLLER_PARAM_GAUGE_MOTOR_MIN 51
+#define CONTROLLER_PARAM_GAUGE_MOTOR_MAX 53
+#define CONTROLLER_PARAM_GAUGE_CURRENT_MODE 55
+#define CONTROLLER_PARAM_GAUGE_CURRENT_MIN 56
+#define CONTROLLER_PARAM_GAUGE_CURRENT_MAX 58
+
+#define CONTROLLER_PARAM_BYTES_V1 45
+#define CONTROLLER_PARAM_BYTES 60
 #define CONTROLLER_PARAM_NAME_LEN 15
 
 /* Live ADC (GET only, not EEPROM). Programmer capture uses these. */
-#define CONTROLLER_PARAM_LIVE_MAINS 45
-#define CONTROLLER_PARAM_LIVE_DIR 47
-#define CONTROLLER_PARAM_LIVE_LIGHT 49
-#define CONTROLLER_PARAM_LIVE_LIGHT2 51
-#define CONTROLLER_PARAM_LIVE_DRIVE 53
-#define CONTROLLER_PARAM_LIVE_BRAKE 55
+#define CONTROLLER_PARAM_LIVE_MAINS 60
+#define CONTROLLER_PARAM_LIVE_DIR 62
+#define CONTROLLER_PARAM_LIVE_LIGHT 64
+#define CONTROLLER_PARAM_LIVE_LIGHT2 66
+#define CONTROLLER_PARAM_LIVE_DRIVE 68
+#define CONTROLLER_PARAM_LIVE_BRAKE 70
+#define CONTROLLER_PARAM_LIVE_GAUGE_BATT 72
+#define CONTROLLER_PARAM_LIVE_GAUGE_MOTOR 74
+#define CONTROLLER_PARAM_LIVE_GAUGE_CURRENT 76
 
 #define CONTROLLER_PARAM_MAGIC 0xC3
-#define CONTROLLER_PARAM_SCHEMA 1
+#define CONTROLLER_PARAM_SCHEMA 2
+#define CONTROLLER_PARAM_SCHEMA_V1 1
 
 struct CONTROLLER_PARAMS {
 	uint8_t bytes[CONTROLLER_PARAM_BYTES];
@@ -84,6 +112,7 @@ struct CONTROLLER_PARAM_RESULT {
 
 void controller_params_defaults(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake, uint32_t module_version);
 void controller_params_init_levers(CONTROLLER_PARAMS &params, uint16_t resolution, bool dual_brake);
+void controller_params_init_gauges(CONTROLLER_PARAMS &params);
 bool controller_params_levers_look_dual(const CONTROLLER_PARAMS &params, uint16_t resolution);
 
 uint16_t controller_params_get16(const CONTROLLER_PARAMS &params, uint8_t index);
@@ -94,6 +123,9 @@ uint8_t controller_params_points(const CONTROLLER_PARAMS &params, uint8_t count_
 
 /* 0=mains 1=dir 2=light 3=light2 4=drive 5=brake, or -1 */
 int8_t controller_params_live_channel(uint8_t index);
+
+/* mode-byte index of the previewed gauge, or 0 */
+uint8_t controller_params_live_gauge_mode(uint8_t index);
 
 CONTROLLER_PARAM_RESULT controller_params_on_can(
 	CONTROLLER_PARAMS &params,

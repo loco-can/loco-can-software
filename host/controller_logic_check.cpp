@@ -5,6 +5,7 @@
 #include "can_protocol.h"
 #include "core/analogSwitch/analog_switch_logic.h"
 #include "module/controller/drive_codec.h"
+#include "module/controller/gauge.h"
 #include "module/controller/params.h"
 #include "module/controller/status.h"
 
@@ -41,9 +42,11 @@ static CONTROLLER_INPUTS idle(void) {
 	in.bus_free = true;
 	in.foreign = false;
 	in.bus_moving = false;
-	in.system_error = false;
 	in.horn = false;
 	in.horn2 = false;
+	in.emergency = false;
+	in.vehicle_error = false;
+	in.fault_latched = false;
 	return in;
 }
 
@@ -82,14 +85,18 @@ int controller_logic_check(void) {
 
 	in = idle();
 	in.mains = CONTROLLER_MAINS_ON;
-	in.system_error = true;
-	expect_status("standby system error", step(CONTROLLER_STATUS_STANDBY, in, nulled), CONTROLLER_STATUS_OFF);
+	in.emergency = true;
+	expect_status("standby emergency", step(CONTROLLER_STATUS_STANDBY, in, nulled), CONTROLLER_STATUS_OFF);
+	in.fault_latched = true;
 	expect_status("fault stays off until mains off", step(CONTROLLER_STATUS_OFF, in, nulled), CONTROLLER_STATUS_OFF);
 	in.mains = CONTROLLER_MAINS_OFF;
+	in.fault_latched = false;
 	expect_status("mains off after fault", step(CONTROLLER_STATUS_OFF, in, nulled), CONTROLLER_STATUS_OFF);
 	in.mains = CONTROLLER_MAINS_ON;
-	in.system_error = false;
+	in.emergency = false;
+	in.vehicle_error = true;
 	expect_status("mains cycle after fault", step(CONTROLLER_STATUS_OFF, in, nulled), CONTROLLER_STATUS_STANDBY);
+	expect_status("standby ignores vehicle error", step(CONTROLLER_STATUS_STANDBY, in, nulled), CONTROLLER_STATUS_STANDBY);
 
 	in = idle();
 	in.mains = CONTROLLER_MAINS_MOTOR;
@@ -126,8 +133,8 @@ int controller_logic_check(void) {
 	in = idle();
 	in.mains = CONTROLLER_MAINS_MOTOR;
 	in.dir = CONTROLLER_DIR_FORWARD;
-	in.system_error = true;
-	expect_status("ready fault to off", step(CONTROLLER_STATUS_READY, in, nulled), CONTROLLER_STATUS_OFF);
+	in.vehicle_error = true;
+	expect_status("ready vehicle error to off", step(CONTROLLER_STATUS_READY, in, nulled), CONTROLLER_STATUS_OFF);
 
 	in = idle();
 	in.mains = CONTROLLER_MAINS_ON;
@@ -327,10 +334,34 @@ int controller_logic_check(void) {
 	expect_u8("captured neutral stays 1", analog_switch_nearest(dir_pts, 3, 500), 1);
 	expect_u8("captured forward stays 2", analog_switch_nearest(dir_pts, 3, 200), 2);
 
+	expect_u8("gauge default mode", patched.bytes[CONTROLLER_PARAM_GAUGE_BATT_MODE], CONTROLLER_GAUGE_SERVO);
+	expect_u16("gauge default max", controller_params_get16(patched, CONTROLLER_PARAM_GAUGE_BATT_MAX), CONTROLLER_GAUGE_SERVO_MAX);
+	expect_u16("gauge zero", controller_gauge_output(0, 1023, 0, 180), 0);
+	expect_u16("gauge full", controller_gauge_output(1023, 1023, 0, 180), 180);
+	expect_u16("gauge invert", controller_gauge_output(1023, 1023, 180, 0), 0);
+	expect_u16("gauge abs", controller_gauge_reading((uint16_t)(int16_t)-200, true), 200);
+
+	uint8_t gauge_frame[4] = { 0x38, 0xFF, 0xFF, 0x03 };
+	uint16_t gauge_value = 9;
+	uint16_t gauge_full = 9;
+	if (!controller_gauge_unpack(gauge_frame, 4, true, gauge_value, gauge_full)) {
+		fprintf(stderr, "FAIL unpack motor frame\n");
+		g_fails++;
+	}
+	expect_u16("unpack abs motor", gauge_value, 200);
+	expect_u16("unpack full scale", gauge_full, 1023);
+
 	expect_u8("live mains channel", (uint8_t)controller_params_live_channel(CONTROLLER_PARAM_LIVE_MAINS), 0);
 	expect_u8("live drive channel", (uint8_t)controller_params_live_channel(CONTROLLER_PARAM_LIVE_DRIVE), 4);
 	if (controller_params_live_channel(CONTROLLER_PARAM_DRIVE_ZERO) >= 0) {
 		fprintf(stderr, "FAIL stored points must not map to live analog\n");
+		g_fails++;
+	}
+	expect_u8("live gauge batt", controller_params_live_gauge_mode(CONTROLLER_PARAM_LIVE_GAUGE_BATT), CONTROLLER_PARAM_GAUGE_BATT_MODE);
+	expect_u8("live gauge motor", controller_params_live_gauge_mode(CONTROLLER_PARAM_LIVE_GAUGE_MOTOR), CONTROLLER_PARAM_GAUGE_MOTOR_MODE);
+	expect_u8("live gauge current", controller_params_live_gauge_mode(CONTROLLER_PARAM_LIVE_GAUGE_CURRENT), CONTROLLER_PARAM_GAUGE_CURRENT_MODE);
+	if (controller_params_live_gauge_mode(CONTROLLER_PARAM_LIVE_MAINS) != 0) {
+		fprintf(stderr, "FAIL analog live must not map to a gauge\n");
 		g_fails++;
 	}
 

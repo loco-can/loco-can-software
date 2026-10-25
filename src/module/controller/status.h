@@ -43,7 +43,9 @@ struct CONTROLLER_INPUTS {
 	bool bus_free;
 	bool foreign;
 	bool bus_moving;
-	bool system_error;
+	bool emergency;
+	bool vehicle_error;
+	bool fault_latched;
 };
 
 /* Two programmed points are reverse / forward. Three are reverse / neutral / forward. */

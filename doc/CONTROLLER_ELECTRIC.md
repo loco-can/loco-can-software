@@ -47,12 +47,12 @@ Only one controller may command. A second cab that sees `0x010` or `0x400` from 
 | Frame                             | Period                     | Sender                | Lost-link effect                                                                                |
 | --------------------------------- | -------------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
 | `CAN_ID_DRIVE_HEARTBEAT` `0x010`  | 50 ms                      | Commanding controller | Other cabs: bus occupied for 250 ms (`5 × 50`). Does **not** refresh the electric drive timeout |
-| `CAN_ID_DRIVE` `0x400`            | 100 ms                     | Commanding controller | Electric: command stale after 300 ms (`3 × 100`). If mains was on, `link_fault`                 |
+| `CAN_ID_DRIVE` `0x400`            | 100 ms                     | Commanding controller | Electric: command stale after 300 ms (`3 × 100`). Timeout is idle, not error                    |
 | `CAN_ID_SIGNAL` `0x220`           | 100 ms                     | Commanding controller | Horn bits only; electric ignores this ID                                                        |
 | `CAN_ID_LIGHT` `0x410`            | 100 ms                     | Commanding controller | Switch modules; idle cabs copy instrument light                                                 |
 | `CAN_ID_LOCO_SETUP` `0x600`       | 100 ms while in loco setup | Commanding controller | Electric leaves loco-setup after 500 ms without frames                                          |
 | `CAN_ID_VEHICLE_STATUS` `0x500`   | 100 ms                     | Electric              | Controller drops the vehicle after 2 s (`2 ×` module heartbeat)                                 |
-| Sensor voltages                   | 200 ms                     | Electric              | Display / gauges only; controller does not use them for status                                  |
+| Sensor voltages / current         | 200 ms                     | Electric              | Controller gauges (`0x320` battery, `0x310` motor, `0x110` current). Not used for status        |
 | `CAN_ID_MODULE_HEARTBEAT` `0x510` | 1000 ms                    | Every module          | Presence for the programmer. Stopped in module setup                                            |
 
 
@@ -146,7 +146,7 @@ byte 2:  UUID MSB
 
 | Bit               | Meaning for the controller                                                  |
 | ----------------- | --------------------------------------------------------------------------- |
-| `error`           | Link loss, emergency, or drive `error` → cab `system_error` → drop to `OFF` |
+| `error`           | `0x000` emergency or leftover link fault. Cab fault drive is not copied.    |
 | `moving`          | PWM active or |motor voltage| ≥ `voltage_min` → cab may enter `MOVING`      |
 | `ready`           | Mains + motor, direction settled, no fault                                  |
 | `mains` / `drive` | Echo of the command (cleared on error)                                      |
@@ -193,7 +193,8 @@ The controller does not consume these for its status machine.
 Inputs that come from the **electric** side (via `0x500`):
 
 - `bus_moving` — any remembered vehicle has `MOVING`
-- `vehicle_error` — any remembered vehicle has `ERROR` (together with CAN emergency and the cab’s own emergency brake → `system_error`)
+- `vehicle_error` — any remembered vehicle has `ERROR` (cuts motor-on states only; standby keeps sending mains)
+- `emergency` — `0x000` or both horn buttons (cuts every commanding state)
 
 Inputs that come from the **bus / other cab**:
 
@@ -217,16 +218,16 @@ Controller                         Electric
     │                                   │  stale drive → idle, not error
     │ 0x500 error                       │
     │◄──────────────────────────────────│  outputs off, status error
-    │ system_error → OFF                │
-    │ 0x400 error, brake 1023           │
+    │ motor-on → OFF, standby stays     │
+    │ 0x400 error only on motor cut     │
     │──────────────────────────────────►│  command.error → cut
 ```
 
-A lone `0x010` does not keep the motor alive. If `0x400` stops, the electric module drops to idle and clears `link_fault`. A quiet bus (no controller heartbeat) is not an error.
+A lone `0x010` does not keep the motor alive. If `0x400` stops, the electric module drops to idle and clears `link_fault` and a latched `0x000`. A quiet bus is not an error.
 
-The next valid `0x400` also clears `link_fault`. A cab fault drive (`error` bit) cuts outputs but is **not** copied into `0x500` error — otherwise the cab sees its own cut, drops to `OFF`, sends another error frame, and the pair oscillates. After `system_error` the cab stays `OFF` until mains is switched off.
+The next valid `0x400` also clears `link_fault`. A cab fault drive (`error` bit) cuts outputs but is **not** copied into `0x500` error — otherwise the cab sees its own cut, drops to `OFF`, sends another error frame, and never publishes mains again. After a horn / `0x000` cut the cab stays `OFF` until mains is switched off. After that cycle it returns to standby even if `0x500` still shows error, and sends a clean mains-off then mains-on drive so the locomotive can recover.
 
-`CAN_ID_EMERGENCY` `0x000` is different: it stays until a drive frame with mains off and no error bit.
+`CAN_ID_EMERGENCY` `0x000` stays until a drive frame with mains off and no error bit, or until the drive timeout.
 
 ---
 
@@ -289,7 +290,7 @@ Effective throttle is `drive × power / 1023`. Brake either subtracts from drive
 ### Electric depends on the controller for
 
 - Live `0x400` (mains, motor, direction, 10-bit drive / power / brake, fault)
-- Periodic `0x400` within 300 ms, otherwise link fault if mains was on
+- Periodic `0x400` within 300 ms, otherwise idle (not error)
 - `0x000` emergency
 - `0x600` to select the loco and persist reverse
 - Absence of module-setup (`loco_setup.active`): in that mode the motor is forced off and only EEPROM GET/SET run
@@ -300,7 +301,7 @@ Electric does **not** need `0x010` to stay enabled. It does not follow `0x220` o
 
 - `0x500` so vehicles appear at all (standby LED “no loco” when the list is empty)
 - `0x500` `moving` to leave `READY` for `MOVING`
-- `0x500` `error` to drop the train to `OFF`
+- `0x500` `error` to cut motor-on states; standby keeps commanding mains
 - At least one `0x500` UUID for loco-setup and the `multi` / `loco` fields on `0x400`
 
 The controller does **not** use electric voltage frames for interlocks. Motor-voltage gating of direction lives entirely on the electric module.

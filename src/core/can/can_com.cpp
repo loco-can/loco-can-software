@@ -124,8 +124,10 @@ bool CAN_COM::_begin(long speed) {
 	#endif
 	
 	uint8_t tries = 0;
+	const uint8_t cs = _cs;
+	const int irq = _int;
 
-	while (!_can_handler.begin(speed, _cs, _int)) {
+	while (!_can_handler.begin(speed, cs, irq)) {
 
 		tries++;
 

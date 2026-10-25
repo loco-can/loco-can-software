@@ -7,6 +7,10 @@
 
 #include "MCP2515.h"
 
+#ifdef MODULE_ARCH_AVR
+#include <avr/pgmspace.h>
+#endif
+
 #define REG_BFPCTRL                0x0c
 #define REG_TXRTSCTRL              0x0d
 
@@ -95,50 +99,76 @@ int MCP2515Class::begin(long baudRate)
     return 0;
   }
 
-  const struct {
-    long clockFrequency;
-    long baudRate;
+  /*
+   * Keep this table off the stack. A local copy is ~400 bytes and
+   * smashes AVR BSS (CS/INT become garbage on the second begin try).
+   */
+  struct CnfRow {
+    int32_t clockFrequency;
+    int32_t baudRate;
     uint8_t cnf[3];
-  } CNF_MAPPER[] = {
-    {  (long)8E6, (long)1000E3, { 0x00, 0x80, 0x00 } },
-    {  (long)8E6, (long)666666, { 0xC0, 0xB8, 0x01 } },
-    {  (long)8E6,  (long)500E3, { 0x00, 0x90, 0x02 } },
-    {  (long)8E6,  (long)250E3, { 0x00, 0xb1, 0x05 } },
-    {  (long)8E6,  (long)200E3, { 0x00, 0xb4, 0x06 } },
-    {  (long)8E6,  (long)125E3, { 0x01, 0xb1, 0x05 } },
-    {  (long)8E6,  (long)100E3, { 0x01, 0xb4, 0x06 } },
-    {  (long)8E6,   (long)80E3, { 0x01, 0xbf, 0x07 } },
-    {  (long)8E6,   (long)50E3, { 0x03, 0xb4, 0x06 } },
-    {  (long)8E6,   (long)40E3, { 0x03, 0xbf, 0x07 } },
-    {  (long)8E6,   (long)20E3, { 0x07, 0xbf, 0x07 } },
-    {  (long)8E6,   (long)10E3, { 0x0f, 0xbf, 0x07 } },
-    {  (long)8E6,    (long)5E3, { 0x1f, 0xbf, 0x07 } },
-
-    { (long)16E6, (long)1000E3, { 0x00, 0xd0, 0x82 } },
-    { (long)16E6, (long)666666, { 0xC0, 0xF8, 0x81 } },
-    { (long)16E6,  (long)500E3, { 0x00, 0xf0, 0x86 } },
-    { (long)16E6,  (long)250E3, { 0x41, 0xf1, 0x85 } },
-    { (long)16E6,  (long)200E3, { 0x01, 0xfa, 0x87 } },
-    { (long)16E6,  (long)125E3, { 0x03, 0xf0, 0x86 } },
-    { (long)16E6,  (long)100E3, { 0x03, 0xfa, 0x87 } },
-    { (long)16E6,   (long)80E3, { 0x03, 0xff, 0x87 } },
-    { (long)16E6,   (long)50E3, { 0x07, 0xfa, 0x87 } },
-    { (long)16E6,   (long)40E3, { 0x07, 0xff, 0x87 } },
-    { (long)16E6,   (long)20E3, { 0x0f, 0xff, 0x87 } },
-    { (long)16E6,   (long)10E3, { 0x1f, 0xff, 0x87 } },
-    { (long)16E6,    (long)5E3, { 0x3f, 0xff, 0x87 } },
   };
 
-  const uint8_t* cnf = NULL;
+#ifdef MODULE_ARCH_AVR
+  static const CnfRow CNF_MAPPER[] PROGMEM = {
+#else
+  static const CnfRow CNF_MAPPER[] = {
+#endif
+    {  8000000L, 1000000L, { 0x00, 0x80, 0x00 } },
+    {  8000000L,  666666L, { 0xC0, 0xB8, 0x01 } },
+    {  8000000L,  500000L, { 0x00, 0x90, 0x02 } },
+    {  8000000L,  250000L, { 0x00, 0xb1, 0x05 } },
+    {  8000000L,  200000L, { 0x00, 0xb4, 0x06 } },
+    {  8000000L,  125000L, { 0x01, 0xb1, 0x05 } },
+    {  8000000L,  100000L, { 0x01, 0xb4, 0x06 } },
+    {  8000000L,   80000L, { 0x01, 0xbf, 0x07 } },
+    {  8000000L,   50000L, { 0x03, 0xb4, 0x06 } },
+    {  8000000L,   40000L, { 0x03, 0xbf, 0x07 } },
+    {  8000000L,   20000L, { 0x07, 0xbf, 0x07 } },
+    {  8000000L,   10000L, { 0x0f, 0xbf, 0x07 } },
+    {  8000000L,    5000L, { 0x1f, 0xbf, 0x07 } },
+    { 16000000L, 1000000L, { 0x00, 0xd0, 0x82 } },
+    { 16000000L,  666666L, { 0xC0, 0xF8, 0x81 } },
+    { 16000000L,  500000L, { 0x00, 0xf0, 0x86 } },
+    { 16000000L,  250000L, { 0x41, 0xf1, 0x85 } },
+    { 16000000L,  200000L, { 0x01, 0xfa, 0x87 } },
+    { 16000000L,  125000L, { 0x03, 0xf0, 0x86 } },
+    { 16000000L,  100000L, { 0x03, 0xfa, 0x87 } },
+    { 16000000L,   80000L, { 0x03, 0xff, 0x87 } },
+    { 16000000L,   50000L, { 0x07, 0xfa, 0x87 } },
+    { 16000000L,   40000L, { 0x07, 0xff, 0x87 } },
+    { 16000000L,   20000L, { 0x0f, 0xff, 0x87 } },
+    { 16000000L,   10000L, { 0x1f, 0xff, 0x87 } },
+    { 16000000L,    5000L, { 0x3f, 0xff, 0x87 } },
+  };
+
+  uint8_t cnf[3];
+  bool found = false;
 
   for (unsigned int i = 0; i < (sizeof(CNF_MAPPER) / sizeof(CNF_MAPPER[0])); i++) {
-    if (CNF_MAPPER[i].clockFrequency == _clockFrequency && CNF_MAPPER[i].baudRate == baudRate) {
-      cnf = CNF_MAPPER[i].cnf;
+#ifdef MODULE_ARCH_AVR
+    const int32_t clockFrequency = (int32_t)pgm_read_dword(&CNF_MAPPER[i].clockFrequency);
+    const int32_t rowBaud = (int32_t)pgm_read_dword(&CNF_MAPPER[i].baudRate);
+#else
+    const int32_t clockFrequency = CNF_MAPPER[i].clockFrequency;
+    const int32_t rowBaud = CNF_MAPPER[i].baudRate;
+#endif
+    if (clockFrequency == _clockFrequency && rowBaud == baudRate) {
+#ifdef MODULE_ARCH_AVR
+      cnf[0] = pgm_read_byte(&CNF_MAPPER[i].cnf[0]);
+      cnf[1] = pgm_read_byte(&CNF_MAPPER[i].cnf[1]);
+      cnf[2] = pgm_read_byte(&CNF_MAPPER[i].cnf[2]);
+#else
+      cnf[0] = CNF_MAPPER[i].cnf[0];
+      cnf[1] = CNF_MAPPER[i].cnf[1];
+      cnf[2] = CNF_MAPPER[i].cnf[2];
+#endif
+      found = true;
       break;
     }
   }
 
-  if (cnf == NULL) {
+  if (!found) {
     return 0;
   }
 

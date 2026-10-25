@@ -8,11 +8,16 @@
 uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool &nulled) {
 
 	/*
-	 * A vehicle error, CAN emergency or the local emergency brake
-	 * drops every driving state back to off. Setup is included so a
-	 * fault cannot leave the locomotives in setup mode.
+	 * Horn / 0x000 cut every commanding state, including standby and
+	 * loco-setup. A 0x500 error only cuts motor-on states. Standby must
+	 * keep publishing mains=1 so the locomotive can clear a latched
+	 * status error.
 	 */
-	if (in.system_error && controller_is_commanding(status)) {
+	if (in.emergency && controller_is_commanding(status)) {
+		nulled = false;
+		return CONTROLLER_STATUS_OFF;
+	}
+	if (in.vehicle_error && controller_motor_on(status)) {
 		nulled = false;
 		return CONTROLLER_STATUS_OFF;
 	}
@@ -26,11 +31,11 @@ uint8_t controller_next_status(uint8_t status, const CONTROLLER_INPUTS &in, bool
 			}
 			/*
 			 * Stay off after a fault until the mains switch is cycled.
-			 * Returning to standby while the vehicle still reports error
-			 * sends another fault drive every loop and the cab never
-			 * publishes a clean 0x400.
+			 * Vehicle error alone must not block standby after that
+			 * cycle — otherwise the cab never sends a clean 0x400 and
+			 * the locomotive cannot leave error.
 			 */
-			if (in.system_error) {
+			if (in.fault_latched) {
 				return CONTROLLER_STATUS_OFF;
 			}
 			if (!in.bus_free) {

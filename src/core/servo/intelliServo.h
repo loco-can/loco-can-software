@@ -19,6 +19,7 @@ class INTELLISERVO {
 	public:
 		INTELLISERVO(void);
 		void begin(uint8_t _port);
+		void end(void);
 		void set_limits(uint16_t min, uint16_t max); // set min, max motor limits
 		void set_value_limits(uint16_t, uint16_t); // set min max input value
 

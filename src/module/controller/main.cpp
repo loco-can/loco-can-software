@@ -20,7 +20,7 @@ extern CAN_COM can;
 #define CONTROLLER_BUTTON_SHORT 2
 
 #define CONTROLLER_VEHICLE_TIMEOUT (MODULE_HEARTBEAT_TIMEOUT * 2)
-#define CONTROLLER_EEPROM_BYTES 80
+#define CONTROLLER_EEPROM_BYTES 96
 
 
 #ifdef MODULE_CONTROLLER_CONFIG_H
@@ -89,24 +89,45 @@ void MODULE_CONTROLLER::_load_params(void) {
 	uint8_t schema = EEPROM.read(1);
 	uint8_t stored_version = EEPROM.read(2);
 
-	if (magic != CONTROLLER_PARAM_MAGIC || schema != CONTROLLER_PARAM_SCHEMA || stored_version != version) {
+	if (magic != CONTROLLER_PARAM_MAGIC || stored_version != version
+		|| (schema != CONTROLLER_PARAM_SCHEMA && schema != CONTROLLER_PARAM_SCHEMA_V1)) {
 		controller_params_defaults(_params, PLATFORM_ANALOG_RESOLUTION, dual, CONTROLLER_MODULE_VERSION);
 		_save_params();
 		return;
 	}
 
+	uint8_t stored_bytes = CONTROLLER_PARAM_BYTES;
+	if (schema == CONTROLLER_PARAM_SCHEMA_V1) {
+		stored_bytes = CONTROLLER_PARAM_BYTES_V1;
+	}
+
 	for (uint8_t i = 0; i < CONTROLLER_PARAM_BYTES; i++) {
+		_params.bytes[i] = 0;
+	}
+
+	for (uint8_t i = 0; i < stored_bytes; i++) {
 		_params.bytes[i] = EEPROM.read((int)(3 + i));
 	}
 
 	for (uint8_t i = 0; i < CONTROLLER_PARAM_NAME_LEN; i++) {
-		_params.name[i] = (char)EEPROM.read((int)(3 + CONTROLLER_PARAM_BYTES + i));
+		_params.name[i] = (char)EEPROM.read((int)(3 + stored_bytes + i));
 	}
 	_params.name[CONTROLLER_PARAM_NAME_LEN] = 0;
 	_params.bytes[CONTROLLER_PARAM_VERSION] = version;
 
+	bool changed = false;
+
+	if (schema == CONTROLLER_PARAM_SCHEMA_V1) {
+		controller_params_init_gauges(_params);
+		changed = true;
+	}
+
 	if (!dual && controller_params_levers_look_dual(_params, PLATFORM_ANALOG_RESOLUTION)) {
 		controller_params_init_levers(_params, PLATFORM_ANALOG_RESOLUTION, false);
+		changed = true;
+	}
+
+	if (changed) {
 		_save_params();
 	}
 }
@@ -158,6 +179,17 @@ void MODULE_CONTROLLER::_apply_params(void) {
 		point_count = controller_params_points(_params, CONTROLLER_PARAM_LIGHT2_COUNT, CONTROLLER_PARAM_LIGHT2_POINTS, points);
 		_light2_switch.set_positions(points, point_count);
 	#endif
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+	for (uint8_t i = 0; i < _gauge_count; i++) {
+		uint8_t mode_at = _gauges[i].param_mode;
+		_gauges[i].mode = controller_gauge_mode(_params.bytes[mode_at]);
+		_gauges[i].out_min = controller_params_get16(_params, (uint8_t)(mode_at + 1));
+		_gauges[i].out_max = controller_params_get16(_params, (uint8_t)(mode_at + 3));
+		pinMode(_gauges[i].port, OUTPUT);
+		digitalWrite(_gauges[i].port, LOW);
+	}
+#endif
 
 	(void)points;
 	(void)point_count;
@@ -211,23 +243,95 @@ bool MODULE_CONTROLLER::_live_analog(uint8_t index, uint16_t &adc) {
 }
 
 
+bool MODULE_CONTROLLER::_gauge_preview(uint8_t live_index, uint16_t &value) const {
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+	const uint8_t mode_at = controller_params_live_gauge_mode(live_index);
+	if (mode_at == 0) {
+		return false;
+	}
+
+	for (uint8_t i = 0; i < _gauge_count; i++) {
+		if (_gauges[i].param_mode != mode_at) {
+			continue;
+		}
+		value = _gauges[i].preview_on ? _gauges[i].preview : _gauges[i].out_min;
+		return true;
+	}
+#else
+	(void)live_index;
+#endif
+	(void)value;
+	return false;
+}
+
+
+bool MODULE_CONTROLLER::_set_gauge_preview(uint8_t live_index, uint16_t value) {
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+	const uint8_t mode_at = controller_params_live_gauge_mode(live_index);
+	if (mode_at == 0) {
+		return false;
+	}
+
+	for (uint8_t i = 0; i < _gauge_count; i++) {
+		if (_gauges[i].param_mode != mode_at) {
+			continue;
+		}
+		uint16_t limit = _gauges[i].mode == CONTROLLER_GAUGE_ANALOG
+			? (uint16_t)CONTROLLER_GAUGE_ANALOG_MAX
+			: (uint16_t)CONTROLLER_GAUGE_SERVO_MAX;
+		if (value > limit) {
+			value = limit;
+		}
+		_gauges[i].preview = value;
+		_gauges[i].preview_on = 1;
+		return true;
+	}
+#else
+	(void)live_index;
+	(void)value;
+#endif
+	return false;
+}
+
+
 void MODULE_CONTROLLER::_handle_setup(CAN_MESSAGE message) {
 
 	if (message.id == CAN_ID_REQUEST && message.size >= 3) {
 		uint16_t target = ((uint16_t)message.data[0] << 8) | message.data[1];
 		if (target == (uint16_t)can.uuid()) {
-			uint16_t adc = 0;
-			if (_live_analog(message.data[2], adc)) {
+			uint16_t live = 0;
+			if (_live_analog(message.data[2], live) || _gauge_preview(message.data[2], live)) {
 				CAN_MESSAGE reply;
 				memset(&reply, 0, sizeof(reply));
 				reply.id = (uint32_t)(CAN_ID_REPLY | (message.data[2] & 0x7F));
 				reply.uuid = (uint16_t)can.uuid();
 				reply.size = 2;
-				reply.data[0] = (uint8_t)(adc & 0xFF);
-				reply.data[1] = (uint8_t)(adc >> 8);
+				reply.data[0] = (uint8_t)(live & 0xFF);
+				reply.data[1] = (uint8_t)(live >> 8);
 				can.send(reply);
 				return;
 			}
+		}
+	}
+
+	if ((message.id & 0x780) == CAN_ID_SETUP && message.size >= 4) {
+		uint8_t index = (uint8_t)(message.id & 0x7F);
+		uint16_t target = ((uint16_t)message.data[0] << 8) | message.data[1];
+		if (target == (uint16_t)can.uuid() && controller_params_live_gauge_mode(index) != 0) {
+			uint16_t value = (uint16_t)message.data[2] | ((uint16_t)message.data[3] << 8);
+			if (_set_gauge_preview(index, value)) {
+				CAN_MESSAGE reply;
+				memset(&reply, 0, sizeof(reply));
+				reply.id = (uint32_t)(CAN_ID_REPLY | (index & 0x7F));
+				reply.uuid = (uint16_t)can.uuid();
+				reply.size = 2;
+				reply.data[0] = (uint8_t)(value & 0xFF);
+				reply.data[1] = (uint8_t)(value >> 8);
+				can.send(reply);
+			}
+			return;
 		}
 	}
 
@@ -265,6 +369,8 @@ void MODULE_CONTROLLER::begin(void) {
 	_bus_moving = false;
 	_foreign = false;
 	_fault_frame = false;
+	_fault_latched = false;
+	_idle_frame = false;
 	_setup_release = false;
 	_setup_ignore_release = false;
 
@@ -296,14 +402,64 @@ void MODULE_CONTROLLER::begin(void) {
 		Serial.println("start function/controller");
 	#endif
 
-	can.register_filter(CAN_ID_MASK, CAN_ID_MODULE_CURRENT);
-	can.register_filter(CAN_ID_MASK, CAN_ID_DRIVE);
+	can.register_filter(0x760, CAN_ID_MODULE_CURRENT);
+	can.register_filter(0x760, CAN_ID_DRIVE);
 	can.register_filter(CAN_ID_MASK, CAN_ID_DRIVE_HEARTBEAT);
 	can.register_filter(CAN_ID_MASK, CAN_ID_VEHICLE_STATUS);
 	can.register_filter(0x7FF, CAN_ID_EMERGENCY);
-	can.register_filter(CAN_ID_MASK, CAN_ID_LIGHT);
+	can.register_filter(0x740, CAN_ID_VOLTAGE);
 	can.register_filter(0x7FF, CAN_ID_REQUEST);
 	can.register_filter(0x780, CAN_ID_SETUP);
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+	_gauge_count = 0;
+
+#ifdef CONTROLLER_BATTERY_VOLTAGE_PORT
+	_gauges[_gauge_count].port = CONTROLLER_BATTERY_VOLTAGE_PORT;
+	_gauges[_gauge_count].param_mode = CONTROLLER_PARAM_GAUGE_BATT_MODE;
+	_gauges[_gauge_count].can_id = CAN_ID_BATT_VOLTAGE;
+	_gauges[_gauge_count].signed_abs = 0;
+	_gauges[_gauge_count].mode = CONTROLLER_GAUGE_SERVO;
+	_gauges[_gauge_count].out_min = 0;
+	_gauges[_gauge_count].out_max = CONTROLLER_GAUGE_SERVO_MAX;
+	_gauges[_gauge_count].preview = 0;
+	_gauges[_gauge_count].preview_on = 0;
+	_gauges[_gauge_count].value = 0;
+	_gauges[_gauge_count].full_scale = 1023;
+	_gauges[_gauge_count].seen = 0;
+	_gauge_count++;
+#endif
+#ifdef CONTROLLER_MOTOR_VOLTAGE_PORT
+	_gauges[_gauge_count].port = CONTROLLER_MOTOR_VOLTAGE_PORT;
+	_gauges[_gauge_count].param_mode = CONTROLLER_PARAM_GAUGE_MOTOR_MODE;
+	_gauges[_gauge_count].can_id = CAN_ID_MOTOR_VOLTAGE;
+	_gauges[_gauge_count].signed_abs = 1;
+	_gauges[_gauge_count].mode = CONTROLLER_GAUGE_SERVO;
+	_gauges[_gauge_count].out_min = 0;
+	_gauges[_gauge_count].out_max = CONTROLLER_GAUGE_SERVO_MAX;
+	_gauges[_gauge_count].preview = 0;
+	_gauges[_gauge_count].preview_on = 0;
+	_gauges[_gauge_count].value = 0;
+	_gauges[_gauge_count].full_scale = 1023;
+	_gauges[_gauge_count].seen = 0;
+	_gauge_count++;
+#endif
+#ifdef CONTROLLER_CURRENT_PORT
+	_gauges[_gauge_count].port = CONTROLLER_CURRENT_PORT;
+	_gauges[_gauge_count].param_mode = CONTROLLER_PARAM_GAUGE_CURRENT_MODE;
+	_gauges[_gauge_count].can_id = CAN_ID_MOTOR_CURRENT;
+	_gauges[_gauge_count].signed_abs = 0;
+	_gauges[_gauge_count].mode = CONTROLLER_GAUGE_SERVO;
+	_gauges[_gauge_count].out_min = 0;
+	_gauges[_gauge_count].out_max = CONTROLLER_GAUGE_SERVO_MAX;
+	_gauges[_gauge_count].preview = 0;
+	_gauges[_gauge_count].preview_on = 0;
+	_gauges[_gauge_count].value = 0;
+	_gauges[_gauge_count].full_scale = 1023;
+	_gauges[_gauge_count].seen = 0;
+	_gauge_count++;
+#endif
+#endif
 
 	_load_params();
 
@@ -529,6 +685,12 @@ void MODULE_CONTROLLER::_handle_can(CAN_MESSAGE message) {
 			}
 			break;
 
+		case CAN_ID_BATT_VOLTAGE:
+		case CAN_ID_MOTOR_VOLTAGE:
+		case CAN_ID_MOTOR_CURRENT:
+			_note_gauge(message.id, message.uuid, message.data, message.size);
+			break;
+
 		default:
 			break;
 	}
@@ -591,6 +753,96 @@ void MODULE_CONTROLLER::_step_setup(uint8_t previous) {
 			_setup_index = 0;
 		}
 	}
+}
+
+
+void MODULE_CONTROLLER::_note_gauge(uint16_t id, uint16_t uuid, const uint8_t *data, uint8_t size) {
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+	uint16_t loco = _main_loco();
+	if (loco != 0 && uuid != loco) {
+		return;
+	}
+
+	for (uint8_t i = 0; i < _gauge_count; i++) {
+		if (_gauges[i].can_id != id) {
+			continue;
+		}
+
+		uint16_t value = 0;
+		uint16_t full_scale = 1023;
+		if (!controller_gauge_unpack(data, size, _gauges[i].signed_abs, value, full_scale)) {
+			return;
+		}
+
+		_gauges[i].value = value;
+		_gauges[i].full_scale = full_scale;
+		uint16_t now = (uint16_t)millis();
+		_gauges[i].seen = now == 0 ? 1 : now;
+		return;
+	}
+#else
+	(void)id;
+	(void)uuid;
+	(void)data;
+	(void)size;
+#endif
+}
+
+
+void MODULE_CONTROLLER::_write_gauges(bool park) {
+
+#if defined(CONTROLLER_BATTERY_VOLTAGE_PORT) || defined(CONTROLLER_MOTOR_VOLTAGE_PORT) || defined(CONTROLLER_CURRENT_PORT)
+	static uint16_t servo_ms = 0;
+	uint16_t now = (uint16_t)millis();
+	bool pulse = (uint16_t)(now - servo_ms) >= 20;
+	if (pulse) {
+		servo_ms = now;
+	}
+
+	for (uint8_t i = 0; i < _gauge_count; i++) {
+		if (!park) {
+			_gauges[i].preview_on = 0;
+		}
+
+		bool stale = _gauges[i].seen == 0
+			|| (uint16_t)(now - _gauges[i].seen) > CONTROLLER_GAUGE_TIMEOUT;
+		uint16_t out = _gauges[i].out_min;
+
+		if (park && _gauges[i].preview_on) {
+			out = _gauges[i].preview;
+		}
+		else if (!park && !stale) {
+			out = controller_gauge_output(
+				_gauges[i].value,
+				_gauges[i].full_scale,
+				_gauges[i].out_min,
+				_gauges[i].out_max
+			);
+		}
+
+		if (_gauges[i].mode == CONTROLLER_GAUGE_SERVO) {
+			if (!pulse) {
+				continue;
+			}
+			if (out > CONTROLLER_GAUGE_SERVO_MAX) {
+				out = CONTROLLER_GAUGE_SERVO_MAX;
+			}
+			uint16_t us = (uint16_t)(544 + (((uint32_t)out * 1856UL) / 180));
+			digitalWrite(_gauges[i].port, HIGH);
+			delayMicroseconds(us);
+			digitalWrite(_gauges[i].port, LOW);
+		}
+		else {
+			if (out > CONTROLLER_GAUGE_ANALOG_MAX) {
+				out = CONTROLLER_GAUGE_ANALOG_MAX;
+			}
+			analogWrite(_gauges[i].port, (uint8_t)out);
+		}
+	}
+#else
+	(void)park;
+#endif
 }
 
 
@@ -802,6 +1054,7 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 		if (message.id == CAN_ID_REQUEST || (message.id & 0x780) == CAN_ID_SETUP) {
 			_handle_setup(message);
 		}
+		_write_gauges(true);
 		return;
 	}
 
@@ -815,6 +1068,7 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 
 	_refresh_vehicles();
 	_read_controls();
+	_write_gauges(false);
 
 	if (_horn && _horn2 && _mains != CONTROLLER_MAINS_OFF) {
 		_horn_emergency = true;
@@ -837,7 +1091,9 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 	in.bus_free = bus_free;
 	in.foreign = _foreign;
 	in.bus_moving = _bus_moving;
-	in.system_error = _system_error;
+	in.emergency = _horn_emergency || _can_emergency;
+	in.vehicle_error = _vehicle_error;
+	in.fault_latched = _fault_latched;
 
 	uint8_t previous = _status;
 	_status = controller_next_status(_status, in, _nulled);
@@ -846,9 +1102,14 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 		_dir_latched = _dir;
 	}
 
-	if (previous != CONTROLLER_STATUS_OFF && previous != CONTROLLER_STATUS_LOCKED
-		&& _status == CONTROLLER_STATUS_OFF && _system_error) {
-		_fault_frame = true;
+	if (controller_is_commanding(previous) && _status == CONTROLLER_STATUS_OFF) {
+		if (in.emergency || (controller_motor_on(previous) && _vehicle_error)) {
+			_fault_frame = true;
+			_fault_latched = true;
+		}
+		else if (_mains == CONTROLLER_MAINS_OFF) {
+			_idle_frame = true;
+		}
 	}
 
 	_step_setup(previous);
@@ -856,7 +1117,8 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 	if (_mains == CONTROLLER_MAINS_OFF) {
 		_horn_emergency = false;
 		_can_emergency = false;
-		_system_error = _vehicle_error;
+		_fault_latched = false;
+		_system_error = false;
 	}
 
 	#ifdef DEBUG
@@ -875,6 +1137,11 @@ void MODULE_CONTROLLER::update(CAN_MESSAGE message) {
 	if (_fault_frame) {
 		_send_drive(true);
 		_fault_frame = false;
+	}
+
+	if (_idle_frame) {
+		_send_drive(false);
+		_idle_frame = false;
 	}
 
 	if (_setup_release) {

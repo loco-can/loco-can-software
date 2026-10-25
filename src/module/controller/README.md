@@ -39,7 +39,15 @@ The hardware specifications are described in the README files of the Universal a
 The input pins for light, mains and direction use the analog switch library. The output values are set by learned voltages, that represent the different switch positions. On the hardware side a switch witch resistors can be used.
 
 ### Measurement Outputs
-The outputs to display voltage or current values can be set to analog or servo signals (analog output is not yet implemented).
+The three gauge pins follow CAN sensor frames:
+
+| Port | Message | Default |
+|------|---------|---------|
+| Battery voltage | `CAN_ID_BATT_VOLTAGE` `0x320` | servo |
+| Motor voltage | `CAN_ID_MOTOR_VOLTAGE` `0x310` | servo (absolute) |
+| Current | `CAN_ID_MOTOR_CURRENT` `0x110` | servo |
+
+Each output has a mode (analog PWM 0–255 or model servo 0–180°) and min/max output values. Zero reading maps to min, full-scale (bytes 2–3 of the frame) maps to max. A missing frame for 2 s parks the needle at min. Only the selected loco is shown when one is paired.
 
 ## LED Status
 flashing: 100ms on every second

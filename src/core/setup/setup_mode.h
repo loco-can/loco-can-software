@@ -84,6 +84,14 @@ inline uint8_t loco_setup_on_frame(
 	if (id == CAN_ID_DRIVE_HEARTBEAT) {
 		loco_setup_note_controller(session, now);
 		if (session.active) {
+			/*
+			 * A cab heartbeat that was already on the wire when ENTER
+			 * was sent must not abort the session. Live heartbeats
+			 * after the hold window still do.
+			 */
+			if ((uint32_t)(now - session.setup_ms) < (uint32_t)CAN_SETUP_MODE_HOLD_MS) {
+				return LOCO_SETUP_EV_NONE;
+			}
 			session.active = false;
 			return LOCO_SETUP_EV_ABORT;
 		}
