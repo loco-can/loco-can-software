@@ -3,8 +3,8 @@ package main
 import "testing"
 
 func TestParseIdentifyLine(t *testing.T) {
-	info, ok := parseIdentifyLine("LOCO type=electric ver=2.1.0 id=0x20 can=1")
-	if !ok || info.Module != "electric" || info.Version != "2.1.0" || info.TypeID != 0x20 {
+	info, ok := parseIdentifyLine("LOCO type=vehicle ver=2.1.0 id=0x20 can=1")
+	if !ok || info.Module != "vehicle" || info.Version != "2.1.0" || info.TypeID != 0x20 {
 		t.Fatalf("%+v ok=%v", info, ok)
 	}
 	if info.CAN == nil || !*info.CAN {
@@ -20,47 +20,47 @@ func TestParseIdentifyLine(t *testing.T) {
 }
 
 func TestParseIdentifyTextSkipsBanner(t *testing.T) {
-	text := "* Welcome to Loco-Can *\nMODULE: src/module/electric/config.h\nLOCO type=electric ver=2.1.0 id=0x20 can=0\n"
+	text := "* Welcome to Loco-Can *\nMODULE: src/module/vehicle/config.h\nLOCO type=vehicle ver=2.1.0 id=0x20 can=0\n"
 	info, ok := parseIdentifyText(text)
-	if !ok || info.Module != "electric" || info.Version != "2.1.0" {
+	if !ok || info.Module != "vehicle" || info.Version != "2.1.0" {
 		t.Fatalf("%+v", info)
 	}
 }
 
 func TestMatchProbedImageSameOrNewer(t *testing.T) {
 	images := []Image{
-		{Module: "electric", Version: "2.1.0", File: "electric_v2_1_0.hex", Protocol: "arduino"},
-		{Module: "electric", Version: "2.1.12", File: "electric_v2_1_12.hex", Protocol: "arduino"},
+		{Module: "vehicle", Version: "2.1.0", File: "vehicle_v2_1_0.hex", Protocol: "arduino"},
+		{Module: "vehicle", Version: "2.1.12", File: "vehicle_v2_1_12.hex", Protocol: "arduino"},
 		{Module: "switch", Version: "2.1.0", File: "switch_v2_1_0.hex", Protocol: "arduino"},
 	}
-	got, ok := matchProbedImage(images, ModuleInfo{Module: "electric", Version: "2.1.0"})
-	if !ok || got.File != "electric_v2_1_12.hex" {
+	got, ok := matchProbedImage(images, ModuleInfo{Module: "vehicle", Version: "2.1.0"})
+	if !ok || got.File != "vehicle_v2_1_12.hex" {
 		t.Fatalf("same or newer %+v", got)
 	}
-	latest, ok := matchProbedImage(images, ModuleInfo{Module: "electric", Version: "2.1"})
-	if !ok || latest.File != "electric_v2_1_12.hex" {
+	latest, ok := matchProbedImage(images, ModuleInfo{Module: "vehicle", Version: "2.1"})
+	if !ok || latest.File != "vehicle_v2_1_12.hex" {
 		t.Fatalf("hardware %+v", latest)
 	}
-	if _, ok := matchProbedImage(images, ModuleInfo{Module: "electric", Version: "3.0.0"}); ok {
+	if _, ok := matchProbedImage(images, ModuleInfo{Module: "vehicle", Version: "3.0.0"}); ok {
 		t.Fatal("must not pick older than the board")
 	}
 }
 
 func TestMatchProbedReleaseSameOrNewer(t *testing.T) {
 	releases := []Release{
-		{Tag: "v2", Images: []Image{mustImage("electric_v2_1_12.hex"), mustImage("switch_v2_1_0.hex")}},
-		{Tag: "v1", Images: []Image{mustImage("electric_v2_1_0.hex")}},
-		{Tag: "v0", Images: []Image{mustImage("electric_v2_0_0.hex")}},
+		{Tag: "v2", Images: []Image{mustImage("vehicle_v2_1_12.hex"), mustImage("switch_v2_1_0.hex")}},
+		{Tag: "v1", Images: []Image{mustImage("vehicle_v2_1_0.hex")}},
+		{Tag: "v0", Images: []Image{mustImage("vehicle_v2_0_0.hex")}},
 	}
-	idx, img, ok := matchProbedRelease(releases, ModuleInfo{Module: "electric", Version: "2.1.0"})
-	if !ok || idx != 0 || img.File != "electric_v2_1_12.hex" {
+	idx, img, ok := matchProbedRelease(releases, ModuleInfo{Module: "vehicle", Version: "2.1.0"})
+	if !ok || idx != 0 || img.File != "vehicle_v2_1_12.hex" {
 		t.Fatalf("newer %+v idx=%d ok=%v", img, idx, ok)
 	}
-	idx, img, ok = matchProbedRelease(releases, ModuleInfo{Module: "electric", Version: "2.1.12"})
-	if !ok || idx != 0 || img.File != "electric_v2_1_12.hex" {
+	idx, img, ok = matchProbedRelease(releases, ModuleInfo{Module: "vehicle", Version: "2.1.12"})
+	if !ok || idx != 0 || img.File != "vehicle_v2_1_12.hex" {
 		t.Fatalf("same %+v idx=%d", img, idx)
 	}
-	if _, _, ok := matchProbedRelease(releases, ModuleInfo{Module: "electric", Version: "3.0.0"}); ok {
+	if _, _, ok := matchProbedRelease(releases, ModuleInfo{Module: "vehicle", Version: "3.0.0"}); ok {
 		t.Fatal("must not pick older than the board")
 	}
 	idx, img, ok = matchProbedRelease(releases, ModuleInfo{Module: "switch"})

@@ -266,7 +266,7 @@ static const char *programmer_id_name(uint16_t id) {
 static const char *programmer_type_name(uint8_t type) {
 	switch (type) {
 		case TYPE_CONTROLLER: return "CTRL";
-		case TYPE_ELECTRIC: return "MOT";
+		case TYPE_VEHICLE: return "VEH";
 		case TYPE_SERVO: return "SRV";
 		case TYPE_SWITCH: return "SW";
 		case TYPE_DRIVE: return "DRV";

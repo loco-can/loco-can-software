@@ -5,7 +5,7 @@
 #include "sensors.h"
 
 
-static void electric_pack_reading(uint8_t out[4], uint16_t value, uint16_t reference) {
+static void vehicle_pack_reading(uint8_t out[4], uint16_t value, uint16_t reference) {
 
 	out[0] = (uint8_t)(value & 0xFF);
 	out[1] = (uint8_t)((value >> 8) & 0xFF);
@@ -14,7 +14,7 @@ static void electric_pack_reading(uint8_t out[4], uint16_t value, uint16_t refer
 }
 
 
-static uint16_t electric_battery_id(uint8_t index) {
+static uint16_t vehicle_battery_id(uint8_t index) {
 
 	switch (index) {
 		case 0:
@@ -29,12 +29,12 @@ static uint16_t electric_battery_id(uint8_t index) {
 }
 
 
-uint8_t electric_sensor_frames(
+uint8_t vehicle_sensor_frames(
 	int16_t motor_voltage,
 	const uint16_t *batteries,
 	uint8_t battery_count,
 	uint16_t reference,
-	ELECTRIC_SENSOR_FRAME *out,
+	VEHICLE_SENSOR_FRAME *out,
 	uint8_t max_out
 ) {
 
@@ -46,28 +46,28 @@ uint8_t electric_sensor_frames(
 
 	out[count].id = CAN_ID_MOTOR_VOLTAGE;
 	out[count].size = 4;
-	electric_pack_reading(out[count].data, (uint16_t)motor_voltage, reference);
+	vehicle_pack_reading(out[count].data, (uint16_t)motor_voltage, reference);
 	count++;
 
 	if (batteries == 0 || battery_count == 0 || count >= max_out) {
 		return count;
 	}
 
-	if (battery_count > ELECTRIC_BATT_MAX) {
-		battery_count = ELECTRIC_BATT_MAX;
+	if (battery_count > VEHICLE_BATT_MAX) {
+		battery_count = VEHICLE_BATT_MAX;
 	}
 
 	uint32_t sum = 0;
 
 	for (uint8_t i = 0; i < battery_count && count < max_out; i++) {
-		uint16_t id = electric_battery_id(i);
+		uint16_t id = vehicle_battery_id(i);
 		if (id == 0) {
 			break;
 		}
 
 		out[count].id = id;
 		out[count].size = 4;
-		electric_pack_reading(out[count].data, batteries[i], reference);
+		vehicle_pack_reading(out[count].data, batteries[i], reference);
 		sum += batteries[i];
 		count++;
 	}
@@ -78,7 +78,7 @@ uint8_t electric_sensor_frames(
 		}
 		out[count].id = CAN_ID_VOLTAGE;
 		out[count].size = 4;
-		electric_pack_reading(out[count].data, (uint16_t)sum, reference);
+		vehicle_pack_reading(out[count].data, (uint16_t)sum, reference);
 		count++;
 	}
 

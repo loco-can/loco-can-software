@@ -77,7 +77,7 @@ func TestChooseNewestRelease(t *testing.T) {
 }
 
 func TestManifestRoundTrip(t *testing.T) {
-	src := mustImage("electric_v2_1_12.hex")
+	src := mustImage("vehicle_v2_1_12.hex")
 	src.SHA256 = "abc"
 	var buf bytes.Buffer
 	if err := writeManifest(&buf, []Image{src}); err != nil {

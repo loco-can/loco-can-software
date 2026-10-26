@@ -70,7 +70,7 @@
  *   bits 3-0  type inside the group
  *
  *   Controller                          0x1n
- *   Actuator (electric, servo, switch)  0x2n
+ *   Actuator (vehicle, servo, switch)   0x2n
  *   Sensor                              0x3n
  */
 #define LOCO_TYPE_WIRELESS         0x80
@@ -82,7 +82,7 @@
 #define LOCO_TYPE(group, n) ((group) | ((n) & 0x0F))
 
 #define TYPE_CONTROLLER LOCO_TYPE(LOCO_TYPE_GROUP_CONTROLLER, 0)
-#define TYPE_ELECTRIC   LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 0)
+#define TYPE_VEHICLE   LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 0)
 #define TYPE_SERVO      LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 1)
 #define TYPE_SWITCH     LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 2)
 #define TYPE_DRIVE      LOCO_TYPE(LOCO_TYPE_GROUP_ACTUATOR, 3)
@@ -91,7 +91,7 @@
 #define TYPE_WIFI       (LOCO_TYPE_WIRELESS | 0x01)
 
 #define CONTROLLER_TYPE_ID TYPE_CONTROLLER
-#define ELECTRIC_TYPE_ID   TYPE_ELECTRIC
+#define VEHICLE_TYPE_ID   TYPE_VEHICLE
 #define SERVO_TYPE_ID      TYPE_SERVO
 #define SWITCH_TYPE_ID     TYPE_SWITCH
 #define SENSOR_TYPE_ID     TYPE_SENSOR

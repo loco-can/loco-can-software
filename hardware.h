@@ -71,17 +71,19 @@
 
 
 /* ========================================================================
- * MOTOR MODULE
+ * VEHICLE MODULE
  *
- * The motor module connects the CAN control with a electro motor driver.
+ * The vehicle module connects the CAN control with a motor driver.
  * It has no power amplifier but only control lines to operate different
  * motor drivers.
  */
-// #define MODULE ELECTRIC_MODULE
+// #define MODULE VEHICLE_MODULE
 
 /* ===== MODULE VERSIONS ===== */
-// #define ELECTRIC_MODULE_VERSION V_1_0_0
-// #define ELECTRIC_MODULE_VERSION V_2_0_0
+// #define VEHICLE_MODULE_VERSION V_1_0_0
+// #define VEHICLE_MODULE_VERSION V_2_0_0
+// #define VEHICLE_MODULE_VERSION V_2_1_0
+// #define VEHICLE_MODULE_VERSION V_2_2_0
 /* ===================================================================== */
 
 
@@ -179,8 +181,8 @@
  */
 #if defined(SWITCH_MODULE_VERSION)
 	#include "src/module/switch/config.h"
-#elif defined(ELECTRIC_MODULE_VERSION)
-	#include "src/module/electric/config.h"
+#elif defined(VEHICLE_MODULE_VERSION)
+	#include "src/module/vehicle/config.h"
 #elif defined(CONTROLLER_MODULE_VERSION)
 	#include "src/module/controller/config.h"
 #elif defined(SERVO_MODULE_VERSION)

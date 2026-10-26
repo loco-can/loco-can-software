@@ -64,9 +64,9 @@ class LocoCANcore {
 			MODULE_SENSOR _module;
 		#endif
 
-		// electric driven locomotive
-		#ifdef MODULE_ELECTRIC_H
-			MODULE_ELECTRIC _module;
+		// vehicle module
+		#ifdef MODULE_VEHICLE_H
+			MODULE_VEHICLE _module;
 		#endif
 
 		// wireless CAN bridge

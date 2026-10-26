@@ -80,15 +80,16 @@ Versions:
 
 
 /* ========================================================================
-ELECTRIC MOTOR MODULE
-	The motor module is the interface to control an external power driver
+VEHICLE MODULE
+	The vehicle module is the interface to control an external power driver
 	to the Loco-CAN system.
 
 Versions:
 	V_2_0_0
 	V_2_1_0
+	V_2_2_0
 ======================================================================== */
-#define ELECTRIC_MODULE "src/module/electric/config.h"
+#define VEHICLE_MODULE "src/module/vehicle/config.h"
 
 
 /* ========================================================================
@@ -169,6 +170,7 @@ Versions:
 #define V_1_0_0 LOCO_VERSION(1, 0, 0)
 #define V_2_0_0 LOCO_VERSION(2, 0, 0)
 #define V_2_1_0 LOCO_VERSION(2, 1, 0)
+#define V_2_2_0 LOCO_VERSION(2, 2, 0)
 #define V_3_0_0 LOCO_VERSION(3, 0, 0)
 #define V_3_1_0 LOCO_VERSION(3, 1, 0)
 

@@ -139,7 +139,7 @@ pio run -e protocol_host          # PC check of LocoCAN IDs (no hardware)
 | `wifi_v3` | ESP32-S3 | WIFI V3.0 (CAN + ESP-NOW bridge) |
 | `controller_v3` | ESP32-S3 | Controller V3.0 |
 | `controller_v21` / `controller_v20` | ATmega328P Nano | Controller V2.x |
-| `electric_v21` | ATmega328P Nano | Motor module V2.1 |
+| `vehicle_v21` / `vehicle_v22` | ATmega328P Nano | Vehicle module V2.x |
 | `switch_v21` | ATmega328P Nano | Switch V2.1 |
 | `sensor_v21` | ATmega328P Nano | Sensor V2.1 |
 | `servo_v21` | ATmega328P Nano | Servo V2.1 |

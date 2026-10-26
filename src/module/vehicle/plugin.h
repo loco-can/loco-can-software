@@ -1,5 +1,5 @@
 /*
- * Motor-controller plugins for the electric module.
+ * Motor-controller plugins for the vehicle module.
  *
  * The module speaks one CAN drive message. A plugin turns that message
  * into the signals of a particular controller:
@@ -16,27 +16,27 @@
  */
 #pragma once
 
-#ifndef ELECTRIC_PLUGIN_H
-#define ELECTRIC_PLUGIN_H
+#ifndef VEHICLE_PLUGIN_H
+#define VEHICLE_PLUGIN_H
 
 #include <stdint.h>
 
-#define ELECTRIC_PLUGIN_DIRECT 0
-#define ELECTRIC_PLUGIN_4QD 1
-#define ELECTRIC_PLUGIN_CURTIS 2
-#define ELECTRIC_PLUGIN_COUNT 3
+#define VEHICLE_PLUGIN_DIRECT 0
+#define VEHICLE_PLUGIN_4QD 1
+#define VEHICLE_PLUGIN_CURTIS 2
+#define VEHICLE_PLUGIN_COUNT 3
 
-#define ELECTRIC_PWM_DRIVE 0
-#define ELECTRIC_PWM_DRIVE_BRAKE 1
+#define VEHICLE_PWM_DRIVE 0
+#define VEHICLE_PWM_DRIVE_BRAKE 1
 
-#define ELECTRIC_DIR_NONE 0
-#define ELECTRIC_DIR_FORWARD 1
-#define ELECTRIC_DIR_REVERSE 2
+#define VEHICLE_DIR_NONE 0
+#define VEHICLE_DIR_FORWARD 1
+#define VEHICLE_DIR_REVERSE 2
 
 /* 10-bit throttle at or below this counts as zero (Curtis HPD). */
-#define ELECTRIC_THROTTLE_ZERO 16
+#define VEHICLE_THROTTLE_ZERO 16
 
-struct ELECTRIC_COMMAND {
+struct VEHICLE_COMMAND {
 	bool present;
 	bool mains;
 	bool motor;
@@ -50,7 +50,7 @@ struct ELECTRIC_COMMAND {
 	uint16_t power;
 };
 
-struct ELECTRIC_PLUGIN_INPUT {
+struct VEHICLE_PLUGIN_INPUT {
 	uint8_t pwm_mode;
 	bool power_relay_fitted;
 	uint16_t voltage_min;
@@ -62,39 +62,57 @@ struct ELECTRIC_PLUGIN_INPUT {
 	 * open, does not wait.
 	 */
 	bool gap_elapsed;
-	ELECTRIC_COMMAND command;
+	VEHICLE_COMMAND command;
 };
 
-struct ELECTRIC_PLUGIN_STATE {
+struct VEHICLE_PLUGIN_STATE {
 	uint8_t direction;
 	uint8_t pending;
 	bool hpd_locked;
 	bool was_enabled;
 };
 
-struct ELECTRIC_OUTPUT {
+struct VEHICLE_OUTPUT {
 	uint8_t drive_pwm;
 	uint8_t brake_pwm;
 	bool forward;
 	bool reverse;
 	bool power;
+	bool enable;
 	bool direction_blocked;
 	uint8_t direction;
 };
 
-void electric_plugin_reset(ELECTRIC_PLUGIN_STATE &state);
+void vehicle_plugin_reset(VEHICLE_PLUGIN_STATE &state);
 
 /* Unknown plugin ids produce a safe, fully off output. */
-ELECTRIC_OUTPUT electric_plugin_apply(
+VEHICLE_OUTPUT vehicle_plugin_apply(
 	uint8_t plugin,
-	const ELECTRIC_PLUGIN_INPUT &in,
-	ELECTRIC_PLUGIN_STATE &state
+	const VEHICLE_PLUGIN_INPUT &in,
+	VEHICLE_PLUGIN_STATE &state
 );
 
 /* Inverse of controller_pack_drive(). Returns false when size < 8. */
-bool electric_unpack_drive(const uint8_t *data, uint8_t size, ELECTRIC_COMMAND &command);
+bool vehicle_unpack_drive(const uint8_t *data, uint8_t size, VEHICLE_COMMAND &command);
 
-struct ELECTRIC_STATUS_BITS {
+/* True when 0x220 has SIGNAL_LOW or SIGNAL_HIGH set. */
+bool vehicle_horn_from_signal(const uint8_t *data, uint8_t size);
+
+/* True when 0x410 has LIGHT_LOW or LIGHT_HIGH set. */
+bool vehicle_light_from_frame(const uint8_t *data, uint8_t size);
+
+/*
+ * DRIVE_ENABLE latch: set when the cab motor bit is live, cleared only
+ * after mains is off and |motor voltage| is under voltage_min.
+ */
+bool vehicle_drive_enable(
+	const VEHICLE_COMMAND &command,
+	int32_t motor_voltage,
+	uint16_t voltage_min,
+	bool previous
+);
+
+struct VEHICLE_STATUS_BITS {
 	bool error;
 	bool ready;
 	bool moving;
@@ -105,11 +123,11 @@ struct ELECTRIC_STATUS_BITS {
 	bool mains;
 };
 
-uint8_t electric_status_byte(const ELECTRIC_STATUS_BITS &bits);
+uint8_t vehicle_status_byte(const VEHICLE_STATUS_BITS &bits);
 
-ELECTRIC_STATUS_BITS electric_vehicle_status(
-	const ELECTRIC_COMMAND &command,
-	const ELECTRIC_OUTPUT &output,
+VEHICLE_STATUS_BITS vehicle_status(
+	const VEHICLE_COMMAND &command,
+	const VEHICLE_OUTPUT &output,
 	int32_t motor_voltage,
 	uint16_t voltage_min,
 	bool reverse_logic,

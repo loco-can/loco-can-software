@@ -7,16 +7,16 @@
 #include "../../can_protocol.h"
 
 
-void electric_plugin_reset(ELECTRIC_PLUGIN_STATE &state) {
+void vehicle_plugin_reset(VEHICLE_PLUGIN_STATE &state) {
 
-	state.direction = ELECTRIC_DIR_NONE;
-	state.pending = ELECTRIC_DIR_NONE;
+	state.direction = VEHICLE_DIR_NONE;
+	state.pending = VEHICLE_DIR_NONE;
 	state.hpd_locked = true;
 	state.was_enabled = false;
 }
 
 
-static uint16_t electric_clamp10(uint16_t value) {
+static uint16_t vehicle_clamp10(uint16_t value) {
 
 	if (value > 1023) {
 		return 1023;
@@ -26,36 +26,36 @@ static uint16_t electric_clamp10(uint16_t value) {
 }
 
 
-static uint8_t electric_to_pwm(uint16_t value) {
+static uint8_t vehicle_to_pwm(uint16_t value) {
 
-	value = electric_clamp10(value);
+	value = vehicle_clamp10(value);
 	return (uint8_t)(((uint32_t)value * 255UL) / 1023UL);
 }
 
 
-static uint16_t electric_limited_drive(const ELECTRIC_COMMAND &command) {
+static uint16_t vehicle_limited_drive(const VEHICLE_COMMAND &command) {
 
-	uint16_t drive = electric_clamp10(command.drive);
-	uint16_t power = electric_clamp10(command.power);
+	uint16_t drive = vehicle_clamp10(command.drive);
+	uint16_t power = vehicle_clamp10(command.power);
 
 	return (uint16_t)(((uint32_t)drive * power) / 1023UL);
 }
 
 
-static void electric_pwm_pair(uint8_t mode, uint16_t drive, uint16_t brake, bool drop_throttle_on_brake, uint8_t &drive_pwm, uint8_t &brake_pwm) {
+static void vehicle_pwm_pair(uint8_t mode, uint16_t drive, uint16_t brake, bool drop_throttle_on_brake, uint8_t &drive_pwm, uint8_t &brake_pwm) {
 
-	drive = electric_clamp10(drive);
-	brake = electric_clamp10(brake);
+	drive = vehicle_clamp10(drive);
+	brake = vehicle_clamp10(brake);
 
-	if (mode == ELECTRIC_PWM_DRIVE_BRAKE) {
-		drive_pwm = electric_to_pwm(drive);
-		brake_pwm = electric_to_pwm(brake);
+	if (mode == VEHICLE_PWM_DRIVE_BRAKE) {
+		drive_pwm = vehicle_to_pwm(drive);
+		brake_pwm = vehicle_to_pwm(brake);
 		return;
 	}
 
 	brake_pwm = 0;
 
-	if (drop_throttle_on_brake && brake > ELECTRIC_THROTTLE_ZERO) {
+	if (drop_throttle_on_brake && brake > VEHICLE_THROTTLE_ZERO) {
 		drive_pwm = 0;
 		return;
 	}
@@ -65,25 +65,25 @@ static void electric_pwm_pair(uint8_t mode, uint16_t drive, uint16_t brake, bool
 		return;
 	}
 
-	drive_pwm = electric_to_pwm((uint16_t)(drive - brake));
+	drive_pwm = vehicle_to_pwm((uint16_t)(drive - brake));
 }
 
 
-static bool electric_voltage_low(int32_t motor_voltage, uint16_t voltage_min) {
+static bool vehicle_voltage_low(int32_t motor_voltage, uint16_t voltage_min) {
 
 	int32_t absolute = motor_voltage < 0 ? -motor_voltage : motor_voltage;
 	return absolute < (int32_t)voltage_min;
 }
 
 
-static uint8_t electric_want_direction(const ELECTRIC_COMMAND &command, bool reversed) {
+static uint8_t vehicle_want_direction(const VEHICLE_COMMAND &command, bool reversed) {
 
 	if (!command.present || !command.mains || !command.motor || command.error || command.emergency) {
-		return ELECTRIC_DIR_NONE;
+		return VEHICLE_DIR_NONE;
 	}
 
 	bool reverse = command.reverse ^ reversed;
-	return reverse ? ELECTRIC_DIR_REVERSE : ELECTRIC_DIR_FORWARD;
+	return reverse ? VEHICLE_DIR_REVERSE : VEHICLE_DIR_FORWARD;
 }
 
 
@@ -92,16 +92,16 @@ static uint8_t electric_want_direction(const ELECTRIC_COMMAND &command, bool rev
  * waits until the motor voltage is under the minimum.
  * Returns true while the requested direction is not yet applied.
  */
-static bool electric_settle_direction(uint8_t want, bool voltage_low, bool gap_elapsed, ELECTRIC_PLUGIN_STATE &state) {
+static bool vehicle_settle_direction(uint8_t want, bool voltage_low, bool gap_elapsed, VEHICLE_PLUGIN_STATE &state) {
 
-	if (want == ELECTRIC_DIR_NONE) {
-		state.direction = ELECTRIC_DIR_NONE;
-		state.pending = ELECTRIC_DIR_NONE;
+	if (want == VEHICLE_DIR_NONE) {
+		state.direction = VEHICLE_DIR_NONE;
+		state.pending = VEHICLE_DIR_NONE;
 		return false;
 	}
 
 	if (want == state.direction) {
-		state.pending = ELECTRIC_DIR_NONE;
+		state.pending = VEHICLE_DIR_NONE;
 		return false;
 	}
 
@@ -115,36 +115,37 @@ static bool electric_settle_direction(uint8_t want, bool voltage_low, bool gap_e
 	 * Relays that were on stay open until gap_elapsed, so forward and
 	 * reverse cannot overlap. The first engage does not wait.
 	 */
-	if (state.direction != ELECTRIC_DIR_NONE) {
-		state.direction = ELECTRIC_DIR_NONE;
+	if (state.direction != VEHICLE_DIR_NONE) {
+		state.direction = VEHICLE_DIR_NONE;
 		state.pending = want;
 		return true;
 	}
 
-	if (state.pending != ELECTRIC_DIR_NONE && !gap_elapsed) {
+	if (state.pending != VEHICLE_DIR_NONE && !gap_elapsed) {
 		state.pending = want;
 		return true;
 	}
 
 	state.direction = want;
-	state.pending = ELECTRIC_DIR_NONE;
+	state.pending = VEHICLE_DIR_NONE;
 	return false;
 }
 
 
-static void electric_clear_output(ELECTRIC_OUTPUT &out) {
+static void vehicle_clear_output(VEHICLE_OUTPUT &out) {
 
 	out.drive_pwm = 0;
 	out.brake_pwm = 0;
 	out.forward = false;
 	out.reverse = false;
 	out.power = false;
+	out.enable = false;
 	out.direction_blocked = false;
-	out.direction = ELECTRIC_DIR_NONE;
+	out.direction = VEHICLE_DIR_NONE;
 }
 
 
-static void electric_update_hpd(bool enable, bool blocked, bool direction_changed, uint16_t drive, ELECTRIC_PLUGIN_STATE &state) {
+static void vehicle_update_hpd(bool enable, bool blocked, bool direction_changed, uint16_t drive, VEHICLE_PLUGIN_STATE &state) {
 
 	if (!enable) {
 		state.hpd_locked = true;
@@ -152,10 +153,10 @@ static void electric_update_hpd(bool enable, bool blocked, bool direction_change
 		return;
 	}
 
-	if ((!state.was_enabled || direction_changed || blocked) && drive > ELECTRIC_THROTTLE_ZERO) {
+	if ((!state.was_enabled || direction_changed || blocked) && drive > VEHICLE_THROTTLE_ZERO) {
 		state.hpd_locked = true;
 	}
-	else if (state.hpd_locked && drive <= ELECTRIC_THROTTLE_ZERO) {
+	else if (state.hpd_locked && drive <= VEHICLE_THROTTLE_ZERO) {
 		state.hpd_locked = false;
 	}
 
@@ -163,30 +164,30 @@ static void electric_update_hpd(bool enable, bool blocked, bool direction_change
 }
 
 
-static ELECTRIC_OUTPUT electric_direct_apply(const ELECTRIC_PLUGIN_INPUT &in, ELECTRIC_PLUGIN_STATE &state) {
+static VEHICLE_OUTPUT vehicle_direct_apply(const VEHICLE_PLUGIN_INPUT &in, VEHICLE_PLUGIN_STATE &state) {
 
-	ELECTRIC_OUTPUT out;
-	electric_clear_output(out);
+	VEHICLE_OUTPUT out;
+	vehicle_clear_output(out);
 
-	uint8_t want = electric_want_direction(in.command, in.reversed);
-	bool low = electric_voltage_low(in.motor_voltage, in.voltage_min);
-	bool blocked = electric_settle_direction(want, low, in.gap_elapsed, state);
-	bool enable = want != ELECTRIC_DIR_NONE;
+	uint8_t want = vehicle_want_direction(in.command, in.reversed);
+	bool low = vehicle_voltage_low(in.motor_voltage, in.voltage_min);
+	bool blocked = vehicle_settle_direction(want, low, in.gap_elapsed, state);
+	bool enable = want != VEHICLE_DIR_NONE;
 
-	uint16_t drive = electric_limited_drive(in.command);
-	uint16_t brake = electric_clamp10(in.command.brake);
+	uint16_t drive = vehicle_limited_drive(in.command);
+	uint16_t brake = vehicle_clamp10(in.command.brake);
 	uint8_t drive_pwm = 0;
 	uint8_t brake_pwm = 0;
-	electric_pwm_pair(in.pwm_mode, drive, brake, false, drive_pwm, brake_pwm);
+	vehicle_pwm_pair(in.pwm_mode, drive, brake, false, drive_pwm, brake_pwm);
 
 	out.direction = state.direction;
 	out.direction_blocked = blocked;
-	out.forward = state.direction == ELECTRIC_DIR_FORWARD;
-	out.reverse = state.direction == ELECTRIC_DIR_REVERSE;
+	out.forward = state.direction == VEHICLE_DIR_FORWARD;
+	out.reverse = state.direction == VEHICLE_DIR_REVERSE;
 
 	if (!enable || blocked) {
 		out.drive_pwm = 0;
-		out.brake_pwm = (blocked && in.pwm_mode == ELECTRIC_PWM_DRIVE_BRAKE) ? brake_pwm : 0;
+		out.brake_pwm = (blocked && in.pwm_mode == VEHICLE_PWM_DRIVE_BRAKE) ? brake_pwm : 0;
 		out.power = false;
 		return out;
 	}
@@ -198,25 +199,25 @@ static ELECTRIC_OUTPUT electric_direct_apply(const ELECTRIC_PLUGIN_INPUT &in, EL
 }
 
 
-static ELECTRIC_OUTPUT electric_4qd_apply(const ELECTRIC_PLUGIN_INPUT &in, ELECTRIC_PLUGIN_STATE &state) {
+static VEHICLE_OUTPUT vehicle_4qd_apply(const VEHICLE_PLUGIN_INPUT &in, VEHICLE_PLUGIN_STATE &state) {
 
-	ELECTRIC_OUTPUT out;
-	electric_clear_output(out);
+	VEHICLE_OUTPUT out;
+	vehicle_clear_output(out);
 
-	uint8_t want = electric_want_direction(in.command, in.reversed);
-	bool low = electric_voltage_low(in.motor_voltage, in.voltage_min);
-	bool blocked = electric_settle_direction(want, low, in.gap_elapsed, state);
-	bool enable = want != ELECTRIC_DIR_NONE;
+	uint8_t want = vehicle_want_direction(in.command, in.reversed);
+	bool low = vehicle_voltage_low(in.motor_voltage, in.voltage_min);
+	bool blocked = vehicle_settle_direction(want, low, in.gap_elapsed, state);
+	bool enable = want != VEHICLE_DIR_NONE;
 
-	uint16_t drive = electric_limited_drive(in.command);
-	uint16_t brake = electric_clamp10(in.command.brake);
+	uint16_t drive = vehicle_limited_drive(in.command);
+	uint16_t brake = vehicle_clamp10(in.command.brake);
 	uint8_t drive_pwm = 0;
 	uint8_t brake_pwm = 0;
-	electric_pwm_pair(in.pwm_mode, drive, brake, true, drive_pwm, brake_pwm);
+	vehicle_pwm_pair(in.pwm_mode, drive, brake, true, drive_pwm, brake_pwm);
 
 	out.direction = state.direction;
 	out.direction_blocked = blocked;
-	out.reverse = state.direction == ELECTRIC_DIR_REVERSE;
+	out.reverse = state.direction == VEHICLE_DIR_REVERSE;
 
 	/*
 	 * 4QD uses one reverse switch and a separate enable. FORW is that
@@ -226,11 +227,11 @@ static ELECTRIC_OUTPUT electric_4qd_apply(const ELECTRIC_PLUGIN_INPUT &in, ELECT
 	if (!enable || blocked) {
 		out.forward = false;
 		out.drive_pwm = 0;
-		out.brake_pwm = (blocked && in.pwm_mode == ELECTRIC_PWM_DRIVE_BRAKE) ? brake_pwm : 0;
+		out.brake_pwm = (blocked && in.pwm_mode == VEHICLE_PWM_DRIVE_BRAKE) ? brake_pwm : 0;
 		out.power = false;
 		if (!enable) {
 			out.reverse = false;
-			out.direction = ELECTRIC_DIR_NONE;
+			out.direction = VEHICLE_DIR_NONE;
 		}
 		return out;
 	}
@@ -243,25 +244,25 @@ static ELECTRIC_OUTPUT electric_4qd_apply(const ELECTRIC_PLUGIN_INPUT &in, ELECT
 }
 
 
-static ELECTRIC_OUTPUT electric_curtis_apply(const ELECTRIC_PLUGIN_INPUT &in, ELECTRIC_PLUGIN_STATE &state) {
+static VEHICLE_OUTPUT vehicle_curtis_apply(const VEHICLE_PLUGIN_INPUT &in, VEHICLE_PLUGIN_STATE &state) {
 
-	ELECTRIC_OUTPUT out;
-	electric_clear_output(out);
+	VEHICLE_OUTPUT out;
+	vehicle_clear_output(out);
 
 	uint8_t before = state.direction;
-	uint8_t want = electric_want_direction(in.command, in.reversed);
-	bool low = electric_voltage_low(in.motor_voltage, in.voltage_min);
-	bool blocked = electric_settle_direction(want, low, in.gap_elapsed, state);
-	bool enable = want != ELECTRIC_DIR_NONE;
+	uint8_t want = vehicle_want_direction(in.command, in.reversed);
+	bool low = vehicle_voltage_low(in.motor_voltage, in.voltage_min);
+	bool blocked = vehicle_settle_direction(want, low, in.gap_elapsed, state);
+	bool enable = want != VEHICLE_DIR_NONE;
 	bool changed = state.direction != before;
 
-	uint16_t drive = electric_limited_drive(in.command);
-	uint16_t brake = electric_clamp10(in.command.brake);
-	electric_update_hpd(enable, blocked, changed, drive, state);
+	uint16_t drive = vehicle_limited_drive(in.command);
+	uint16_t brake = vehicle_clamp10(in.command.brake);
+	vehicle_update_hpd(enable, blocked, changed, drive, state);
 
 	uint8_t drive_pwm = 0;
 	uint8_t brake_pwm = 0;
-	electric_pwm_pair(in.pwm_mode, drive, brake, false, drive_pwm, brake_pwm);
+	vehicle_pwm_pair(in.pwm_mode, drive, brake, false, drive_pwm, brake_pwm);
 
 	if (state.hpd_locked) {
 		drive_pwm = 0;
@@ -269,8 +270,8 @@ static ELECTRIC_OUTPUT electric_curtis_apply(const ELECTRIC_PLUGIN_INPUT &in, EL
 
 	out.direction = state.direction;
 	out.direction_blocked = blocked;
-	out.forward = state.direction == ELECTRIC_DIR_FORWARD;
-	out.reverse = state.direction == ELECTRIC_DIR_REVERSE;
+	out.forward = state.direction == VEHICLE_DIR_FORWARD;
+	out.reverse = state.direction == VEHICLE_DIR_REVERSE;
 
 	if (!enable) {
 		out.drive_pwm = 0;
@@ -278,13 +279,13 @@ static ELECTRIC_OUTPUT electric_curtis_apply(const ELECTRIC_PLUGIN_INPUT &in, EL
 		out.forward = false;
 		out.reverse = false;
 		out.power = false;
-		out.direction = ELECTRIC_DIR_NONE;
+		out.direction = VEHICLE_DIR_NONE;
 		return out;
 	}
 
 	if (blocked) {
 		out.drive_pwm = 0;
-		out.brake_pwm = (in.pwm_mode == ELECTRIC_PWM_DRIVE_BRAKE) ? brake_pwm : 0;
+		out.brake_pwm = (in.pwm_mode == VEHICLE_PWM_DRIVE_BRAKE) ? brake_pwm : 0;
 	}
 	else {
 		out.drive_pwm = drive_pwm;
@@ -297,27 +298,27 @@ static ELECTRIC_OUTPUT electric_curtis_apply(const ELECTRIC_PLUGIN_INPUT &in, EL
 }
 
 
-ELECTRIC_OUTPUT electric_plugin_apply(uint8_t plugin, const ELECTRIC_PLUGIN_INPUT &in, ELECTRIC_PLUGIN_STATE &state) {
+VEHICLE_OUTPUT vehicle_plugin_apply(uint8_t plugin, const VEHICLE_PLUGIN_INPUT &in, VEHICLE_PLUGIN_STATE &state) {
 
 	switch (plugin) {
-		case ELECTRIC_PLUGIN_DIRECT:
-			return electric_direct_apply(in, state);
-		case ELECTRIC_PLUGIN_4QD:
-			return electric_4qd_apply(in, state);
-		case ELECTRIC_PLUGIN_CURTIS:
-			return electric_curtis_apply(in, state);
+		case VEHICLE_PLUGIN_DIRECT:
+			return vehicle_direct_apply(in, state);
+		case VEHICLE_PLUGIN_4QD:
+			return vehicle_4qd_apply(in, state);
+		case VEHICLE_PLUGIN_CURTIS:
+			return vehicle_curtis_apply(in, state);
 		default:
 			break;
 	}
 
-	electric_plugin_reset(state);
-	ELECTRIC_OUTPUT out;
-	electric_clear_output(out);
+	vehicle_plugin_reset(state);
+	VEHICLE_OUTPUT out;
+	vehicle_clear_output(out);
 	return out;
 }
 
 
-bool electric_unpack_drive(const uint8_t *data, uint8_t size, ELECTRIC_COMMAND &command) {
+bool vehicle_unpack_drive(const uint8_t *data, uint8_t size, VEHICLE_COMMAND &command) {
 
 	if (data == 0 || size < 8) {
 		return false;
@@ -342,7 +343,29 @@ bool electric_unpack_drive(const uint8_t *data, uint8_t size, ELECTRIC_COMMAND &
 }
 
 
-uint8_t electric_status_byte(const ELECTRIC_STATUS_BITS &bits) {
+bool vehicle_horn_from_signal(const uint8_t *data, uint8_t size) {
+
+	if (data == 0 || size < 1) {
+		return false;
+	}
+
+	uint8_t mask = (uint8_t)((1 << SIGNAL_LOW) | (1 << SIGNAL_HIGH));
+	return (data[0] & mask) != 0;
+}
+
+
+bool vehicle_light_from_frame(const uint8_t *data, uint8_t size) {
+
+	if (data == 0 || size < 1) {
+		return false;
+	}
+
+	uint8_t mask = (uint8_t)((1 << LIGHT_LOW) | (1 << LIGHT_HIGH));
+	return (data[0] & mask) != 0;
+}
+
+
+uint8_t vehicle_status_byte(const VEHICLE_STATUS_BITS &bits) {
 
 	uint8_t value = 0;
 
@@ -359,15 +382,34 @@ uint8_t electric_status_byte(const ELECTRIC_STATUS_BITS &bits) {
 }
 
 
-static bool electric_is_moving(int32_t motor_voltage, uint16_t voltage_min) {
+bool vehicle_drive_enable(
+	const VEHICLE_COMMAND &command,
+	int32_t motor_voltage,
+	uint16_t voltage_min,
+	bool previous
+) {
 
-	return !electric_voltage_low(motor_voltage, voltage_min);
+	if (command.present && command.motor && !command.emergency) {
+		return true;
+	}
+
+	if (!command.mains && vehicle_voltage_low(motor_voltage, voltage_min)) {
+		return false;
+	}
+
+	return previous;
 }
 
 
-ELECTRIC_STATUS_BITS electric_vehicle_status(
-	const ELECTRIC_COMMAND &command,
-	const ELECTRIC_OUTPUT &output,
+static bool vehicle_is_moving(int32_t motor_voltage, uint16_t voltage_min) {
+
+	return !vehicle_voltage_low(motor_voltage, voltage_min);
+}
+
+
+VEHICLE_STATUS_BITS vehicle_status(
+	const VEHICLE_COMMAND &command,
+	const VEHICLE_OUTPUT &output,
 	int32_t motor_voltage,
 	uint16_t voltage_min,
 	bool reverse_logic,
@@ -375,13 +417,13 @@ ELECTRIC_STATUS_BITS electric_vehicle_status(
 	bool setup_idle
 ) {
 
-	ELECTRIC_STATUS_BITS bits;
+	VEHICLE_STATUS_BITS bits;
 	bits.error = false;
 	bits.ready = false;
 	bits.moving = false;
 	bits.multi = false;
 	bits.reverse_logic = reverse_logic;
-	bits.reverse_dir = output.direction == ELECTRIC_DIR_REVERSE;
+	bits.reverse_dir = output.direction == VEHICLE_DIR_REVERSE;
 	bits.drive = false;
 	bits.mains = false;
 
@@ -401,7 +443,7 @@ ELECTRIC_STATUS_BITS electric_vehicle_status(
 	bits.mains = command.present && command.mains && !bits.error;
 	bits.drive = bits.mains && command.motor;
 	bits.ready = bits.drive && !output.direction_blocked;
-	bits.moving = electric_is_moving(motor_voltage, voltage_min);
+	bits.moving = vehicle_is_moving(motor_voltage, voltage_min);
 	bits.multi = command.multi;
 
 	if (bits.error) {

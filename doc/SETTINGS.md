@@ -15,12 +15,12 @@ Each module has an eight bit identification code containing of 3 bits for the mo
 	bits 3-0  type inside the group
 
 	Controller 								0x1n
-	Actuator (electric, servo, switch, drive)	0x2n
+	Actuator (vehicle, servo, switch, drive)	0x2n
 	Sensor									0x3n
 	Programmer								0x7n
 
 	TYPE_CONTROLLER   0x10
-	TYPE_ELECTRIC     0x20
+	TYPE_VEHICLE     0x20
 	TYPE_SERVO        0x21
 	TYPE_SWITCH       0x22
 	TYPE_DRIVE        0x23
